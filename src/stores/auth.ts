@@ -1,22 +1,102 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import api from '@/services/api'
 
-export const useAuthStore = defineStore('auth', () => {
-  const user = ref<{ id: number; email: string; name: string } | null>(null)
-  const token = ref<string | null>(null)
+export type UserRole = 'student' | 'trainer' | 'admin'
 
-  function setUser(userData: { id: number; email: string; name: string } | null) {
-    user.value = userData
-  }
+export interface AuthUser {
+  id: string
+  fullName: string
+  email: string
+  role: UserRole
+}
 
-  function setToken(newToken: string | null) {
-    token.value = newToken
-  }
+interface LoginPayload {
+  email: string
+  password: string
+  remember?: boolean
+}
 
-  function logout() {
-    user.value = null
-    token.value = null
-  }
+interface RegisterPayload {
+  fullName: string
+  email: string
+  role: UserRole
+  password: string
+}
 
-  return { user, token, setUser, setToken, logout }
+interface AuthState {
+  user: AuthUser | null
+  token: string | null
+  loading: boolean
+  error: string | null
+}
+
+const TOKEN_KEY = 'eduleave_token'
+const USER_KEY = 'eduleave_user'
+
+export const useAuthStore = defineStore('auth', {
+  state: (): AuthState => ({
+    user: JSON.parse(localStorage.getItem(USER_KEY) ?? 'null'),
+    token: localStorage.getItem(TOKEN_KEY),
+    loading: false,
+    error: null,
+  }),
+
+  getters: {
+    isAuthenticated: (state) => Boolean(state.token),
+    isStudent: (state) => state.user?.role === 'student',
+    isTrainer: (state) => state.user?.role === 'trainer',
+  },
+
+  actions: {
+    async login(payload: LoginPayload): Promise<boolean> {
+      this.loading = true
+      this.error = null
+      try {
+        const { data } = await api.post('/auth/login', payload)
+        this.setSession(data.token, data.user, payload.remember)
+        return true
+      } catch (err: any) {
+        this.error = err.response?.data?.message ?? 'Unable to sign in. Please check your credentials.'
+        return false
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async register(payload: RegisterPayload): Promise<boolean> {
+      this.loading = true
+      this.error = null
+      try {
+        const { data } = await api.post('/auth/register', payload)
+        this.setSession(data.token, data.user, true)
+        return true
+      } catch (err: any) {
+        this.error = err.response?.data?.message ?? 'Unable to create your account. Please try again.'
+        return false
+      } finally {
+        this.loading = false
+      }
+    },
+
+    socialLogin(provider: 'google' | 'office365' | 'facebook') {
+      // Redirect to the backend-driven OAuth flow for the chosen provider.
+      window.location.href = `${api.defaults.baseURL}/auth/${provider}`
+    },
+
+    setSession(token: string, user: AuthUser, persist = true) {
+      this.token = token
+      this.user = user
+      if (persist) {
+        localStorage.setItem(TOKEN_KEY, token)
+        localStorage.setItem(USER_KEY, JSON.stringify(user))
+      }
+    },
+
+    logout() {
+      this.token = null
+      this.user = null
+      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(USER_KEY)
+    },
+  },
 })

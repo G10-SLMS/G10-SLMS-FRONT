@@ -1,7 +1,7 @@
 <template>
-  <router-view />
+  <RouterView />
 </template>
 
 <script setup lang="ts">
-// Root component
+import { RouterView } from 'vue-router'
 </script>
