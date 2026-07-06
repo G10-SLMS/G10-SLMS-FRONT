@@ -219,25 +219,24 @@ body {
   font-size: 0.82rem;
   font-weight: 600;
   color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 999px;
-  padding: 0.2rem 0.7rem;
+  background: transparent;
+  border: none;
+  padding: 0.2rem 0.4rem;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+  transition: color 0.2s ease, background 0.2s ease;
   line-height: 1.5;
   white-space: nowrap;
+  border-radius: 6px;
 }
 
 .forgot-link:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
   color: #1d4ed8;
+  background: #eff6ff;
 }
 
 .forgot-link:active {
-  transform: scale(0.97);
-  background: #bfdbfe;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .btn-social {
@@ -255,6 +254,54 @@ body {
   color: #374151;
   cursor: pointer;
   transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease, transform 0.05s ease;
+  white-space: nowrap;
+}
+
+.btn-social svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.btn-google {
+  border-color: #d1d5db;
+}
+
+.btn-google:hover {
+  background: #f9fafb;
+  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.btn-google:active {
+  transform: translateY(0);
+  background: #f3f4f6;
+}
+
+.btn-facebook {
+  color: #1877F2;
+  border-color: #c7d2fe;
+  background: #ffffff;
+}
+
+.btn-facebook svg {
+  flex-shrink: 0;
+}
+
+.btn-facebook:hover {
+  background: #eef2ff;
+  border-color: #818cf8;
+  box-shadow: 0 6px 16px -6px rgba(24, 119, 242, 0.18);
+  transform: translateY(-1px);
+}
+
+.btn-facebook:active {
+  transform: translateY(0);
+  background: #e0e7ff;
+}
+
+.btn-social:active {
+  transform: translateY(0);
 }
 
 .btn-social svg {
