@@ -1,22 +1,86 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import api from '@/services/api'
+
+export interface User {
+  id: number
+  name: string
+  email: string
+  role: 'student' | 'trainer' | 'admin'
+  avatar: string | null
+}
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<{ id: number; email: string; name: string } | null>(null)
-  const token = ref<string | null>(null)
+  const user = ref<User | null>(null)
+  const token = ref<string | null>(localStorage.getItem('token') || null)
 
-  function setUser(userData: { id: number; email: string; name: string } | null) {
-    user.value = userData
+  const isAuthenticated = computed(() => !!token.value)
+  const userRole = computed(() => user.value?.role ?? null)
+  const userName = computed(() => user.value?.name ?? '')
+  const userAvatar = computed(() => user.value?.avatar ?? null)
+
+  async function login(email: string, password: string) {
+    const { data } = await api.post('/login', { email, password })
+    token.value = data.token
+    user.value = data.user
+    localStorage.setItem('token', data.token)
   }
 
-  function setToken(newToken: string | null) {
-    token.value = newToken
+  async function register(
+    name: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string
+  ) {
+    const { data } = await api.post('/register', {
+      name,
+      email,
+      password,
+      password_confirmation: passwordConfirmation,
+    })
+    token.value = data.token
+    user.value = data.user
+    localStorage.setItem('token', data.token)
   }
 
-  function logout() {
-    user.value = null
-    token.value = null
+  async function fetchUser() {
+    if (!token.value) return
+    try {
+      const { data } = await api.get('/user')
+      user.value = data
+    } catch {
+      logout()
+    }
   }
 
-  return { user, token, setUser, setToken, logout }
+  async function updateProfile(formData: FormData) {
+    const { data } = await api.put('/profile', formData)
+    user.value = data.user
+  }
+
+  async function logout() {
+    try {
+      await api.post('/logout')
+    } catch {
+      // ignore logout errors
+    } finally {
+      user.value = null
+      token.value = null
+      localStorage.removeItem('token')
+    }
+  }
+
+  return {
+    user,
+    token,
+    isAuthenticated,
+    userRole,
+    userName,
+    userAvatar,
+    login,
+    register,
+    fetchUser,
+    updateProfile,
+    logout,
+  }
 })
