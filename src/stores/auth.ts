@@ -19,53 +19,85 @@ export const useAuthStore = defineStore('auth', () => {
   const userName = computed(() => user.value?.name ?? '')
   const userAvatar = computed(() => user.value?.avatar ?? null)
 
+  // ── Role helpers ──────────────────────────────────────────────────────
+  const isAdmin = computed(() => user.value?.role === 'admin')
+  const isTrainer = computed(() => user.value?.role === 'trainer')
+  const isStudent = computed(() => user.value?.role === 'student')
+
+  // ── Login ─────────────────────────────────────────────────────────────
   async function login(email: string, password: string) {
-    const { data } = await api.post('/login', { email, password })
-    token.value = data.token
-    user.value = data.user
-    localStorage.setItem('token', data.token)
+    try {
+      const { data } = await api.post('/login', { email, password })
+      token.value = data.token
+      user.value = data.user
+      localStorage.setItem('token', data.token)
+    } catch (error) {
+      // Ensure clean state even on partial failure
+      token.value = null
+      user.value = null
+      localStorage.removeItem('token')
+      throw error
+    }
   }
 
+  // ── Register ──────────────────────────────────────────────────────────
   async function register(
     name: string,
     email: string,
     password: string,
     passwordConfirmation: string
   ) {
-    const { data } = await api.post('/register', {
-      name,
-      email,
-      password,
-      password_confirmation: passwordConfirmation,
-    })
-    token.value = data.token
-    user.value = data.user
-    localStorage.setItem('token', data.token)
+    try {
+      const { data } = await api.post('/register', {
+        name,
+        email,
+        password,
+        password_confirmation: passwordConfirmation,
+      })
+      token.value = data.token
+      user.value = data.user
+      localStorage.setItem('token', data.token)
+    } catch (error) {
+      token.value = null
+      user.value = null
+      localStorage.removeItem('token')
+      throw error
+    }
   }
 
+  // ── Fetch current user ────────────────────────────────────────────────
   async function fetchUser() {
     if (!token.value) return
     try {
       const { data } = await api.get('/user')
       user.value = data
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch user:', error)
-      logout()
+      // Only logout on actual 401, not network blips or other errors
+      if (error.response?.status === 401) {
+        await logout()
+      }
     }
   }
 
+  // ── Update profile ────────────────────────────────────────────────────
   async function updateProfile(formData: FormData) {
-    const { data } = await api.post('/profile', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    user.value = data.user
+    try {
+      const { data } = await api.post('/profile', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      user.value = data.user
+    } catch (error) {
+      throw error
+    }
   }
 
+  // ── Logout ────────────────────────────────────────────────────────────
   async function logout() {
     try {
       await api.post('/logout')
     } catch {
-      // ignore logout errors
+      // ignore logout errors – we clear local state regardless
     } finally {
       user.value = null
       token.value = null
@@ -80,6 +112,9 @@ export const useAuthStore = defineStore('auth', () => {
     userRole,
     userName,
     userAvatar,
+    isAdmin,
+    isTrainer,
+    isStudent,
     login,
     register,
     fetchUser,

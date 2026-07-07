@@ -9,6 +9,8 @@ const api: AxiosInstance = axios.create({
   },
 })
 
+let isLoggingOut = false
+
 api.interceptors.request.use((config) => {
   const authStore = useAuthStore()
   if (authStore.token) {
@@ -20,9 +22,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !isLoggingOut) {
+      isLoggingOut = true
       const authStore = useAuthStore()
-      authStore.logout()
+      authStore.logout().finally(() => {
+        isLoggingOut = false
+      })
     }
     return Promise.reject(error)
   }
