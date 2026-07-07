@@ -25,16 +25,11 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !isLoggingOut) {
       isLoggingOut = true
       const authStore = useAuthStore()
-      authStore.logout().finally(() => {
-        isLoggingOut = false
-      })
+      authStore.logout()
+      isLoggingOut = false
     }
     return Promise.reject(error)
   }
 )
 
-<<<<<<< HEAD
-// Export configured axios instance
-=======
->>>>>>> feature/pinia-auth
 export default api
