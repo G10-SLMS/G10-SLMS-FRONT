@@ -2,11 +2,12 @@
   <div class="dashboard-layout">
     <Navbar @toggle-sidebar="sidebarOpen = !sidebarOpen" />
     <div class="layout-body">
-      <Sidebar :is-open="sidebarOpen" />
+      <Sidebar :is-open="sidebarOpen" @close="sidebarOpen = false" />
       <main class="content">
         <RouterView />
       </main>
     </div>
+    <Footer />
     <Transition name="fade">
       <div v-if="sidebarOpen" class="sidebar-overlay" @click="sidebarOpen = false"></div>
     </Transition>
@@ -17,6 +18,7 @@
 import { ref } from 'vue'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
+import Footer from '@/components/Footer.vue'
 
 const sidebarOpen = ref(false)
 </script>

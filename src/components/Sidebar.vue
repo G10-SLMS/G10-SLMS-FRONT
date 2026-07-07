@@ -1,10 +1,10 @@
 <template>
   <aside class="sidebar" :class="{ open: isOpen }">
     <nav>
-      <RouterLink to="/dashboard" class="nav-item">📊 Dashboard</RouterLink>
-      <RouterLink to="/leave-requests" class="nav-item">📝 Leave Requests</RouterLink>
-      <RouterLink to="/calendar" class="nav-item">📅 Calendar</RouterLink>
-      <RouterLink to="/admin" class="nav-item">⚙️ Admin</RouterLink>
+      <RouterLink to="/dashboard" class="nav-item" @click="emit('close')"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></RouterLink>
+      <RouterLink to="/leave-requests" class="nav-item" @click="emit('close')"><span class="nav-icon">📝</span><span class="nav-label">Leave Requests</span></RouterLink>
+      <RouterLink to="/calendar" class="nav-item" @click="emit('close')"><span class="nav-icon">📅</span><span class="nav-label">Calendar</span></RouterLink>
+      <RouterLink to="/admin" class="nav-item" @click="emit('close')"><span class="nav-icon">⚙️</span><span class="nav-label">Admin</span></RouterLink>
     </nav>
 
   </aside>
@@ -14,6 +14,8 @@
 defineProps<{
   isOpen?: boolean
 }>()
+
+const emit = defineEmits<{ close: [] }>()
 </script>
 
 <style scoped>
@@ -33,10 +35,22 @@ nav {
 }
 
 .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 12px 24px;
   color: #d1d5db;
   text-decoration: none;
   transition: background 0.2s;
+}
+
+.nav-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.nav-label {
+  font-size: 14px;
 }
 
 .nav-item:hover,
@@ -50,9 +64,11 @@ nav {
     width: 72px;
   }
   .nav-item {
+    justify-content: center;
     padding: 12px;
-    text-align: center;
-    font-size: 0;
+  }
+  .nav-label {
+    display: none;
   }
 }
 

@@ -1,11 +1,12 @@
 <template>
   <header class="navbar">
     <div class="navbar-left">
-      <button class="icon-btn hamburger" @click="emit('toggle-sidebar')" aria-label="Toggle menu">☰</button>
+      
       <span class="logo">📋 SLMS</span>
     </div>
 
     <div class="navbar-right">
+      <button class="icon-btn hamburger" @click="emit('toggle-sidebar')" aria-label="Toggle menu">☰</button>
       <button class="icon-btn" title="Notifications">🔔</button>
 
       <div class="user-menu">
@@ -18,9 +19,6 @@
         <div v-if="menuOpen" class="dropdown">
           <RouterLink to="/dashboard" class="dropdown-item" @click="menuOpen = false">
             📊 Dashboard
-          </RouterLink>
-          <RouterLink to="/profile" class="dropdown-item" @click="menuOpen = false">
-            👤 Profile
           </RouterLink>
           <button class="dropdown-item logout" @click="logout">
             🚪 Logout
@@ -54,6 +52,7 @@ function logout() {
 <style scoped>
 .navbar {
   display: flex;
+  flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
   padding: 12px 24px;
@@ -65,6 +64,14 @@ function logout() {
 .logo {
   font-weight: bold;
   font-size: 18px;
+  white-space: nowrap;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .navbar-right {
@@ -148,11 +155,12 @@ function logout() {
   color: #ef4444;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1024px) {
   .navbar {
     position: sticky;
     top: 0;
     z-index: 30;
+    padding: 12px 16px;
   }
 
   .hamburger {
