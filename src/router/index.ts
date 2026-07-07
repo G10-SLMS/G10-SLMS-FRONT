@@ -76,45 +76,84 @@ const router = createRouter({
   routes,
 =======
 import { createRouter, createWebHistory } from 'vue-router'
-import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
-import DashboardLayout from '../layouts/DashboardLayout.vue'
-import DashboardView from '../views/DashboardView.vue'
-import LeaveRequestView from '../views/LeaveRequestView.vue'
-import LeaveFormView from '../views/LeaveFormView.vue'
-import ApprovalView from '../views/ApprovalView.vue'
-import CalendarView from '../views/CalendarView.vue'
-import AdminView from '../views/AdminView.vue'
-import NotFoundView from '../views/NotFoundView.vue'
 
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior: () => ({ top: 0 }),
   routes: [
     { path: '/', redirect: '/dashboard' },
-    { path: '/login', name: 'Login', component: LoginView },
-    { path: '/register', name: 'Register', component: RegisterView },
+    { 
+      path: '/login', 
+      name: 'Login', 
+      component: () => import('../views/LoginView.vue'),
+      meta: { title: 'Login' }
+    },
+    { 
+      path: '/register', 
+      name: 'Register', 
+      component: () => import('../views/RegisterView.vue'),
+      meta: { title: 'Register' }
+    },
     {
       path: '/dashboard-panel',
-      component: DashboardLayout,
+      component: () => import('../layouts/DashboardLayout.vue'),
+      meta: { title: 'Dashboard' },
       children: [
-        { path: '/dashboard', name: 'Dashboard', component: DashboardView },
-        { path: '/leave-requests', name: 'LeaveRequests', component: LeaveRequestView },
-        { path: '/leave/new', name: 'NewLeave', component: LeaveFormView },
-        { path: '/leave/:id/edit', name: 'EditLeave', component: LeaveFormView },
-        { path: '/approvals', name: 'Approvals', component: ApprovalView },
-        { path: '/calendar', name: 'Calendar', component: CalendarView },
-        { path: '/admin', name: 'Admin', component: AdminView },
+        { 
+          path: '/dashboard', 
+          name: 'Dashboard', 
+          component: () => import('../views/DashboardView.vue'),
+          meta: { title: 'Dashboard' }
+        },
+        { 
+          path: '/leave-requests', 
+          name: 'LeaveRequests', 
+          component: () => import('../views/LeaveRequestView.vue'),
+          meta: { title: 'Leave Requests' }
+        },
+        { 
+          path: '/leave/new', 
+          name: 'NewLeave', 
+          component: () => import('../views/LeaveFormView.vue'),
+          meta: { title: 'New Leave Request' }
+        },
+        { 
+          path: '/leave/:id/edit', 
+          name: 'EditLeave', 
+          component: () => import('../views/LeaveFormView.vue'),
+          meta: { title: 'Edit Leave Request' }
+        },
+        { 
+          path: '/approvals', 
+          name: 'Approvals', 
+          component: () => import('../views/ApprovalView.vue'),
+          meta: { title: 'Approvals' }
+        },
+        { 
+          path: '/calendar', 
+          name: 'Calendar', 
+          component: () => import('../views/CalendarView.vue'),
+          meta: { title: 'Calendar' }
+        },
+        { 
+          path: '/admin', 
+          name: 'Admin', 
+          component: () => import('../views/AdminView.vue'),
+          meta: { title: 'Admin' }
+        },
       ]
     },
     {
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
-      component: NotFoundView,
+      component: () => import('../views/NotFoundView.vue'),
+      meta: { title: 'Page Not Found' }
     },
   ],
 >>>>>>> feature/dashboard-layout
 })
 
+<<<<<<< HEAD
 router.beforeEach((to) => {
   const auth = useAuthStore()
 
@@ -127,6 +166,12 @@ router.beforeEach((to) => {
   }
 
   return true
+=======
+router.beforeEach((to, _from, next) => {
+  const title = (to.meta.title as string) || 'SLMS'
+  document.title = `${title} · SLMS`
+  next()
+>>>>>>> feature/router-configuration
 })
 
 export default router
