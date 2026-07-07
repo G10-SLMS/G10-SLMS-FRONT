@@ -13,6 +13,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
+<<<<<<< HEAD
 }
 
 /* Shared layout for EduLeave authentication pages (Login / Register) */
@@ -578,4 +579,7 @@ body {
   .auth-panel-right {
     flex: 1 1 100%;
   }
+=======
+  overflow-x: hidden;
+>>>>>>> feature/dashboard-layout
 }
