@@ -28,4 +28,5 @@ api.interceptors.response.use(
   }
 )
 
+// Export configured axios instance
 export default api
