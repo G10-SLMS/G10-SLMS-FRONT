@@ -79,7 +79,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    socialLogin(provider: 'google' | 'office365' | 'facebook') {
+    socialLogin(provider: 'google' | 'office365' | 'githup') {
       // Redirect to the backend-driven OAuth flow for the chosen provider.
       window.location.href = `${api.defaults.baseURL}/auth/${provider}`
     },
