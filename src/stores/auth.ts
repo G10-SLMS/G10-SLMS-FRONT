@@ -48,13 +48,16 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const { data } = await api.get('/user')
       user.value = data
-    } catch {
+    } catch (error) {
+      console.error('Failed to fetch user:', error)
       logout()
     }
   }
 
   async function updateProfile(formData: FormData) {
-    const { data } = await api.put('/profile', formData)
+    const { data } = await api.post('/profile', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
     user.value = data.user
   }
 
