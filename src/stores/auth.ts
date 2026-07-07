@@ -21,6 +21,7 @@ interface RegisterPayload {
   email: string
   role: UserRole
   password: string
+  password_confirmation: string
 }
 
 interface AuthState {
