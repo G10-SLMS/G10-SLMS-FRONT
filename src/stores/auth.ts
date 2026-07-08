@@ -7,46 +7,70 @@ export interface User {
   name: string
   email: string
   role: 'student' | 'trainer' | 'admin'
-  avatar: string | null
+  avatar?: string | null
 }
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const token = ref<string | null>(localStorage.getItem('token') || null)
+  const isLoading = ref(false)
 
-  const isAuthenticated = computed(() => !!token.value)
+  // Getters
+  const isAuthenticated = computed(() => !!token.value && !!user.value)
   const userRole = computed(() => user.value?.role ?? null)
   const userName = computed(() => user.value?.name ?? '')
   const userAvatar = computed(() => user.value?.avatar ?? null)
 
-  // ── Role helpers ──────────────────────────────────────────────────────
   const isAdmin = computed(() => user.value?.role === 'admin')
   const isTrainer = computed(() => user.value?.role === 'trainer')
   const isStudent = computed(() => user.value?.role === 'student')
 
-  // ── Login ─────────────────────────────────────────────────────────────
+  // Set token and configure API
+  const setAuth = (newToken: string, userData: User) => {
+    token.value = newToken
+    user.value = userData
+    localStorage.setItem('token', newToken)
+    
+    // Set default Authorization header
+    api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
+  }
+
+  const clearAuth = () => {
+    user.value = null
+    token.value = null
+    localStorage.removeItem('token')
+    delete api.defaults.headers.common['Authorization']
+  }
+
+  // Initialize / Restore session
+  async function initialize() {
+    if (!token.value) return
+    await fetchUser()
+  }
+
+  // Login
   async function login(email: string, password: string) {
+    isLoading.value = true
     try {
       const { data } = await api.post('/login', { email, password })
-      token.value = data.token
-      user.value = data.user
-      localStorage.setItem('token', data.token)
-    } catch (error) {
-      // Ensure clean state even on partial failure
-      token.value = null
-      user.value = null
-      localStorage.removeItem('token')
+      setAuth(data.token, data.user)
+      return data
+    } catch (error: any) {
+      clearAuth()
       throw error
+    } finally {
+      isLoading.value = false
     }
   }
 
-  // ── Register ──────────────────────────────────────────────────────────
+  // Register
   async function register(
     name: string,
     email: string,
     password: string,
     passwordConfirmation: string
   ) {
+    isLoading.value = true
     try {
       const { data } = await api.post('/register', {
         name,
@@ -54,60 +78,64 @@ export const useAuthStore = defineStore('auth', () => {
         password,
         password_confirmation: passwordConfirmation,
       })
-      token.value = data.token
-      user.value = data.user
-      localStorage.setItem('token', data.token)
-    } catch (error) {
-      token.value = null
-      user.value = null
-      localStorage.removeItem('token')
+      setAuth(data.token, data.user)
+      return data
+    } catch (error: any) {
+      clearAuth()
       throw error
+    } finally {
+      isLoading.value = false
     }
   }
 
-  // ── Fetch current user ────────────────────────────────────────────────
+  // Fetch current user
   async function fetchUser() {
-    if (!token.value) return
+    if (!token.value) return false
+
     try {
       const { data } = await api.get('/user')
       user.value = data
+      return true
     } catch (error: any) {
-      console.error('Failed to fetch user:', error)
-      // Only logout on actual 401, not network blips or other errors
       if (error.response?.status === 401) {
-        await logout()
+        clearAuth()
       }
+      console.error('Failed to fetch user:', error)
+      return false
     }
   }
 
-  // ── Update profile ────────────────────────────────────────────────────
+  // Update Profile
   async function updateProfile(formData: FormData) {
     try {
       const { data } = await api.post('/profile', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       user.value = data.user
+      return data
     } catch (error) {
       throw error
     }
   }
 
-  // ── Logout ────────────────────────────────────────────────────────────
+  // Logout
   async function logout() {
     try {
       await api.post('/logout')
     } catch {
-      // ignore logout errors – we clear local state regardless
+      // Ignore backend errors
     } finally {
-      user.value = null
-      token.value = null
-      localStorage.removeItem('token')
+      clearAuth()
     }
   }
+
+  // Auto initialize when store is created (important!)
+  initialize()
 
   return {
     user,
     token,
+    isLoading,
     isAuthenticated,
     userRole,
     userName,
@@ -120,5 +148,6 @@ export const useAuthStore = defineStore('auth', () => {
     fetchUser,
     updateProfile,
     logout,
+    initialize,        // expose for manual calls if needed
   }
 })
