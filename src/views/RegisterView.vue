@@ -230,10 +230,11 @@ async function handleSubmit() {
   if (passwordMismatch.value) return
 
   const success = await auth.register({
-    fullName: form.fullName,
+    name: form.fullName,
     email: form.email,
     role: form.role,
     password: form.password,
+    password_confirmation: form.confirmPassword,
   })
 
   if (success) {

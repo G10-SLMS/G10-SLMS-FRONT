@@ -169,7 +169,7 @@ async function handleSubmit() {
   })
 
   if (success) {
-    router.push('/dashboard')
+    router.push('/')
   }
 }
 </script>

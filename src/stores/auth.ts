@@ -1,103 +1,141 @@
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import api from '@/services/api'
+import { authService } from '@/services/authService'
+import type {
+  LoginPayload,
+  RegisterPayload,
+  UpdateProfilePayload,
+  User,
+} from '@/types/user'
+import type { AxiosError } from 'axios'
 
-export type UserRole = 'student' | 'trainer' | 'admin'
-
-export interface AuthUser {
-  id: string
-  fullName: string
-  email: string
-  role: UserRole
+function getStoredUser(): User | null {
+  const raw = localStorage.getItem('auth_user')
+  return raw ? (JSON.parse(raw) as User) : null
 }
 
-interface LoginPayload {
-  email: string
-  password: string
-  remember?: boolean
+function extractErrorMessage(err: unknown, fallback: string): string {
+  const axiosErr = err as AxiosError<{ message?: string }>
+  return axiosErr.response?.data?.message ?? fallback
 }
 
-interface RegisterPayload {
-  fullName: string
-  email: string
-  role: UserRole
-  password: string
-  password_confirmation: string
-}
+export const useAuthStore = defineStore('auth', () => {
+  // --- state ---
+  const user = ref<User | null>(getStoredUser())
+  const token = ref<string | null>(localStorage.getItem('auth_token'))
+  const loading = ref(false)
+  const error = ref<string | null>(null)
 
-interface AuthState {
-  user: AuthUser | null
-  token: string | null
-  loading: boolean
-  error: string | null
-}
+  // --- getters ---
+  const isAuthenticated = computed(() => !!token.value)
+  const isAdmin = computed(() => user.value?.role === 'admin')
+  const isTrainer = computed(() => user.value?.role === 'trainer')
+  const isStudent = computed(() => user.value?.role === 'student')
 
-const TOKEN_KEY = 'eduleave_token'
-const USER_KEY = 'eduleave_user'
+  // --- internal helper ---
+  function setSession(userData: User, authToken: string): void {
+    user.value = userData
+    token.value = authToken
+    localStorage.setItem('auth_user', JSON.stringify(userData))
+    localStorage.setItem('auth_token', authToken)
+  }
 
-export const useAuthStore = defineStore('auth', {
-  state: (): AuthState => ({
-    user: JSON.parse(localStorage.getItem(USER_KEY) ?? 'null'),
-    token: localStorage.getItem(TOKEN_KEY),
-    loading: false,
-    error: null,
-  }),
+  function clearSession(): void {
+    user.value = null
+    token.value = null
+    localStorage.removeItem('auth_user')
+    localStorage.removeItem('auth_token')
+  }
 
-  getters: {
-    isAuthenticated: (state) => Boolean(state.token),
-    isStudent: (state) => state.user?.role === 'student',
-    isTrainer: (state) => state.user?.role === 'trainer',
-  },
+  // --- actions ---
+  async function register(payload: RegisterPayload) {
+    loading.value = true
+    error.value = null
+    try {
+      const { data } = await authService.register(payload)
+      setSession(data.user, data.token)
+      return data
+    } catch (err) {
+      error.value = extractErrorMessage(err, 'Registration failed.')
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
 
-  actions: {
-    async login(payload: LoginPayload): Promise<boolean> {
-      this.loading = true
-      this.error = null
-      try {
-        const { data } = await api.post('/auth/login', payload)
-        this.setSession(data.token, data.user, payload.remember)
-        return true
-      } catch (err: any) {
-        this.error = err.response?.data?.message ?? 'Unable to sign in. Please check your credentials.'
-        return false
-      } finally {
-        this.loading = false
-      }
-    },
+  async function login(payload: LoginPayload) {
+    loading.value = true
+    error.value = null
+    try {
+      const { data } = await authService.login(payload)
+      setSession(data.user, data.token)
+      return data
+    } catch (err) {
+      error.value = extractErrorMessage(err, 'Invalid credentials.')
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
 
-    async register(payload: RegisterPayload): Promise<boolean> {
-      this.loading = true
-      this.error = null
-      try {
-        const { data } = await api.post('/auth/register', payload)
-        this.setSession(data.token, data.user, true)
-        return true
-      } catch (err: any) {
-        this.error = err.response?.data?.message ?? 'Unable to create your account. Please try again.'
-        return false
-      } finally {
-        this.loading = false
-      }
-    },
+  async function logout(): Promise<void> {
+    loading.value = true
+    try {
+      await authService.logout()
+    } catch {
+      // Even if the request fails (e.g. token already expired),
+      // clear local state so the user isn't stuck "logged in".
+    } finally {
+      clearSession()
+      loading.value = false
+    }
+  }
 
-    socialLogin(provider: 'google' | 'office365' | 'github') {
-      // Redirect to the backend-driven OAuth flow for the chosen provider.
-      window.location.href = `${api.defaults.baseURL}/auth/${provider}`
-    },
+  async function fetchCurrentUser(): Promise<User | null> {
+    if (!token.value) return null
 
-    setSession(token: string, user: AuthUser, persist = true) {
-      this.token = token
-      this.user = user
-      if (persist) {
-        localStorage.setItem(TOKEN_KEY, token)
-        localStorage.setItem(USER_KEY, JSON.stringify(user))
-      }
-    },
+    try {
+      const { data } = await authService.getCurrentUser()
+      user.value = data
+      localStorage.setItem('auth_user', JSON.stringify(data))
+      return data
+    } catch (err) {
+      // Token invalid/expired — the axios 401 interceptor will redirect,
+      // but clear local state here too in case that interceptor is skipped.
+      clearSession()
+      throw err
+    }
+  }
 
-    logout() {
-      this.token = null
-      this.user = null
-      localStorage.removeItem(TOKEN_KEY)
-      localStorage.removeItem(USER_KEY)
-    },
-  },
+  async function updateProfile(payload: UpdateProfilePayload | FormData) {
+    loading.value = true
+    error.value = null
+    try {
+      const { data } = await authService.updateProfile(payload)
+      user.value = data
+      localStorage.setItem('auth_user', JSON.stringify(data))
+      return data
+    } catch (err) {
+      error.value = extractErrorMessage(err, 'Update failed.')
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return {
+    user,
+    token,
+    loading,
+    error,
+    isAuthenticated,
+    isAdmin,
+    isTrainer,
+    isStudent,
+    register,
+    login,
+    logout,
+    fetchCurrentUser,
+    updateProfile,
+  }
 })
