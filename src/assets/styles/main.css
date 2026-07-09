@@ -35,7 +35,7 @@ body {
   color: #ffffff;
   background:
     linear-gradient(180deg, rgba(9, 22, 55, 0.78) 0%, rgba(9, 22, 55, 0.65) 100%),
-    url('/image.jpg') center/cover no-repeat;
+    url('../image/p2.jpg') center/cover no-repeat;
   background-size: cover;
   background-position: center;
   overflow: hidden;
@@ -49,14 +49,23 @@ body {
 }
 
 .auth-brand-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
   background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.6rem;
+}
+
+.auth-brand-logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  object-fit: contain;
+  background: #ffffff;
+  display: block;
 }
 
 .auth-brand-name {

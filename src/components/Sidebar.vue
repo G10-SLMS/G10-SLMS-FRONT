@@ -3,6 +3,7 @@
     <nav>
       <RouterLink to="/dashboard" class="nav-item">📊 Dashboard</RouterLink>
       <RouterLink to="/leave-requests" class="nav-item">📝 Leave Requests</RouterLink>
+      <RouterLink v-if="canApprove" to="/approvals" class="nav-item">✅ Approvals</RouterLink>
       <RouterLink to="/calendar" class="nav-item">📅 Calendar</RouterLink>
       <RouterLink to="/admin" class="nav-item">⚙️ Admin</RouterLink>
     </nav>
@@ -11,9 +12,18 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+
 defineProps<{
   isOpen?: boolean
 }>()
+
+const auth = useAuthStore()
+
+// Approvals are only relevant to trainers (their own students) and admins (everyone).
+const canApprove = computed(() => auth.isTrainer || auth.isAdmin)
+const isAdmin = computed(() => auth.isAdmin)
 </script>
 
 <style scoped>

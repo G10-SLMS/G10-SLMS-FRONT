@@ -2,10 +2,10 @@
   <div class="auth-page">
     <!-- Left promotional panel -->
     <aside class="auth-panel-left">
-      <div class="auth-brand">
-        <span class="auth-brand-icon">🎓</span>
-        <span class="auth-brand-name">EduLeave</span>
-      </div>
+    <div class="auth-brand">
+      <img :src="logoUrl" alt="SLMS logo" class="auth-brand-logo" />
+   
+    </div>
 
       <div class="auth-hero">
         <h1>Manage your academic life with ease.</h1>
@@ -19,7 +19,7 @@
         <div class="auth-trust-avatars">
           <span></span><span></span><span></span>
         </div>
-        <p>Trusted by 5,000+ students and faculty</p>
+        <p>Trusted by 1,000+ students and faculty</p>
       </div>
     </aside>
 
@@ -52,7 +52,7 @@
                 id="email"
                 v-model="form.email"
                 type="email"
-                placeholder="student@university.edu"
+                placeholder="student@passerellesnumeriques.org"
                 autocomplete="username"
                 required
               />
@@ -136,6 +136,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import logoUrl from '@/assets/image/logo.png'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -151,12 +152,12 @@ const form = reactive({
 
 function fillDemo(role: 'student' | 'trainer') {
   selectedRole.value = role
-  form.email = role === 'student' ? 'student@university.edu' : 'trainer@university.edu'
+  form.email = role === 'student' ? 'student@passerellesnumeriques.org' : 'trainer@passerellesnumeriques.org'
   form.password = 'demo-password'
 }
 
-function socialLogin(provider: 'google' | 'office365' | 'github') {
-  auth.socialLogin(provider)
+function socialLogin(provider: 'google' | 'github') {
+  window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/${provider}/redirect`
 }
 
 function handleForgotPassword() {

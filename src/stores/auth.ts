@@ -46,6 +46,10 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('auth_user')
     localStorage.removeItem('auth_token')
   }
+  function setToken(newToken: string): void {
+    token.value = newToken
+    localStorage.setItem('auth_token', newToken)
+  }
 
   // --- actions ---
   async function register(payload: RegisterPayload) {
@@ -141,6 +145,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     socialLogin, 
+    setToken,
     fetchCurrentUser,
     updateProfile,
     clearSession,

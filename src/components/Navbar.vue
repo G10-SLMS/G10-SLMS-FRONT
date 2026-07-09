@@ -2,7 +2,10 @@
   <header class="navbar">
     <div class="navbar-left">
       <button class="icon-btn hamburger" @click="emit('toggle-sidebar')" aria-label="Toggle menu">☰</button>
-      <span class="logo">📋 SLMS</span>
+      <div class="auth-brand">
+      <img :src="logoUrl" alt="SLMS logo" class="auth-brand-logo" />
+      
+    </div>
     </div>
 
     <div class="navbar-right">
@@ -35,6 +38,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import logoUrl from '@/assets/image/logo.png'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -68,6 +72,7 @@ async function logout() {
 .logo {
   font-weight: bold;
   font-size: 18px;
+  line-height: 1;
 }
 
 .navbar-right {

@@ -3,9 +3,9 @@
     <!-- Left promotional panel -->
     <aside class="auth-panel-left">
       <div class="auth-brand">
-        <span class="auth-brand-icon">🎓</span>
-        <span class="auth-brand-name">EduLeave</span>
-      </div>
+      <img :src="logoUrl" alt="SLMS logo" class="auth-brand-logo" />
+  
+    </div>
 
       <div class="auth-hero">
         <h1>Join your institution's leave portal.</h1>
@@ -19,7 +19,7 @@
         <div class="auth-trust-avatars">
           <span></span><span></span><span></span>
         </div>
-        <p>Trusted by 5,000+ students and faculty</p>
+        <p>Trusted by 1,000+ students and faculty</p>
       </div>
     </aside>
 
@@ -72,7 +72,7 @@
                 id="regEmail"
                 v-model="form.email"
                 type="email"
-                placeholder="student@university.edu"
+                placeholder="student@passerellesnumeriques.org"
                 autocomplete="email"
                 required
               />
@@ -202,6 +202,7 @@
 import { computed, reactive, ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import logoUrl from '@/assets/image/logo.png'
 
 const router = useRouter()
 const auth = useAuthStore()
