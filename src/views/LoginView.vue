@@ -141,6 +141,7 @@ const router = useRouter()
 const auth = useAuthStore()
 
 const showPassword = ref(false)
+const selectedRole = ref<'student' | 'trainer' | null>(null)
 
 const form = reactive({
   email: '',
@@ -149,6 +150,7 @@ const form = reactive({
 })
 
 function fillDemo(role: 'student' | 'trainer') {
+  selectedRole.value = role
   form.email = role === 'student' ? 'student@university.edu' : 'trainer@university.edu'
   form.password = 'demo-password'
 }
@@ -166,6 +168,7 @@ async function handleSubmit() {
     email: form.email,
     password: form.password,
     remember: form.remember,
+    role: selectedRole.value ?? undefined,
   })
 
   if (success) {

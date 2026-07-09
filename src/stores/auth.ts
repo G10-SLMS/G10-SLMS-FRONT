@@ -91,6 +91,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function socialLogin(provider: 'google' | 'office365' | 'github'): Promise<boolean> {
+  error.value = `${provider} sign-in isn't connected yet.`
+  return false
+  }
+
   async function fetchCurrentUser(): Promise<User | null> {
     if (!token.value) return null
 
@@ -135,7 +140,10 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     login,
     logout,
+    socialLogin, 
     fetchCurrentUser,
     updateProfile,
+    clearSession,
+    
   }
 })

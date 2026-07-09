@@ -29,6 +29,8 @@ export interface RegisterPayload {
 export interface LoginPayload {
   email: string
   password: string
+  remember?: boolean
+  role?: 'student' | 'trainer' 
 }
 
 export interface ResetPasswordPayload {
