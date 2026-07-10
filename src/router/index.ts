@@ -7,13 +7,9 @@ declare module 'vue-router' {
     title?: string
     requiresAuth?: boolean
     guestOnly?: boolean
-<<<<<<< HEAD
     /** If set, only these roles may access the route. Omit = any authenticated role. */
     roles?: UserRole[]
-=======
-    roles?: UserRole[]
     provider?: 'google' | 'github'
->>>>>>> dfa85ba38c1443579f95b8c9e1c560b84d61ea92
   }
 }
 
@@ -34,11 +30,6 @@ export const router = createRouter({
       component: () => import('../views/RegisterView.vue'),
       meta: { title: 'Register', guestOnly: true },
     },
-    {                                                      
-      path: '/oauth/callback',                            
-      name: 'OAuthCallback',                                
-      component: () => import('../views/OAuthCallbackView.vue'), 
-    }, 
     {
       path: '/auth/google/callback',
       name: 'GoogleCallback',

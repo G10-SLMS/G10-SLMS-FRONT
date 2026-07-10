@@ -510,6 +510,72 @@ body {
   text-decoration: underline;
 }
 
+.logout-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.logout-modal {
+  background: #fff;
+  color: #1f2937;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 320px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.logout-modal__title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.logout-modal__text {
+  margin: 0 0 20px;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.logout-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.logout-modal__cancel,
+.logout-modal__confirm {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.logout-modal__cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.logout-modal__cancel:hover {
+  background: #e5e7eb;
+}
+
+.logout-modal__confirm {
+  background: #ef4444;
+  color: #fff;
+}
+
+.logout-modal__confirm:hover {
+  background: #dc2626;
+}
+
 @media (max-width: 860px) {
   .auth-panel-left {
     display: none;
