@@ -1,11 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import type { UserRole } from '@/types/user'
 
 declare module 'vue-router' {
   interface RouteMeta {
     title?: string
     requiresAuth?: boolean
     guestOnly?: boolean
+    /** If set, only these roles may access the route. Omit = any authenticated role. */
+    roles?: UserRole[]
   }
 }
 
@@ -26,6 +29,11 @@ export const router = createRouter({
       component: () => import('../views/RegisterView.vue'),
       meta: { title: 'Register', guestOnly: true },
     },
+    {                                                      
+      path: '/oauth/callback',                            
+      name: 'OAuthCallback',                                
+      component: () => import('../views/OAuthCallbackView.vue'), 
+    }, 
     {
       path: '/dashboard-panel',
       component: () => import('../layouts/DashboardLayout.vue'),
@@ -95,7 +103,18 @@ router.beforeEach((to) => {
     return { name: 'Dashboard' }
   }
 
+  // Role-based access control: if the route restricts roles and the
+  // logged-in user's role isn't in the list, bounce them to the dashboard.
+  if (to.meta.roles && auth.user && !to.meta.roles.includes(auth.user.role)) {
+    return { name: 'Dashboard' }
+  }
+
   return true
+})
+
+router.beforeEach((to) => {
+  const title = to.meta.title || 'SLMS'
+  document.title = `${title} · SLMS`
 })
 
 router.beforeEach((to) => {
