@@ -1,8 +1,9 @@
 <template>
   <div class="dashboard-view">
-    <h1>Welcome</h1>
+    <h1>Welcome, {{ auth.user?.name || 'User' }}</h1>
 
-    <div class="cards">
+    <!-- Admin dashboard -->
+    <div v-if="auth.isAdmin" class="cards">
       <div class="card">
         <p class="card-label">Total Students</p>
         <p class="card-value">100</p>
@@ -21,6 +22,51 @@
       </div>
     </div>
 
+    <!-- Staff / Trainer dashboard -->
+    <div v-else-if="auth.isTrainer" class="cards">
+      <div class="card">
+        <p class="card-label">Pending Reviews</p>
+        <p class="card-value">12</p>
+      </div>
+      <div class="card">
+        <p class="card-label">Approved Today</p>
+        <p class="card-value">4</p>
+      </div>
+      <div class="card">
+        <p class="card-label">Assigned Students</p>
+        <p class="card-value">38</p>
+      </div>
+      <div class="card">
+        <p class="card-label">Rejected Today</p>
+        <p class="card-value">1</p>
+      </div>
+    </div>
+
+    <!-- Student dashboard -->
+    <div v-else-if="auth.isStudent" class="cards">
+      <div class="card">
+        <p class="card-label">My Leave Balance</p>
+        <p class="card-value">8</p>
+      </div>
+      <div class="card">
+        <p class="card-label">Pending Requests</p>
+        <p class="card-value">1</p>
+      </div>
+      <div class="card">
+        <p class="card-label">Approved</p>
+        <p class="card-value">3</p>
+      </div>
+      <div class="card">
+        <p class="card-label">Rejected</p>
+        <p class="card-value">0</p>
+      </div>
+    </div>
+
+    <!-- Fallback if role is missing/unknown -->
+    <div v-else class="cards">
+      <p class="placeholder-text">Unable to determine your role. Please log in again.</p>
+    </div>
+
     <div class="recent-activity">
       <h2>Recent Activity</h2>
       <p class="placeholder-text">No activity yet (placeholder).</p>
@@ -29,7 +75,9 @@
 </template>
 
 <script setup lang="ts">
-// Real data comes from dashboard API in Sprint 4
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
 </script>
 
 <style scoped>
@@ -53,7 +101,7 @@
 
 .card-label {
   font-size: 13px;
-  color: #5c687e;
+  color: #6b7280;
   margin-bottom: 8px;
 }
 
@@ -71,23 +119,5 @@
 
 .placeholder-text {
   color: #9ca3af;
-}
-
-@media (max-width: 1024px) and (min-width: 769px) {
-  .cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .cards {
-    grid-template-columns: 1fr;
-  }
-  .card {
-    padding: 16px;
-  }
-  .card-value {
-    font-size: 22px;
-  }
 }
 </style>
