@@ -4,7 +4,7 @@
     <aside class="auth-panel-left">
     <div class="auth-brand">
       <img :src="logoUrl" alt="SLMS logo" class="auth-brand-logo" />
-   
+
     </div>
 
       <div class="auth-hero">
@@ -159,7 +159,6 @@ function fillDemo(role: 'student' | 'trainer') {
 function socialLogin(provider: 'google' | 'github') {
   window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/${provider}/redirect`
 }
-
 function handleForgotPassword() {
   router.push('/forgot-password')
 }

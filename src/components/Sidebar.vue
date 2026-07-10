@@ -5,9 +5,8 @@
       <RouterLink to="/leave-requests" class="nav-item">📝 Leave Requests</RouterLink>
       <RouterLink v-if="canApprove" to="/approvals" class="nav-item">✅ Approvals</RouterLink>
       <RouterLink to="/calendar" class="nav-item">📅 Calendar</RouterLink>
-      <RouterLink to="/admin" class="nav-item">⚙️ Admin</RouterLink>
+      <RouterLink v-if="isAdmin" to="/admin" class="nav-item">⚙️ Admin</RouterLink>
     </nav>
-
   </aside>
 </template>
 

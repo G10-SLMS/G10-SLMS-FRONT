@@ -1,11 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import type { UserRole } from '@/types/user'
 
 declare module 'vue-router' {
   interface RouteMeta {
     title?: string
     requiresAuth?: boolean
     guestOnly?: boolean
+    roles?: UserRole[]
+    provider?: 'google' | 'github'
   }
 }
 
@@ -25,6 +28,18 @@ export const router = createRouter({
       name: 'Register',
       component: () => import('../views/RegisterView.vue'),
       meta: { title: 'Register', guestOnly: true },
+    },
+    {
+      path: '/auth/google/callback',
+      name: 'GoogleCallback',
+      component: () => import('../views/AuthCallbackView.vue'),
+      meta: { title: 'Signing in…', provider: 'google' },
+    },
+    {
+      path: '/auth/github/callback',
+      name: 'GithubCallback',
+      component: () => import('../views/AuthCallbackView.vue'),
+      meta: { title: 'Signing in…', provider: 'github' },
     },
     {
       path: '/dashboard-panel',
@@ -59,7 +74,7 @@ export const router = createRouter({
           path: '/approvals',
           name: 'Approvals',
           component: () => import('../views/ApprovalView.vue'),
-          meta: { title: 'Approvals', requiresAuth: true },
+          meta: { title: 'Approvals', requiresAuth: true, roles: ['trainer', 'admin'] },
         },
         {
           path: '/calendar',
@@ -71,7 +86,7 @@ export const router = createRouter({
           path: '/admin',
           name: 'Admin',
           component: () => import('../views/AdminView.vue'),
-          meta: { title: 'Admin', requiresAuth: true },
+          meta: { title: 'Admin', requiresAuth: true, roles: ['admin'] },
         },
       ],
     },
@@ -92,6 +107,12 @@ router.beforeEach((to) => {
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {
+    return { name: 'Dashboard' }
+  }
+
+  // Role-based access control: if the route restricts roles and the
+  // logged-in user's role isn't in the list, bounce them to the dashboard.
+  if (to.meta.roles && auth.user && !to.meta.roles.includes(auth.user.role)) {
     return { name: 'Dashboard' }
   }
 
