@@ -7,8 +7,13 @@ declare module 'vue-router' {
     title?: string
     requiresAuth?: boolean
     guestOnly?: boolean
+<<<<<<< HEAD
     /** If set, only these roles may access the route. Omit = any authenticated role. */
     roles?: UserRole[]
+=======
+    roles?: UserRole[]
+    provider?: 'google' | 'github'
+>>>>>>> dfa85ba38c1443579f95b8c9e1c560b84d61ea92
   }
 }
 
@@ -34,6 +39,18 @@ export const router = createRouter({
       name: 'OAuthCallback',                                
       component: () => import('../views/OAuthCallbackView.vue'), 
     }, 
+    {
+      path: '/auth/google/callback',
+      name: 'GoogleCallback',
+      component: () => import('../views/AuthCallbackView.vue'),
+      meta: { title: 'Signing in…', provider: 'google' },
+    },
+    {
+      path: '/auth/github/callback',
+      name: 'GithubCallback',
+      component: () => import('../views/AuthCallbackView.vue'),
+      meta: { title: 'Signing in…', provider: 'github' },
+    },
     {
       path: '/dashboard-panel',
       component: () => import('../layouts/DashboardLayout.vue'),
@@ -67,7 +84,7 @@ export const router = createRouter({
           path: '/approvals',
           name: 'Approvals',
           component: () => import('../views/ApprovalView.vue'),
-          meta: { title: 'Approvals', requiresAuth: true },
+          meta: { title: 'Approvals', requiresAuth: true, roles: ['trainer', 'admin'] },
         },
         {
           path: '/calendar',
@@ -79,7 +96,7 @@ export const router = createRouter({
           path: '/admin',
           name: 'Admin',
           component: () => import('../views/AdminView.vue'),
-          meta: { title: 'Admin', requiresAuth: true },
+          meta: { title: 'Admin', requiresAuth: true, roles: ['admin'] },
         },
       ],
     },

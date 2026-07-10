@@ -46,10 +46,6 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('auth_user')
     localStorage.removeItem('auth_token')
   }
-  function setToken(newToken: string): void {
-    token.value = newToken
-    localStorage.setItem('auth_token', newToken)
-  }
 
   // --- actions ---
   async function register(payload: RegisterPayload) {
@@ -94,10 +90,38 @@ export const useAuthStore = defineStore('auth', () => {
       loading.value = false
     }
   }
+  function socialLogin(provider: 'google' | 'office365' | 'github'): void {
+    if (provider === 'office365') {
+      error.value = `${provider} sign-in isn't connected yet.`
+      return
+    }
 
-  async function socialLogin(provider: 'google' | 'office365' | 'github'): Promise<boolean> {
-  error.value = `${provider} sign-in isn't connected yet.`
-  return false
+    // Let the backend build the provider authorization URL. It attaches a
+    // signed, short-lived `state` value via Socialite and redirects the
+    // browser straight to Google/GitHub — the frontend must not construct
+    // this URL itself, or no `state` gets sent and the callback has nothing
+    // to verify against (this was the "Missing state parameter" bug).
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+    window.location.href = `${apiBaseUrl}/auth/${provider}/redirect`
+  }
+
+  async function exchangeSocialCode(provider: 'google' | 'github', code: string, state: string): Promise<boolean> {
+    loading.value = true
+    error.value = null
+    try {
+      const redirectUri = `${window.location.origin}/auth/${provider}/callback`
+      const { data } =
+        provider === 'google'
+          ? await authService.googleLogin(code, redirectUri, state)
+          : await authService.githubLogin(code, redirectUri, state)
+      setSession(data.user, data.token)
+      return true
+    } catch (err) {
+      error.value = extractErrorMessage(err, `${provider} sign-in failed.`)
+      return false
+    } finally {
+      loading.value = false
+    }
   }
 
   async function fetchCurrentUser(): Promise<User | null> {
@@ -144,11 +168,11 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     login,
     logout,
-    socialLogin, 
-    setToken,
+    socialLogin,
+    exchangeSocialCode,
     fetchCurrentUser,
     updateProfile,
     clearSession,
-    
+
   }
 })

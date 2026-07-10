@@ -4,7 +4,7 @@
     <aside class="auth-panel-left">
     <div class="auth-brand">
       <img :src="logoUrl" alt="SLMS logo" class="auth-brand-logo" />
-   
+
     </div>
 
       <div class="auth-hero">
@@ -60,6 +60,8 @@
               <p class="form-hint">
                 Quick links:
                 <button type="button" class="role-link" @click="fillDemo('student')">Student Account</button>
+                <span class="form-hint-divider">|</span>
+                <button type="button" class="role-link" @click="fillDemo('fellow')">Fellow Account</button>
                 <span class="form-hint-divider">|</span>
                 <button type="button" class="role-link" @click="fillDemo('trainer')">Trainer Account</button>
               </p>
@@ -150,10 +152,17 @@ const form = reactive({
   remember: false,
 })
 
-function fillDemo(role: 'student' | 'trainer') {
-  selectedRole.value = role
-  form.email = role === 'student' ? 'student@passerellesnumeriques.org' : 'trainer@passerellesnumeriques.org'
-  form.password = 'demo-password'
+function fillDemo(kind: 'student' | 'fellow' | 'trainer') {
+  selectedRole.value = kind === 'trainer' ? 'trainer' : 'student'
+
+  const demoEmails: Record<typeof kind, string> = {
+    student: '@student.passerellesnumeriques.org',
+    fellow: '@fellow.passerellesnumeriques.org',
+    trainer: '@trainer.passerellesnumeriques.org',
+  }
+
+  form.email = demoEmails[kind]
+  form.password = kind === 'trainer' ? 'password' : 'password123'
 }
 
 function socialLogin(provider: 'google' | 'github') {
