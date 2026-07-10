@@ -61,6 +61,8 @@
                 Quick links:
                 <button type="button" class="role-link" @click="fillDemo('student')">Student Account</button>
                 <span class="form-hint-divider">|</span>
+                <button type="button" class="role-link" @click="fillDemo('fellow')">Fellow Account</button>
+                <span class="form-hint-divider">|</span>
                 <button type="button" class="role-link" @click="fillDemo('trainer')">Trainer Account</button>
               </p>
           </div>
@@ -150,15 +152,23 @@ const form = reactive({
   remember: false,
 })
 
-function fillDemo(role: 'student' | 'trainer') {
-  selectedRole.value = role
-  form.email = role === 'student' ? 'student@passerellesnumeriques.org' : 'trainer@passerellesnumeriques.org'
-  form.password = 'demo-password'
+function fillDemo(kind: 'student' | 'fellow' | 'trainer') {
+  selectedRole.value = kind === 'trainer' ? 'trainer' : 'student'
+
+  const demoEmails: Record<typeof kind, string> = {
+    student: '@student.passerellesnumeriques.org',
+    fellow: '@fellow.passerellesnumeriques.org',
+    trainer: '@trainer.passerellesnumeriques.org',
+  }
+
+  form.email = demoEmails[kind]
+  form.password = kind === 'trainer' ? 'password' : 'password123'
 }
 
 function socialLogin(provider: 'google' | 'github') {
   window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/${provider}/redirect`
 }
+
 function handleForgotPassword() {
   router.push('/forgot-password')
 }
