@@ -2,7 +2,6 @@
   <aside class="sidebar" :class="{ open: isOpen }">
     <div class="sidebar-brand">
       <img :src="logoUrl" alt="SLMS logo" class="sidebar-logo" />
-      <span class="sidebar-name">PNC-SLMS</span>
     </div>
 
     <nav>
