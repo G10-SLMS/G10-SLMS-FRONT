@@ -1,36 +1,61 @@
 <template>
-  <aside class="sidebar" :class="{ open: isOpen }">
-    <div class="sidebar-brand">
-      <img :src="logoUrl" alt="SLMS logo" class="sidebar-logo" />
-    </div>
+  <div class="sidebar-root">
+    <Transition name="backdrop-fade">
+      <div v-if="isOpen" class="sidebar-backdrop" aria-hidden="true" @click="close" />
+    </Transition>
 
-    <nav>
-      <RouterLink to="/dashboard" class="nav-item">
-        <LayoutDashboard class="nav-icon" :size="18" />
-        <span class="nav-label">Dashboard</span>
-      </RouterLink>
-      <RouterLink to="/leave-requests" class="nav-item">
-        <FileText class="nav-icon" :size="18" />
-        <span class="nav-label">Leave Requests</span>
-      </RouterLink>
-      <RouterLink v-if="canApprove" to="/approvals" class="nav-item">
-        <CheckSquare class="nav-icon" :size="18" />
-        <span class="nav-label">Approvals</span>
-      </RouterLink>
-      <RouterLink to="/calendar" class="nav-item">
-        <Calendar class="nav-icon" :size="18" />
-        <span class="nav-label">Calendar</span>
-      </RouterLink>
-      <RouterLink v-if="isAdmin" to="/admin" class="nav-item">
-        <Settings class="nav-icon" :size="18" />
-        <span class="nav-label">Admin</span>
-      </RouterLink>
-    </nav>
-  </aside>
+    <aside class="sidebar" :class="{ open: isOpen, collapsed: collapsed }">
+      <div class="sidebar-brand">
+        <img :src="logoUrl" alt="SLMS logo" class="sidebar-logo" />
+
+        <button v-if="isOpen" class="close-btn" aria-label="Close menu" @click="close">
+          <X :size="20" :stroke-width="1.8" />
+        </button>
+      </div>
+
+      <nav>
+        <RouterLink
+          v-for="item in visibleNavItems"
+          :key="item.to"
+          :to="item.to"
+          class="nav-item"
+          @click="close"
+          @mouseenter="showTooltip($event, item.label)"
+          @mouseleave="hideTooltip"
+        >
+          <component :is="item.icon" class="nav-icon" :size="18" />
+          <span class="nav-label">{{ item.label }}</span>
+        </RouterLink>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button
+          class="collapse-btn nav-item"
+          :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+          @click="collapsed = !collapsed"
+          @mouseenter="showTooltip($event, collapsed ? 'Expand' : 'Collapse')"
+          @mouseleave="hideTooltip"
+        >
+          <PanelLeftClose class="nav-icon collapse-icon" :size="18" :stroke-width="1.8" />
+          <span class="nav-label">Collapse</span>
+        </button>
+      </div>
+    </aside>
+    
+    <Teleport to="body">
+      <div
+        v-if="collapsed && hoveredLabel"
+        class="nav-floating-tooltip"
+        :style="{ top: tooltipStyle.top, left: tooltipStyle.left }"
+      >
+        {{ hoveredLabel }}
+      </div>
+    </Teleport>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import logoUrl from '@/assets/image/logo.png'
 import {
@@ -39,20 +64,102 @@ import {
   CheckSquare,
   Calendar,
   Settings,
+  X,
+  PanelLeftClose,
 } from 'lucide-vue-next'
 
-defineProps<{
+const props = defineProps<{
   isOpen?: boolean
 }>()
 
-const auth = useAuthStore()
+const emit = defineEmits<{
+  close: []
+}>()
 
-// Approvals are only relevant to trainers (their own students) and admins (everyone).
+const auth = useAuthStore()
 const canApprove = computed(() => auth.isTrainer || auth.isAdmin)
 const isAdmin = computed(() => auth.isAdmin)
+
+const navItems = computed(() => [
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, show: true },
+  { to: '/leave-requests', label: 'Leave Requests', icon: FileText, show: true },
+  { to: '/approvals', label: 'Approvals', icon: CheckSquare, show: canApprove.value },
+  { to: '/calendar', label: 'Calendar', icon: Calendar, show: true },
+  { to: '/admin', label: 'Admin', icon: Settings, show: isAdmin.value },
+])
+
+const visibleNavItems = computed(() => navItems.value.filter((item) => item.show))
+const collapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true')
+
+watch(collapsed, (value) => {
+  localStorage.setItem('sidebar-collapsed', String(value))
+  if (!value) hideTooltip()
+})
+
+function close() {
+  emit('close')
+}
+
+const hoveredLabel = ref<string | null>(null)
+const tooltipStyle = ref({ top: '0px', left: '0px' })
+
+function showTooltip(event: MouseEvent, label: string) {
+  if (!collapsed.value) return
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  tooltipStyle.value = {
+    top: `${rect.top + rect.height / 2}px`,
+    left: `${rect.right + 10}px`,
+  }
+  hoveredLabel.value = label
+}
+
+function hideTooltip() {
+  hoveredLabel.value = null
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && props.isOpen) close()
+}
+watch(
+  () => props.isOpen,
+  (open) => {
+    document.body.style.overflow = open ? 'hidden' : ''
+  },
+)
+
+onMounted(() => window.addEventListener('keydown', handleKeydown))
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+  document.body.style.overflow = ''
+})
 </script>
 
 <style scoped>
+.sidebar-backdrop {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 49;
+}
+
+.backdrop-fade-enter-active,
+.backdrop-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.backdrop-fade-enter-from,
+.backdrop-fade-leave-to {
+  opacity: 0;
+}
+
+@media (min-width: 769px) {
+  .sidebar-backdrop {
+    display: none;
+  }
+}
+
 .sidebar {
   width: 220px;
   height: 100vh;
@@ -67,11 +174,13 @@ const isAdmin = computed(() => auth.isAdmin)
   border-right: 1px solid #e2e8f0;
   box-shadow: 1px 0 3px rgba(0, 0, 0, 0.04);
   overflow-y: auto;
+  transition: width 0.25s ease;
 }
 
 .sidebar-brand {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   padding: 0 20px 16px;
   margin-bottom: 8px;
@@ -83,6 +192,7 @@ const isAdmin = computed(() => auth.isAdmin)
   width: auto;
   display: block;
   flex-shrink: 0;
+  transition: height 0.25s ease;
 }
 
 .sidebar-name {
@@ -93,13 +203,43 @@ const isAdmin = computed(() => auth.isAdmin)
   white-space: nowrap;
 }
 
+.close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.close-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.close-btn:active {
+  background: #e2e8f0;
+}
+
+.close-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
 }
 
 .nav-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -108,6 +248,12 @@ nav {
   border-radius: 6px;
   color: #64748b;
   text-decoration: none;
+  background: none;
+  border: none;
+  width: calc(100% - 16px);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
   transition: background 0.15s, color 0.15s;
 }
 
@@ -119,6 +265,7 @@ nav {
 .nav-label {
   font-size: 14px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .nav-item:hover {
@@ -133,6 +280,71 @@ nav {
 
 .nav-item.router-link-active .nav-icon {
   color: #2563eb;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.collapse-icon {
+  transition: transform 0.25s ease;
+}
+
+.sidebar.collapsed .collapse-icon {
+  transform: rotate(180deg);
+}
+
+.sidebar.collapsed {
+  width: 72px;
+}
+.sidebar.collapsed .sidebar-brand {
+  justify-content: center;
+  padding: 0 0 16px;
+}
+.sidebar.collapsed .sidebar-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  object-position: left center;
+  border-radius: 6px;
+}
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 12px;
+  margin: 0 8px;
+  width: calc(100% - 16px);
+}
+.sidebar.collapsed .nav-label {
+  display: none;
+}
+
+.nav-floating-tooltip {
+  position: fixed;
+  transform: translateY(-50%);
+  background: #0f172a;
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  z-index: 200;
+  pointer-events: none;
+  animation: tooltip-fade-in 0.12s ease;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
 }
 
 @media (max-width: 1024px) and (min-width: 769px) {
@@ -157,14 +369,18 @@ nav {
   .nav-label {
     display: none;
   }
+
+  .sidebar-footer {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
-    top: 0;
+    top: 60px;
     left: 0;
-    height: 100vh;
+    height: calc(100vh - 60px);
     transform: translateX(-100%);
     transition: transform 0.25s ease;
     z-index: 50;
@@ -173,6 +389,37 @@ nav {
 
   .sidebar.open {
     transform: translateX(0);
+  }
+
+  .sidebar-footer {
+    display: none;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+
+  .sidebar.collapsed {
+    width: 220px;
+  }
+  .sidebar.collapsed .sidebar-logo {
+    width: auto;
+    height: 32px;
+    object-fit: initial;
+    border-radius: 0;
+  }
+  .sidebar.collapsed .sidebar-brand {
+    justify-content: space-between;
+    padding: 0 20px 16px;
+  }
+  .sidebar.collapsed .nav-item {
+    justify-content: flex-start;
+    padding: 10px 20px;
+  }
+  .sidebar.collapsed .nav-label {
+    display: inline;
   }
 }
 </style>

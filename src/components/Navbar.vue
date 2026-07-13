@@ -80,7 +80,7 @@ async function logout() {
   border-bottom: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: 55;
 }
 
 .navbar-left {

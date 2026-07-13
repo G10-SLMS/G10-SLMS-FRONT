@@ -9,10 +9,6 @@
       </main>
       <Footer />
     </div>
-
-    <Transition name="fade">
-      <div v-if="sidebarOpen" class="sidebar-overlay" @click="sidebarOpen = false"></div>
-    </Transition>
   </div>
 </template>
 
@@ -46,32 +42,9 @@ const sidebarOpen = ref(false)
   min-width: 0;
 }
 
-.sidebar-overlay {
-  display: none;
-}
-
 @media (max-width: 1023px) {
   .content {
     padding: 16px;
   }
-}
-
-@media (max-width: 768px) {
-  .sidebar-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 40;
-  }
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.25s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 </style>

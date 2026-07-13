@@ -5,23 +5,30 @@
         <h1>Admin</h1>
         <p class="sub-label">System overview and management</p>
       </div>
-      <button class="export-btn">📥 Export Summary</button>
+      <button class="export-btn">
+        <Download :size="16" :stroke-width="1.8" />
+        Export Summary
+      </button>
     </div>
 
     <div class="stats-grid">
       <div class="stat-card">
+        <span class="stat-icon icon-blue"><Users :size="18" :stroke-width="1.8" /></span>
         <p class="stat-label">Active Students</p>
         <p class="stat-value">{{ stats.activeStudents }}</p>
       </div>
       <div class="stat-card">
+        <span class="stat-icon icon-amber"><Clock :size="18" :stroke-width="1.8" /></span>
         <p class="stat-label">Pending Requests</p>
         <p class="stat-value">{{ stats.pendingRequests }}</p>
       </div>
       <div class="stat-card">
+        <span class="stat-icon icon-green"><GraduationCap :size="18" :stroke-width="1.8" /></span>
         <p class="stat-label">Trainers</p>
         <p class="stat-value">{{ stats.trainers }}</p>
       </div>
       <div class="stat-card">
+        <span class="stat-icon icon-blue"><Activity :size="18" :stroke-width="1.8" /></span>
         <p class="stat-label">System Health</p>
         <p class="stat-value">{{ stats.systemHealth }}</p>
       </div>
@@ -34,19 +41,31 @@
           <button class="link-btn">Manage</button>
         </div>
         <ul class="leave-types-list">
-          <li>Sick Leave</li>
-          <li>Personal Leave</li>
-          <li>Emergency Leave</li>
+          <li><FileText :size="15" :stroke-width="1.8" /> Sick Leave</li>
+          <li><FileText :size="15" :stroke-width="1.8" /> Personal Leave</li>
+          <li><FileText :size="15" :stroke-width="1.8" /> Emergency Leave</li>
         </ul>
       </div>
 
       <div class="card quick-actions-card">
         <h2>Quick Actions</h2>
         <div class="actions-grid">
-          <button class="action-btn">👤 Add User</button>
-          <button class="action-btn">📄 Generate Report</button>
-          <button class="action-btn">✅ Approve Leaves</button>
-          <button class="action-btn">🔔 Bulk Notify</button>
+          <button class="action-btn">
+            <UserPlus :size="16" :stroke-width="1.8" />
+            Add User
+          </button>
+          <button class="action-btn">
+            <FileText :size="16" :stroke-width="1.8" />
+            Generate Report
+          </button>
+          <button class="action-btn">
+            <CheckCircle :size="16" :stroke-width="1.8" />
+            Approve Leaves
+          </button>
+          <button class="action-btn">
+            <Bell :size="16" :stroke-width="1.8" />
+            Bulk Notify
+          </button>
         </div>
       </div>
     </div>
@@ -95,6 +114,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { Download, UserPlus, FileText, CheckCircle, Bell, Users, Clock, GraduationCap, Activity } from 'lucide-vue-next'
 
 const stats = ref({
   activeStudents: 100,
@@ -130,6 +150,9 @@ const activity = ref([
 }
 
 .export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: #2563eb;
   color: white;
   border: none;
@@ -155,6 +178,31 @@ const activity = ref([
   border-radius: 10px;
   padding: 16px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.icon-blue {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.icon-amber {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.icon-green {
+  background: #dcfce7;
+  color: #15803d;
 }
 
 .stat-label {
@@ -214,9 +262,13 @@ const activity = ref([
 }
 
 .leave-types-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 10px 0;
   border-bottom: 1px solid #f3f4f6;
   font-size: 14px;
+  color: #6b7280;
 }
 
 .leave-types-list li:last-child {
@@ -230,6 +282,9 @@ const activity = ref([
 }
 
 .action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: #f3f4f6;
   border: none;
   padding: 12px;
