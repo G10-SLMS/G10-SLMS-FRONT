@@ -32,6 +32,23 @@
       </nav>
 
       <div class="sidebar-footer">
+        <RouterLink
+          to="/profile"
+          class="profile-card"
+          @click="close"
+          @mouseenter="showTooltip($event, userName)"
+          @mouseleave="hideTooltip"
+        >
+          <div class="profile-avatar">
+            <img v-if="userAvatar" :src="userAvatar" :alt="userName" />
+            <span v-else>{{ userInitials }}</span>
+          </div>
+          <div class="profile-info">
+            <span class="profile-name">{{ userName }}</span>
+            <span class="profile-role">{{ userRole }}</span>
+          </div>
+        </RouterLink>
+
         <button
           class="collapse-btn nav-item"
           :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
@@ -58,9 +75,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import logoUrl from '@/assets/image/logo.png'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import logoUrl from '@/assets/image/logo.png';
 import {
   LayoutDashboard,
   FileText,
@@ -72,19 +89,36 @@ import {
   BarChart3,
   X,
   PanelLeftClose,
-} from 'lucide-vue-next'
+} from 'lucide-vue-next';
 
 const props = defineProps<{
-  isOpen?: boolean
-}>()
+  isOpen?: boolean;
+}>();
 
 const emit = defineEmits<{
-  close: []
-}>()
+  close: [];
+}>();
 
-const auth = useAuthStore()
-const canApprove = computed(() => auth.isTrainer || auth.isAdmin)
-const isAdmin = computed(() => auth.isAdmin)
+const auth = useAuthStore();
+const canApprove = computed(() => auth.isTrainer || auth.isAdmin);
+const isAdmin = computed(() => auth.isAdmin);
+
+const userName = computed(() => auth.user?.name ?? 'Guest');
+const userAvatar = computed(() => auth.user?.avatar ?? null);
+const userRole = computed(() => {
+  if (isAdmin.value) return 'Admin';
+  if (auth.isTrainer) return 'Trainer';
+  return 'Student';
+});
+const userInitials = computed(() =>
+  userName.value
+    .split(' ')
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase(),
+);
 
 const navGroups = computed(() => [
   {
@@ -99,62 +133,61 @@ const navGroups = computed(() => [
   {
     label: 'Management',
     items: [
-      { to: '/users', label: 'User Management', icon: Users, show: isAdmin.value },
       { to: '/leave-types', label: 'Leave Management', icon: ClipboardList, show: isAdmin.value },
       { to: '/reports', label: 'Reports', icon: BarChart3, show: isAdmin.value },
-      { to: '/settings', label: 'Settings', icon: Settings, show: isAdmin.value },
+      { to: '/users', label: 'User Management', icon: Users, show: isAdmin.value },
     ],
   },
-])
+]);
 
 const visibleNavGroups = computed(() =>
   navGroups.value
     .map((group) => ({ ...group, items: group.items.filter((item) => item.show) }))
     .filter((group) => group.items.length > 0),
-)
-const collapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true')
+);
+const collapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true');
 
 watch(collapsed, (value) => {
-  localStorage.setItem('sidebar-collapsed', String(value))
-  if (!value) hideTooltip()
-})
+  localStorage.setItem('sidebar-collapsed', String(value));
+  if (!value) hideTooltip();
+});
 
 function close() {
-  emit('close')
+  emit('close');
 }
 
-const hoveredLabel = ref<string | null>(null)
-const tooltipStyle = ref({ top: '0px', left: '0px' })
+const hoveredLabel = ref<string | null>(null);
+const tooltipStyle = ref({ top: '0px', left: '0px' });
 
 function showTooltip(event: MouseEvent, label: string) {
-  if (!collapsed.value) return
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  if (!collapsed.value) return;
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
   tooltipStyle.value = {
     top: `${rect.top + rect.height / 2}px`,
     left: `${rect.right + 10}px`,
-  }
-  hoveredLabel.value = label
+  };
+  hoveredLabel.value = label;
 }
 
 function hideTooltip() {
-  hoveredLabel.value = null
+  hoveredLabel.value = null;
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && props.isOpen) close()
+  if (event.key === 'Escape' && props.isOpen) close();
 }
 watch(
   () => props.isOpen,
   (open) => {
-    document.body.style.overflow = open ? 'hidden' : ''
+    document.body.style.overflow = open ? 'hidden' : '';
   },
-)
+);
 
-onMounted(() => window.addEventListener('keydown', handleKeydown))
+onMounted(() => window.addEventListener('keydown', handleKeydown));
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown)
-  document.body.style.overflow = ''
-})
+  window.removeEventListener('keydown', handleKeydown);
+  document.body.style.overflow = '';
+});
 </script>
 
 <style scoped>
@@ -298,7 +331,9 @@ nav {
   text-align: left;
   cursor: pointer;
   font: inherit;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .nav-icon {
@@ -332,6 +367,64 @@ nav {
   border-top: 1px solid #e2e8f0;
 }
 
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  margin: 0 8px 4px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+}
+
+.profile-card:hover {
+  background: #f1f5f9;
+}
+
+.profile-avatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.profile-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-role {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
 .collapse-icon {
   transition: transform 0.25s ease;
 }
@@ -361,6 +454,14 @@ nav {
   width: calc(100% - 16px);
 }
 .sidebar.collapsed .nav-label {
+  display: none;
+}
+.sidebar.collapsed .profile-card {
+  justify-content: center;
+  padding: 10px;
+  margin: 0 8px 4px;
+}
+.sidebar.collapsed .profile-info {
   display: none;
 }
 
@@ -464,6 +565,13 @@ nav {
   }
   .sidebar.collapsed .nav-label {
     display: inline;
+  }
+  .sidebar.collapsed .profile-card {
+    justify-content: flex-start;
+    padding: 10px 20px;
+  }
+  .sidebar.collapsed .profile-info {
+    display: flex;
   }
 }
 </style>
