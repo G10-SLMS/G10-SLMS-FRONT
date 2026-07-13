@@ -94,9 +94,18 @@ body {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  border: 2px solid #0a1638;
-  background: linear-gradient(135deg, #8b5e34, #4a3220);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-left: -10px;
+}
+
+.auth-trust-avatars span i {
+  font-size: 0.85rem;
+  color: #ffffff;
+  line-height: 1;
 }
 
 .auth-trust-avatars span:first-child {
@@ -503,6 +512,9 @@ body {
   .auth-panel-right {
     flex: 1 1 100%;
   }
+<<<<<<< HEAD
 
   overflow-x: hidden;
+=======
+>>>>>>> origin/develop
 }

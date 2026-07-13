@@ -15,11 +15,11 @@
         </p>
       </div>
 
-      <div class="auth-trust">
+       <div class="auth-trust">
         <div class="auth-trust-avatars">
-          <span></span><span></span><span></span>
+          <span><i class="fa-solid fa-handshake"></i></span><span><i class="fa-solid fa-user-shield"></i></span><span><i class="fa-solid fa-circle-check"></i></span><span><i class="fa-solid fa-users"></i></span>
         </div>
-        <p>Trusted by 1,000+ students and faculty</p>
+        <p>Trust, Respect, Responsibility, Solidarity</p>
       </div>
     </aside>
 
