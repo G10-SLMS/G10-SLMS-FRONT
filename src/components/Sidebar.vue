@@ -14,18 +14,21 @@
       </div>
 
       <nav>
-        <RouterLink
-          v-for="item in visibleNavItems"
-          :key="item.to"
-          :to="item.to"
-          class="nav-item"
-          @click="close"
-          @mouseenter="showTooltip($event, item.label)"
-          @mouseleave="hideTooltip"
-        >
-          <component :is="item.icon" class="nav-icon" :size="18" />
-          <span class="nav-label">{{ item.label }}</span>
-        </RouterLink>
+        <div v-for="group in visibleNavGroups" :key="group.label" class="nav-group">
+          <span v-if="group.label && !collapsed" class="nav-group-label">{{ group.label }}</span>
+          <RouterLink
+            v-for="item in group.items"
+            :key="item.to"
+            :to="item.to"
+            class="nav-item"
+            @click="close"
+            @mouseenter="showTooltip($event, item.label)"
+            @mouseleave="hideTooltip"
+          >
+            <component :is="item.icon" class="nav-icon" :size="18" />
+            <span class="nav-label">{{ item.label }}</span>
+          </RouterLink>
+        </div>
       </nav>
 
       <div class="sidebar-footer">
@@ -41,7 +44,7 @@
         </button>
       </div>
     </aside>
-    
+
     <Teleport to="body">
       <div
         v-if="collapsed && hoveredLabel"
@@ -64,6 +67,9 @@ import {
   CheckSquare,
   Calendar,
   Settings,
+  Users,
+  ClipboardList,
+  BarChart3,
   X,
   PanelLeftClose,
 } from 'lucide-vue-next'
@@ -80,15 +86,32 @@ const auth = useAuthStore()
 const canApprove = computed(() => auth.isTrainer || auth.isAdmin)
 const isAdmin = computed(() => auth.isAdmin)
 
-const navItems = computed(() => [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, show: true },
-  { to: '/leave-requests', label: 'Leave Requests', icon: FileText, show: true },
-  { to: '/approvals', label: 'Approvals', icon: CheckSquare, show: canApprove.value },
-  { to: '/calendar', label: 'Calendar', icon: Calendar, show: true },
-  { to: '/admin', label: 'Admin', icon: Settings, show: isAdmin.value },
+const navGroups = computed(() => [
+  {
+    label: 'Main',
+    items: [
+      { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, show: true },
+      { to: '/leave-requests', label: 'Leave Requests', icon: FileText, show: true },
+      { to: '/approvals', label: 'Approvals', icon: CheckSquare, show: canApprove.value },
+      { to: '/calendar', label: 'Calendar', icon: Calendar, show: true },
+    ],
+  },
+  {
+    label: 'Management',
+    items: [
+      { to: '/users', label: 'User Management', icon: Users, show: isAdmin.value },
+      { to: '/leave-types', label: 'Leave Management', icon: ClipboardList, show: isAdmin.value },
+      { to: '/reports', label: 'Reports', icon: BarChart3, show: isAdmin.value },
+      { to: '/settings', label: 'Settings', icon: Settings, show: isAdmin.value },
+    ],
+  },
 ])
 
-const visibleNavItems = computed(() => navItems.value.filter((item) => item.show))
+const visibleNavGroups = computed(() =>
+  navGroups.value
+    .map((group) => ({ ...group, items: group.items.filter((item) => item.show) }))
+    .filter((group) => group.items.length > 0),
+)
 const collapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true')
 
 watch(collapsed, (value) => {
@@ -234,8 +257,29 @@ onUnmounted(() => {
 nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   flex: 1;
+}
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-group + .nav-group {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.nav-group-label {
+  padding: 4px 20px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
 }
 
 .nav-item {
