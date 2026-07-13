@@ -1,14 +1,14 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import type { UserRole } from '@/types/user'
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import type { UserRole } from '@/types/user';
 
 declare module 'vue-router' {
   interface RouteMeta {
-    title?: string
-    requiresAuth?: boolean
-    guestOnly?: boolean
-    roles?: UserRole[]
-    provider?: 'google' | 'github'
+    title?: string;
+    requiresAuth?: boolean;
+    guestOnly?: boolean;
+    roles?: UserRole[];
+    provider?: 'google' | 'github';
   }
 }
 
@@ -59,18 +59,6 @@ export const router = createRouter({
           meta: { title: 'Leave Requests', requiresAuth: true },
         },
         {
-          path: '/leave/new',
-          name: 'NewLeave',
-          component: () => import('../views/LeaveFormView.vue'),
-          meta: { title: 'New Leave Request', requiresAuth: true },
-        },
-        {
-          path: '/leave/:id/edit',
-          name: 'EditLeave',
-          component: () => import('../views/LeaveFormView.vue'),
-          meta: { title: 'Edit Leave Request', requiresAuth: true },
-        },
-        {
           path: '/approvals',
           name: 'Approvals',
           component: () => import('../views/ApprovalView.vue'),
@@ -89,12 +77,6 @@ export const router = createRouter({
           meta: { title: 'Reports', requiresAuth: true, roles: ['admin'] },
         },
         {
-          path: '/settings',
-          name: 'Settings',
-          component: () => import('../views/SettingsView.vue'),
-          meta: { title: 'Settings', requiresAuth: true, roles: ['admin'] },
-        },
-        {
           path: '/users',
           name: 'UserManagement',
           component: () => import('../views/UserManagementView.vue'),
@@ -106,6 +88,18 @@ export const router = createRouter({
           component: () => import('../views/LeaveTypesView.vue'),
           meta: { title: 'Leave Types Management', requiresAuth: true, roles: ['admin'] },
         },
+        {
+          path: '/profile',
+          name: 'Profile',
+          component: () => import('../views/ProfileView.vue'),
+          meta: { title: 'My Profile', requiresAuth: true },
+        },
+        {
+          path: '/profile/edit',
+          name: 'EditProfile',
+          component: () => import('../views/EditProfileView.vue'),
+          meta: { title: 'Edit Profile', requiresAuth: true },
+        },
       ],
     },
     {
@@ -115,31 +109,31 @@ export const router = createRouter({
       meta: { title: 'Page Not Found' },
     },
   ],
-})
+});
 
 router.beforeEach((to) => {
-  const auth = useAuthStore()
+  const auth = useAuthStore();
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    return { name: 'Login', query: { redirect: to.fullPath } }
+    return { name: 'Login', query: { redirect: to.fullPath } };
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {
-    return { name: 'Dashboard' }
+    return { name: 'Dashboard' };
   }
 
   // Role-based access control: if the route restricts roles and the
   // logged-in user's role isn't in the list, bounce them to the dashboard.
   if (to.meta.roles && auth.user && !to.meta.roles.includes(auth.user.role)) {
-    return { name: 'Dashboard' }
+    return { name: 'Dashboard' };
   }
 
-  return true
-})
+  return true;
+});
 
 router.beforeEach((to) => {
-  const title = to.meta.title || 'SLMS'
-  document.title = `${title} · SLMS`
-})
+  const title = to.meta.title || 'SLMS';
+  document.title = `${title} · SLMS`;
+});
 
-export default router
+export default router;

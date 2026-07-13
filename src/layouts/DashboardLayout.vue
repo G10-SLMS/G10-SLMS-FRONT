@@ -9,6 +9,8 @@
       </main>
       <Footer />
     </div>
+
+    <LeaveFormModal @submitted="handleLeaveSubmitted" />
   </div>
 </template>
 
@@ -17,8 +19,15 @@ import { ref } from 'vue'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import Footer from '@/components/Footer.vue'
+import LeaveFormModal from '@/components/LeaveFormModal.vue'
 
 const sidebarOpen = ref(false)
+
+function handleLeaveSubmitted() {
+  // TODO: once wired to the real API, trigger a refetch of the leave
+  // request list here (e.g. via the leave store) so the table updates
+  // without a full page reload.
+}
 </script>
 
 <style scoped>

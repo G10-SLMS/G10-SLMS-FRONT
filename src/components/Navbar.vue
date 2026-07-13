@@ -4,6 +4,10 @@
       <button class="icon-btn hamburger" @click="emit('toggle-sidebar')" aria-label="Toggle menu">
         <Menu :size="20" />
       </button>
+      <button v-if="auth.isStudent" class="btn-new-request" @click="leaveModal.openCreate()">
+        <Plus :size="16" />
+        <span class="btn-new-request-label">New Request</span>
+      </button>
     </div>
 
     <div class="navbar-right">
@@ -22,9 +26,9 @@
         </button>
 
         <div v-if="menuOpen" class="dropdown">
-          <RouterLink to="/dashboard" class="dropdown-item" @click="menuOpen = false">
-            <LayoutDashboard :size="16" />
-            <span>Dashboard</span>
+          <RouterLink to="/profile" class="dropdown-item" @click="menuOpen = false">
+            <UserCircle :size="16" />
+            <span>Profile</span>
           </RouterLink>
           <button class="dropdown-item logout" @click="logout">
             <LogOut :size="16" />
@@ -37,34 +41,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { Menu, Bell, User, ChevronDown, LayoutDashboard, LogOut } from 'lucide-vue-next'
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import { useLeaveFormModalStore } from '@/stores/leaveFormModal';
+import { Menu, Bell, User, ChevronDown, UserCircle, LogOut, Plus } from 'lucide-vue-next';
 
-const router = useRouter()
-const auth = useAuthStore()
+const router = useRouter();
+const auth = useAuthStore();
+const leaveModal = useLeaveFormModalStore();
 
-const menuOpen = ref(false)
-const emit = defineEmits<{ 'toggle-sidebar': [] }>()
+const menuOpen = ref(false);
+const emit = defineEmits<{ 'toggle-sidebar': [] }>();
 
-const userName = computed(() => auth.user?.name || 'Guest User')
+const userName = computed(() => auth.user?.name || 'Guest User');
 
 const roleLabel = computed(() => {
-  if (auth.isAdmin) return 'Admin'
-  if (auth.isTrainer) return 'Trainer'
-  if (auth.isStudent) return 'Student'
-  return ''
-})
+  if (auth.isAdmin) return 'Admin';
+  if (auth.isTrainer) return 'Trainer';
+  if (auth.isStudent) return 'Student';
+  return '';
+});
 
 function toggleMenu() {
-  menuOpen.value = !menuOpen.value
+  menuOpen.value = !menuOpen.value;
 }
 
 async function logout() {
-  menuOpen.value = false
-  await auth.logout()
-  router.push('/login')
+  menuOpen.value = false;
+  await auth.logout();
+  router.push('/login');
 }
 </script>
 
@@ -86,12 +92,32 @@ async function logout() {
 .navbar-left {
   display: flex;
   align-items: center;
+  gap: 12px;
 }
 
 .navbar-right {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.btn-new-request {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f97316;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-new-request:hover {
+  background: #ea580c;
 }
 
 .icon-btn {
@@ -104,7 +130,9 @@ async function logout() {
   color: #64748b;
   padding: 8px;
   border-radius: 6px;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .icon-btn:hover {
@@ -220,6 +248,14 @@ async function logout() {
 
   .user-text {
     display: none;
+  }
+
+  .btn-new-request-label {
+    display: none;
+  }
+
+  .btn-new-request {
+    padding: 8px;
   }
 }
 </style>
