@@ -1,5 +1,4 @@
-/* Append to main.css — styles the new icon-based "Contact Administration" link
-   that replaced the 📞 emoji. */
+
 .auth-footer .contact-link {
   display: inline-flex;
   align-items: center;
