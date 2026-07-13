@@ -1,13 +1,15 @@
 <template>
   <div class="dashboard-layout">
-    <Navbar @toggle-sidebar="sidebarOpen = !sidebarOpen" />
-    <div class="layout-body">
-      <Sidebar :is-open="sidebarOpen" @close="sidebarOpen = false" />
+    <Sidebar :is-open="sidebarOpen" @close="sidebarOpen = false" />
+
+    <div class="layout-main">
+      <Navbar @toggle-sidebar="sidebarOpen = !sidebarOpen" />
       <main class="content">
         <RouterView />
       </main>
+      <Footer />
     </div>
-    <Footer />
+
     <Transition name="fade">
       <div v-if="sidebarOpen" class="sidebar-overlay" @click="sidebarOpen = false"></div>
     </Transition>
@@ -26,19 +28,22 @@ const sidebarOpen = ref(false)
 <style scoped>
 .dashboard-layout {
   display: flex;
-  flex-direction: column;
   min-height: 100vh;
+  background: #f5f6fa;
 }
 
-.layout-body {
-  display: flex;
+.layout-main {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .content {
   flex: 1;
   padding: 24px;
   background: #f5f6fa;
+  min-width: 0;
 }
 
 .sidebar-overlay {

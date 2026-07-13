@@ -1,30 +1,34 @@
 <template>
   <header class="navbar">
     <div class="navbar-left">
-      <button class="icon-btn hamburger" @click="emit('toggle-sidebar')" aria-label="Toggle menu">☰</button>
-      <div class="auth-brand">
-      <img :src="logoUrl" alt="SLMS logo" class="auth-brand-logo" />
-
-    </div>
+      <button class="icon-btn hamburger" @click="emit('toggle-sidebar')" aria-label="Toggle menu">
+        <Menu :size="20" />
+      </button>
     </div>
 
     <div class="navbar-right">
-      <button class="icon-btn hamburger" @click="emit('toggle-sidebar')" aria-label="Toggle menu">☰</button>
-      <button class="icon-btn" title="Notifications">🔔</button>
+      <button class="icon-btn" title="Notifications">
+        <Bell :size="20" />
+      </button>
 
       <div class="user-menu">
         <button class="user-info" @click="toggleMenu">
-          <span class="avatar">👤</span>
-          <span class="user-name">{{ userName }}</span>
-          <span class="chevron">▾</span>
+          <span class="avatar"><User :size="18" /></span>
+          <span class="user-text">
+            <span class="user-name">{{ userName }}</span>
+            <span class="user-role">{{ roleLabel }}</span>
+          </span>
+          <ChevronDown class="chevron" :size="14" />
         </button>
 
         <div v-if="menuOpen" class="dropdown">
           <RouterLink to="/dashboard" class="dropdown-item" @click="menuOpen = false">
-            📊 Dashboard
+            <LayoutDashboard :size="16" />
+            <span>Dashboard</span>
           </RouterLink>
           <button class="dropdown-item logout" @click="logout">
-            🚪 Logout
+            <LogOut :size="16" />
+            <span>Logout</span>
           </button>
         </div>
       </div>
@@ -33,17 +37,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import logoUrl from '@/assets/image/logo.png'
+import { Menu, Bell, User, ChevronDown, LayoutDashboard, LogOut } from 'lucide-vue-next'
 
 const router = useRouter()
 const auth = useAuthStore()
 
-const userName = ref('Guest User')
 const menuOpen = ref(false)
 const emit = defineEmits<{ 'toggle-sidebar': [] }>()
+
+const userName = computed(() => auth.user?.name || 'Guest User')
+
+const roleLabel = computed(() => {
+  if (auth.isAdmin) return 'Admin'
+  if (auth.isTrainer) return 'Trainer'
+  if (auth.isStudent) return 'Student'
+  return ''
+})
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
@@ -63,29 +75,41 @@ async function logout() {
   justify-content: space-between;
   align-items: center;
   padding: 12px 24px;
-  background: #1e293b;
-  color: white;
-  position: relative;
+  background: #ffffff;
+  color: #334155;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 30;
 }
 
-.logo {
-  font-weight: bold;
-  font-size: 18px;
-  line-height: 1;
+.navbar-left {
+  display: flex;
+  align-items: center;
 }
 
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
 }
 
 .icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
-  font-size: 18px;
   cursor: pointer;
-  color: white;
+  color: #64748b;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.icon-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 .hamburger {
@@ -102,40 +126,70 @@ async function logout() {
   gap: 8px;
   background: none;
   border: none;
-  color: white;
+  color: #334155;
   cursor: pointer;
-  padding: 6px 8px;
+  padding: 6px 10px;
   border-radius: 6px;
+  transition: background 0.15s;
 }
 
 .user-info:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f1f5f9;
 }
 
 .avatar {
-  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.user-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.user-role {
+  font-size: 11px;
+  font-weight: 500;
+  color: #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .chevron {
-  font-size: 12px;
-  color: #cbd5e1;
+  color: #94a3b8;
 }
 
 .dropdown {
   position: absolute;
-  top: 44px;
+  top: 52px;
   right: 0;
   background: white;
   color: #1f2937;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 160px;
+  min-width: 170px;
   overflow: hidden;
   z-index: 10;
 }
 
 .dropdown-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
   padding: 10px 16px;
   text-align: left;
@@ -157,9 +211,6 @@ async function logout() {
 
 @media (max-width: 1024px) {
   .navbar {
-    position: sticky;
-    top: 0;
-    z-index: 30;
     padding: 12px 16px;
   }
 
@@ -167,7 +218,7 @@ async function logout() {
     display: block;
   }
 
-  .user-name {
+  .user-text {
     display: none;
   }
 }
