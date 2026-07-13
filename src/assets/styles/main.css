@@ -59,33 +59,6 @@ body {
   font-size: 1.6rem;
 }
 
-.auth-brand-logo {
-  width: auto;
-  height: 50px;
-  border-radius: 10px;
-  object-fit: contain;
-  display: inline-block;
-
-  /* Make logo clearly readable on top images/backgrounds */
-  background: rgba(255, 255, 255, 0.92);
-  padding: 8px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-
-  /* Overlay blur (supported browsers) */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
-  /* Avoid any unwanted blending artifacts */
-  mix-blend-mode: normal;
-}
-
-
-.auth-brand-name {
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
 .auth-hero {
   z-index: 1;
   max-width: 460px;
@@ -539,4 +512,9 @@ body {
   .auth-panel-right {
     flex: 1 1 100%;
   }
+<<<<<<< HEAD
+
+  overflow-x: hidden;
+=======
+>>>>>>> origin/develop
 }
