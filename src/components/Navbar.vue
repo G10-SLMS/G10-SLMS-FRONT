@@ -1,8 +1,11 @@
 <template>
   <header class="navbar">
     <div class="navbar-left">
-      
-      <span class="logo">📋 SLMS</span>
+      <button class="icon-btn hamburger" @click="emit('toggle-sidebar')" aria-label="Toggle menu">☰</button>
+      <div class="auth-brand">
+      <img :src="logoUrl" alt="SLMS logo" class="auth-brand-logo" />
+
+    </div>
     </div>
 
     <div class="navbar-right">
@@ -32,8 +35,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import logoUrl from '@/assets/image/logo.png'
 
 const router = useRouter()
+const auth = useAuthStore()
 
 const userName = ref('Guest User')
 const menuOpen = ref(false)
@@ -43,8 +49,9 @@ function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
 
-function logout() {
+async function logout() {
   menuOpen.value = false
+  await auth.logout()
   router.push('/login')
 }
 </script>
@@ -64,14 +71,7 @@ function logout() {
 .logo {
   font-weight: bold;
   font-size: 18px;
-  white-space: nowrap;
-}
-
-.navbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
+  line-height: 1;
 }
 
 .navbar-right {

@@ -1,21 +1,28 @@
 <template>
   <aside class="sidebar" :class="{ open: isOpen }">
     <nav>
-      <RouterLink to="/dashboard" class="nav-item" @click="emit('close')"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></RouterLink>
-      <RouterLink to="/leave-requests" class="nav-item" @click="emit('close')"><span class="nav-icon">📝</span><span class="nav-label">Leave Requests</span></RouterLink>
-      <RouterLink to="/calendar" class="nav-item" @click="emit('close')"><span class="nav-icon">📅</span><span class="nav-label">Calendar</span></RouterLink>
-      <RouterLink to="/admin" class="nav-item" @click="emit('close')"><span class="nav-icon">⚙️</span><span class="nav-label">Admin</span></RouterLink>
+      <RouterLink to="/dashboard" class="nav-item">📊 Dashboard</RouterLink>
+      <RouterLink to="/leave-requests" class="nav-item">📝 Leave Requests</RouterLink>
+      <RouterLink v-if="canApprove" to="/approvals" class="nav-item">✅ Approvals</RouterLink>
+      <RouterLink to="/calendar" class="nav-item">📅 Calendar</RouterLink>
+      <RouterLink v-if="isAdmin" to="/admin" class="nav-item">⚙️ Admin</RouterLink>
     </nav>
-
   </aside>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+
 defineProps<{
   isOpen?: boolean
 }>()
 
-const emit = defineEmits<{ close: [] }>()
+const auth = useAuthStore()
+
+// Approvals are only relevant to trainers (their own students) and admins (everyone).
+const canApprove = computed(() => auth.isTrainer || auth.isAdmin)
+const isAdmin = computed(() => auth.isAdmin)
 </script>
 
 <style scoped>

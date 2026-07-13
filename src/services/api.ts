@@ -9,6 +9,8 @@ const api: AxiosInstance = axios.create({
   },
 })
 
+// let isLoggingOut = false
+
 api.interceptors.request.use((config) => {
   const authStore = useAuthStore()
   if (authStore.token) {
@@ -20,10 +22,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isLogoutRequest = error.config?.url?.includes('/logout')
+
+    if (error.response?.status === 401 && !isLogoutRequest) {
       const authStore = useAuthStore()
-      authStore.logout()
+      authStore.clearSession() // clears local state only — does NOT call the API again
     }
+
     return Promise.reject(error)
   }
 )
