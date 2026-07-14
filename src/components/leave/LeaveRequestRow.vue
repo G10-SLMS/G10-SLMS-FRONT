@@ -1,27 +1,27 @@
 <template>
-  <tr>
-    <td>{{ request.student }}</td>
-    <td>{{ request.type }}</td>
-    <td>{{ request.leaveDate }}</td>
-    <td class="submitted-cell">{{ timeAgo }}</td>
-    <td>
+  <tr class="border-b border-gray-100 last:border-none">
+    <td class="px-4 py-3.5 text-left">{{ request.student }}</td>
+    <td class="px-4 py-3.5 text-left">{{ request.type }}</td>
+    <td class="px-4 py-3.5 text-left">{{ request.leaveDate }}</td>
+    <td class="whitespace-nowrap px-4 py-3.5 text-left text-gray-500">{{ timeAgo }}</td>
+    <td class="px-4 py-3.5 text-left">
       <LeaveStatusBadge :status="request.status" />
     </td>
-    <td v-if="showActions">
+    <td v-if="showActions" class="px-4 py-3.5 text-left">
       <button
         v-if="request.status === 'Pending'"
-        class="edit-btn"
+        class="flex items-center gap-1 rounded-md border-none bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-600 cursor-pointer hover:bg-blue-100"
         @click="$emit('edit', request.id)"
       >
         <Pencil :size="14" />
         Edit
       </button>
-      <span v-else class="locked-hint">—</span>
+      <span v-else class="text-[13px] text-gray-400">—</span>
     </td>
   </tr>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { Pencil } from 'lucide-vue-next'
 import LeaveStatusBadge from './LeaveStatusBadge.vue'
@@ -56,46 +56,3 @@ const timeAgo = computed(() => {
   return submitted.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 })
 </script>
-
-<style scoped>
-tr {
-  border-bottom: 1px solid #f3f4f6;
-}
-
-tr:last-child {
-  border-bottom: none;
-}
-
-td {
-  text-align: left;
-  padding: 14px 16px;
-}
-
-.submitted-cell {
-  color: #6b7280;
-  white-space: nowrap;
-}
-
-.edit-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: #eff6ff;
-  color: #2563eb;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.edit-btn:hover {
-  background: #dbeafe;
-}
-
-.locked-hint {
-  color: #9ca3af;
-  font-size: 13px;
-}
-</style>

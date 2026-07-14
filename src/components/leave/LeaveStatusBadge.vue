@@ -1,10 +1,17 @@
 <template>
-  <span class="badge" :class="status.toLowerCase()">
+  <span
+    class="rounded-full px-2.5 py-1 text-xs font-medium"
+    :class="{
+      'bg-amber-100 text-amber-700': status.toLowerCase() === 'pending',
+      'bg-green-100 text-green-700': status.toLowerCase() === 'approved',
+      'bg-red-100 text-red-700': status.toLowerCase() === 'rejected',
+    }"
+  >
     {{ status }}
   </span>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineProps({
   status: {
     type: String,
@@ -12,27 +19,3 @@ defineProps({
   },
 })
 </script>
-
-<style scoped>
-.badge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.badge.pending {
-  background: #fef3c7;
-  color: #b45309;
-}
-
-.badge.approved {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.badge.rejected {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-</style>

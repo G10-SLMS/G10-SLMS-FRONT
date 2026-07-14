@@ -1,21 +1,21 @@
 <template>
-  <div class="callback-page">
-    <div class="callback-card">
+  <div class="flex min-h-screen items-center justify-center bg-gray-100 p-4">
+    <div class="w-full max-w-[360px] rounded-2xl bg-white p-10 text-center shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
       <template v-if="status === 'loading'">
-        <span class="callback-icon icon-blue spin">
+        <span class="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-blue-700 [&_svg]:animate-spin">
           <Loader2 :size="28" :stroke-width="1.8" />
         </span>
-        <h1 class="callback-title">Signing you in…</h1>
-        <p class="callback-subtext">Please wait while we finish connecting your account.</p>
+        <h1 class="mb-1.5 text-lg font-semibold text-gray-900">Signing you in…</h1>
+        <p class="m-0 text-sm text-gray-500">Please wait while we finish connecting your account.</p>
       </template>
 
       <template v-else-if="status === 'error'">
-        <span class="callback-icon icon-red">
+        <span class="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600">
           <AlertCircle :size="28" :stroke-width="1.8" />
         </span>
-        <h1 class="callback-title">Sign-in failed</h1>
-        <p class="callback-error">{{ errorMessage }}</p>
-        <RouterLink to="/login" class="retry-btn">
+        <h1 class="mb-1.5 text-lg font-semibold text-gray-900">Sign-in failed</h1>
+        <p class="mb-5 text-sm text-red-600">{{ errorMessage }}</p>
+        <RouterLink to="/login" class="inline-flex items-center gap-1.5 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white no-underline hover:bg-blue-700">
           <ArrowLeft :size="16" :stroke-width="1.8" />
           Back to Sign In
         </RouterLink>
@@ -78,89 +78,3 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
-.callback-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f4f6;
-  padding: 16px;
-}
-
-.callback-card {
-  background: white;
-  padding: 40px;
-  border-radius: 14px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  text-align: center;
-  max-width: 360px;
-  width: 100%;
-}
-
-.callback-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  margin-bottom: 16px;
-}
-
-.icon-blue {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.icon-red {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.spin svg {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.callback-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 6px;
-  color: #111827;
-}
-
-.callback-subtext {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0;
-}
-
-.callback-error {
-  font-size: 14px;
-  color: #dc2626;
-  margin: 0 0 20px;
-}
-
-.retry-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  text-decoration: none;
-}
-
-.retry-btn:hover {
-  background: #1d4ed8;
-}
-</style>

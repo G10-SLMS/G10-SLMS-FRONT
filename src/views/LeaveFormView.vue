@@ -1,34 +1,46 @@
 <template>
-  <div class="leave-form-view">
-    <div class="header-row">
-      <button class="back-btn" @click="goBack">
+  <div class="max-w-[640px]">
+    <div class="mb-5 flex items-center gap-3.5">
+      <button
+        class="flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-[13px] font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
+        @click="goBack"
+      >
         <ArrowLeft :size="18" />
         Back
       </button>
-      <h1>{{ isEditMode ? 'Edit Leave Request' : 'New Leave Request' }}</h1>
+      <h1 class="m-0 text-xl">{{ isEditMode ? 'Edit Leave Request' : 'New Leave Request' }}</h1>
     </div>
 
-    <div class="form-card">
-      <div v-if="loadError" class="form-error-banner" role="alert">{{ loadError }}</div>
+    <div class="rounded-[10px] bg-white p-6 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
+      <div v-if="loadError" class="mb-4 rounded-md bg-red-100 px-3.5 py-2.5 text-[13px] text-red-700" role="alert">{{ loadError }}</div>
 
-      <div v-else-if="isEditMode && !editableLoaded" class="loading-state">
+      <div v-else-if="isEditMode && !editableLoaded" class="flex flex-col items-center justify-center gap-2.5 px-5 py-10 text-center text-gray-500">
         Loading request…
       </div>
 
-      <div v-else-if="isEditMode && !canEdit" class="locked-state">
+      <div v-else-if="isEditMode && !canEdit" class="flex flex-col items-center justify-center gap-2.5 px-5 py-10 text-center text-gray-500 [&_svg]:text-amber-500">
         <Lock :size="32" :stroke-width="1.5" />
         <p>This request can no longer be edited because its status is <strong>{{ originalStatus }}</strong>.</p>
-        <button class="btn-secondary" @click="goBack">Back to Leave Requests</button>
+        <button
+          class="rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
+          @click="goBack"
+        >Back to Leave Requests</button>
       </div>
 
       <form v-else @submit.prevent="handleSubmit" novalidate>
-        <div v-if="submitError" class="form-error-banner" role="alert">{{ submitError }}</div>
+        <div v-if="submitError" class="mb-4 rounded-md bg-red-100 px-3.5 py-2.5 text-[13px] text-red-700" role="alert">{{ submitError }}</div>
 
-        <div class="form-row">
-          <label class="form-label" for="type">Leave Type</label>
-          <div class="input-wrap">
-            <span class="input-icon"><FileText :size="18" /></span>
-            <select id="type" v-model="form.type" required :disabled="submitting">
+        <div class="mb-[18px]">
+          <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="type">Leave Type</label>
+          <div class="relative flex items-center">
+            <span class="absolute left-3 flex text-gray-400"><FileText :size="18" /></span>
+            <select
+              id="type"
+              v-model="form.type"
+              required
+              :disabled="submitting"
+              class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-[38px] pr-3 text-sm text-gray-800 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.1)] focus:outline-none"
+            >
               <option value="" disabled>Select leave type</option>
               <option value="Sick Leave">Sick Leave</option>
               <option value="Personal Leave">Personal Leave</option>
@@ -39,11 +51,11 @@
           </div>
         </div>
 
-        <div class="form-row-split">
-          <div class="form-row">
-            <label class="form-label" for="startDate">Start Date</label>
-            <div class="input-wrap">
-              <span class="input-icon"><Calendar :size="18" /></span>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="mb-[18px]">
+            <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="startDate">Start Date</label>
+            <div class="relative flex items-center">
+              <span class="absolute left-3 flex text-gray-400"><Calendar :size="18" /></span>
               <input
                 id="startDate"
                 v-model="form.startDate"
@@ -51,15 +63,16 @@
                 :min="todayStr"
                 required
                 :disabled="submitting"
+                class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-[38px] pr-3 text-sm text-gray-800 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.1)] focus:outline-none"
                 @change="onStartDateChange"
               />
             </div>
           </div>
 
-          <div class="form-row">
-            <label class="form-label" for="endDate">End Date</label>
-            <div class="input-wrap">
-              <span class="input-icon"><Calendar :size="18" /></span>
+          <div class="mb-[18px]">
+            <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="endDate">End Date</label>
+            <div class="relative flex items-center">
+              <span class="absolute left-3 flex text-gray-400"><Calendar :size="18" /></span>
               <input
                 id="endDate"
                 v-model="form.endDate"
@@ -67,14 +80,15 @@
                 :min="form.startDate || todayStr"
                 required
                 :disabled="submitting"
+                class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-[38px] pr-3 text-sm text-gray-800 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.1)] focus:outline-none"
               />
             </div>
           </div>
         </div>
-        <p v-if="dateRangeError" class="field-error">{{ dateRangeError }}</p>
+        <p v-if="dateRangeError" class="-mt-3 mb-4 text-xs text-red-700">{{ dateRangeError }}</p>
 
-        <div class="form-row">
-          <label class="form-label" for="reason">Reason</label>
+        <div class="mb-[18px]">
+          <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="reason">Reason</label>
           <textarea
             id="reason"
             v-model.trim="form.reason"
@@ -83,21 +97,25 @@
             required
             :disabled="submitting"
             maxlength="500"
+            class="w-full resize-y rounded-md border border-gray-300 px-3 py-2.5 font-sans text-sm text-gray-800 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.1)] focus:outline-none"
           ></textarea>
-          <span class="char-count">{{ form.reason.length }}/500</span>
+          <span class="mt-1 block text-right text-[11px] text-gray-400">{{ form.reason.length }}/500</span>
         </div>
 
-        <div class="form-row">
-          <label class="form-label" for="attachment">Supporting Document (optional)</label>
-          <div class="file-input-wrap">
-            <label for="attachment" class="file-input-label">
+        <div class="mb-[18px]">
+          <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="attachment">Supporting Document (optional)</label>
+          <div class="flex items-center gap-2">
+            <label
+              for="attachment"
+              class="flex flex-1 cursor-pointer items-center gap-2 rounded-md border border-dashed border-gray-300 px-3.5 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50"
+            >
               <Paperclip :size="16" />
               {{ form.attachment ? form.attachment.name : 'Choose file' }}
             </label>
             <input
               id="attachment"
               type="file"
-              class="file-input-hidden"
+              class="absolute h-px w-px overflow-hidden opacity-0"
               accept=".pdf,.jpg,.jpeg,.png"
               :disabled="submitting"
               @change="onFileChange"
@@ -105,21 +123,30 @@
             <button
               v-if="form.attachment"
               type="button"
-              class="file-remove-btn"
+              class="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-md border-none bg-red-100 text-red-700 cursor-pointer hover:bg-red-200"
               :disabled="submitting"
               @click="removeFile"
             >
               <X :size="14" />
             </button>
           </div>
-          <span class="field-hint">PDF, JPG, or PNG — max 5MB</span>
+          <span class="mt-1.5 block text-xs text-gray-400">PDF, JPG, or PNG — max 5MB</span>
         </div>
 
-        <div class="form-actions">
-          <button type="button" class="btn-secondary" :disabled="submitting" @click="goBack">
+        <div class="mt-6 flex justify-end gap-2.5 border-t border-gray-100 pt-5">
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 cursor-pointer enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="submitting"
+            @click="goBack"
+          >
             Cancel
           </button>
-          <button type="submit" class="btn-primary" :disabled="!canSubmit">
+          <button
+            type="submit"
+            class="rounded-md border-none bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white cursor-pointer enabled:hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="!canSubmit"
+          >
             {{ submitting ? (isEditMode ? 'Saving…' : 'Submitting…') : (isEditMode ? 'Save Changes' : 'Submit Request') }}
           </button>
         </div>
@@ -278,258 +305,3 @@ async function handleSubmit() {
   }
 }
 </script>
-
-<style scoped>
-.leave-form-view {
-  max-width: 640px;
-}
-
-.header-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 20px;
-}
-
-.header-row h1 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.back-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-}
-
-.back-btn:hover {
-  background: #f3f4f6;
-}
-
-.form-card {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  padding: 24px;
-}
-
-.form-error-banner {
-  background: #fee2e2;
-  color: #b91c1c;
-  padding: 10px 14px;
-  border-radius: 6px;
-  font-size: 13px;
-  margin-bottom: 16px;
-}
-
-.loading-state,
-.locked-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 40px 20px;
-  color: #6b7280;
-  text-align: center;
-}
-
-.locked-state svg {
-  color: #f59e0b;
-}
-
-.form-row {
-  margin-bottom: 18px;
-}
-
-.form-row-split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.form-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 6px;
-}
-
-.input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-icon {
-  position: absolute;
-  left: 12px;
-  color: #9ca3af;
-  display: flex;
-}
-
-.input-wrap select,
-.input-wrap input {
-  width: 100%;
-  padding: 10px 12px 10px 38px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #1f2937;
-  background: white;
-}
-
-.input-wrap select:focus,
-.input-wrap input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #1f2937;
-  resize: vertical;
-  font-family: inherit;
-}
-
-textarea:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.char-count {
-  display: block;
-  text-align: right;
-  font-size: 11px;
-  color: #9ca3af;
-  margin-top: 4px;
-}
-
-.field-error {
-  color: #b91c1c;
-  font-size: 12px;
-  margin-top: -12px;
-  margin-bottom: 16px;
-}
-
-.field-hint {
-  display: block;
-  font-size: 12px;
-  color: #9ca3af;
-  margin-top: 6px;
-}
-
-.file-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.file-input-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px dashed #d1d5db;
-  border-radius: 6px;
-  padding: 10px 14px;
-  font-size: 13px;
-  color: #374151;
-  cursor: pointer;
-  flex: 1;
-}
-
-.file-input-label:hover {
-  background: #f9fafb;
-}
-
-.file-input-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  overflow: hidden;
-}
-
-.file-remove-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  border: none;
-  background: #fee2e2;
-  color: #b91c1c;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.file-remove-btn:hover {
-  background: #fecaca;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #f3f4f6;
-}
-
-.btn-primary {
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #1d4ed8;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: white;
-  color: #374151;
-  border: 1px solid #d1d5db;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #f3f4f6;
-}
-
-@media (max-width: 640px) {
-  .form-row-split {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

@@ -1,30 +1,41 @@
 <template>
-  <div class="calendar-view">
-    <div class="header-row">
-      <div class="header-left">
-        <button class="icon-btn hamburger-placeholder" aria-hidden="true">
+  <div class="flex h-[calc(100vh-120px)] max-w-full flex-col">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button class="flex h-9 w-9 items-center justify-center rounded-lg border-none bg-blue-100 text-blue-700 cursor-default" aria-hidden="true">
           <CalendarDays :size="20" :stroke-width="1.8" />
         </button>
-        <h1>Calendar</h1>
-        <button class="today-btn" @click="goToday">Today</button>
-        <div class="nav-group">
-          <button class="nav-btn" aria-label="Previous week" @click="prevWeek">
+        <h1 class="m-0">Calendar</h1>
+        <button
+          class="h-[34px] rounded-md border border-gray-200 bg-white px-3.5 text-[13px] font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
+          @click="goToday"
+        >Today</button>
+        <div class="flex gap-1">
+          <button
+            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 cursor-pointer hover:bg-gray-100"
+            aria-label="Previous week"
+            @click="prevWeek"
+          >
             <ChevronLeft :size="18" :stroke-width="1.8" />
           </button>
-          <button class="nav-btn" aria-label="Next week" @click="nextWeek">
+          <button
+            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 cursor-pointer hover:bg-gray-100"
+            aria-label="Next week"
+            @click="nextWeek"
+          >
             <ChevronRight :size="18" :stroke-width="1.8" />
           </button>
         </div>
-        <span class="range-label">{{ rangeLabel }}</span>
+        <span class="text-base font-semibold text-gray-800">{{ rangeLabel }}</span>
       </div>
 
-      <div class="header-right">
-        <div class="view-switch">
+      <div class="flex items-center">
+        <div class="flex gap-0.5 rounded-lg bg-slate-100 p-[3px]">
           <button
             v-for="v in views"
             :key="v"
-            class="view-btn"
-            :class="{ active: view === v }"
+            class="rounded-md border-none bg-transparent px-3.5 py-1.5 text-[13px] font-medium text-slate-500 cursor-pointer"
+            :class="view === v ? 'bg-white text-blue-600 shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : ''"
             @click="view = v"
           >
             {{ v }}
@@ -33,60 +44,61 @@
       </div>
     </div>
 
-    <div class="calendar-card">
+    <div class="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[10px] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
       <!-- Day headers -->
-      <div class="days-header">
-        <div class="gutter-cell"></div>
+      <div class="grid shrink-0 grid-cols-[56px_repeat(7,1fr)] border-b border-gray-200">
+        <div class="border-r border-gray-100"></div>
         <div
           v-for="d in weekDays"
           :key="d.dateStr"
-          class="day-header"
-          :class="{ today: d.isToday }"
+          class="flex flex-col items-center justify-center gap-0.5 px-1 py-2"
         >
-          <span class="day-name">{{ d.dayName }}</span>
-          <span class="day-number">{{ d.dayNumber }}</span>
+          <span class="text-[11px] font-semibold tracking-wide text-gray-500" :class="d.isToday ? 'text-blue-600' : ''">{{ d.dayName }}</span>
+          <span
+            class="flex h-[30px] w-[30px] items-center justify-center rounded-full text-base font-semibold text-gray-800"
+            :class="d.isToday ? 'bg-blue-600 text-white' : ''"
+          >{{ d.dayNumber }}</span>
         </div>
       </div>
 
       <!-- Scrollable time grid -->
-      <div class="time-grid-wrap">
-        <div class="time-grid">
+      <div class="flex-1 overflow-y-auto">
+        <div class="relative grid grid-cols-[56px_repeat(7,1fr)]">
           <!-- Hour labels -->
-          <div class="hours-col">
-            <div v-for="h in hours" :key="h" class="hour-slot">
-              <span class="hour-label">{{ formatHour(h) }}</span>
+          <div class="border-r border-gray-100">
+            <div v-for="h in hours" :key="h" class="relative h-[56px]">
+              <span class="absolute -top-[7px] right-2 bg-white px-0.5 text-[11px] text-gray-400">{{ formatHour(h) }}</span>
             </div>
           </div>
 
           <!-- Day columns -->
-          <div v-for="d in weekDays" :key="d.dateStr" class="day-col">
-            <div v-for="h in hours" :key="h" class="hour-cell"></div>
+          <div v-for="d in weekDays" :key="d.dateStr" class="relative border-r border-gray-100 last:border-none">
+            <div v-for="h in hours" :key="h" class="h-[56px] border-b border-gray-100"></div>
 
             <!-- Leave requests shown as full-day booking blocks (Admin: all students. Student: own only.) -->
-            <div
+            <CalendarLeaveBlock
               v-for="(leave, i) in leavesFor(d.dateStr)"
               :key="leave.id"
-              class="leave-block"
-              :class="leave.status.toLowerCase()"
-              :style="leaveBlockStyle(i, leavesFor(d.dateStr).length)"
+              :status="leave.status"
               :title="leaveChipTitle(leave)"
+              :block-style="leaveBlockStyle(i, leavesFor(d.dateStr).length)"
             >
-              <span class="leave-block-title">
+              <template #title>
                 <template v-if="auth.isAdmin">{{ leave.student }}</template>
                 <template v-else>{{ leave.type }}</template>
-              </span>
-              <span class="leave-block-subtitle">
+              </template>
+              <template #subtitle>
                 <template v-if="auth.isAdmin">{{ leave.type }} · </template>{{ leave.status }}
-              </span>
-            </div>
+              </template>
+            </CalendarLeaveBlock>
 
             <!-- Current time line -->
             <div
               v-if="d.isToday && nowLineVisible"
-              class="now-line"
+              class="absolute left-0 right-0 z-[5] h-0 border-t-2 border-red-500"
               :style="{ top: nowOffset + 'px' }"
             >
-              <span class="now-dot"></span>
+              <span class="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-red-500"></span>
             </div>
           </div>
         </div>
@@ -95,10 +107,11 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
+import CalendarLeaveBlock from '@/components/calendar/CalendarLeaveBlock.vue'
 
 const auth = useAuthStore()
 
@@ -116,7 +129,7 @@ onMounted(() => {
 })
 onUnmounted(() => clearInterval(clockTimer))
 
-const HOUR_HEIGHT = 56 // px per hour row, must match CSS .hour-slot / .hour-cell height
+const HOUR_HEIGHT = 56 // px per hour row, must match the h-[56px] hour row classes below
 const START_HOUR = 7 // 7 AM
 const END_HOUR = 23 // 11 PM
 const hours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => i + START_HOUR)
@@ -186,7 +199,10 @@ function addDays(date, n) {
 }
 
 function dateKey(date) {
-  return date.toISOString().slice(0, 10)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 const weekDays = computed(() => {
@@ -262,288 +278,3 @@ function goToday() {
   currentDate.value = new Date()
 }
 </script>
-
-<style scoped>
-.calendar-view {
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 120px);
-}
-
-.header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-left h1 {
-  margin: 0;
-  font-size: 22px;
-}
-
-.icon-btn.hamburger-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: #dbeafe;
-  color: #1d4ed8;
-  border: none;
-  cursor: default;
-}
-
-.today-btn {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 0 14px;
-  height: 34px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  color: #374151;
-}
-
-.today-btn:hover {
-  background: #f3f4f6;
-}
-
-.nav-group {
-  display: flex;
-  gap: 4px;
-}
-
-.nav-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  color: #374151;
-}
-
-.nav-btn:hover {
-  background: #f3f4f6;
-}
-
-.range-label {
-  font-weight: 600;
-  font-size: 16px;
-  color: #1f2937;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-}
-
-.view-switch {
-  display: flex;
-  background: #f1f5f9;
-  border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
-}
-
-.view-btn {
-  border: none;
-  background: transparent;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #64748b;
-  cursor: pointer;
-}
-
-.view-btn.active {
-  background: white;
-  color: #2563eb;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-}
-
-.calendar-card {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
-
-.days-header {
-  display: grid;
-  grid-template-columns: 56px repeat(7, 1fr);
-  border-bottom: 1px solid #e5e7eb;
-  flex-shrink: 0;
-}
-
-.gutter-cell {
-  border-right: 1px solid #f3f4f6;
-}
-
-.leave-block {
-  position: absolute;
-  border-radius: 8px;
-  padding: 8px 10px;
-  border-left: 3px solid transparent;
-  cursor: default;
-  overflow: hidden;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.leave-block-title {
-  font-weight: 700;
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.leave-block-subtitle {
-  font-size: 11px;
-  opacity: 0.85;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.leave-block.pending {
-  background: #fef3c7;
-  color: #92400e;
-  border-left-color: #f59e0b;
-}
-
-.leave-block.approved {
-  background: #dcfce7;
-  color: #15803d;
-  border-left-color: #22c55e;
-}
-
-.leave-block.rejected {
-  background: #fee2e2;
-  color: #b91c1c;
-  border-left-color: #ef4444;
-}
-
-.day-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 4px;
-  gap: 2px;
-}
-
-.day-name {
-  font-size: 11px;
-  font-weight: 600;
-  color: #6b7280;
-  letter-spacing: 0.03em;
-}
-
-.day-number {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-}
-
-.day-header.today .day-number {
-  background: #2563eb;
-  color: white;
-}
-
-.day-header.today .day-name {
-  color: #2563eb;
-}
-
-.time-grid-wrap {
-  overflow-y: auto;
-  flex: 1;
-}
-
-.time-grid {
-  display: grid;
-  grid-template-columns: 56px repeat(7, 1fr);
-  position: relative;
-}
-
-.hours-col {
-  border-right: 1px solid #f3f4f6;
-}
-
-.hour-slot {
-  height: 56px;
-  position: relative;
-}
-
-.hour-label {
-  position: absolute;
-  top: -7px;
-  right: 8px;
-  font-size: 11px;
-  color: #9ca3af;
-  background: white;
-  padding: 0 2px;
-}
-
-.day-col {
-  position: relative;
-  border-right: 1px solid #f3f4f6;
-}
-
-.day-col:last-child {
-  border-right: none;
-}
-
-.hour-cell {
-  height: 56px;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.now-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 0;
-  border-top: 2px solid #ef4444;
-  z-index: 5;
-}
-
-.now-dot {
-  position: absolute;
-  left: -4px;
-  top: -4px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ef4444;
-}
-</style>
