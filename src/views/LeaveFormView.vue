@@ -103,7 +103,8 @@
       <div class="actions">
         <button class="btn sec" @click="$router.push('/leave-requests')">Cancel</button>
         <button class="btn pri" :disabled="busy || !valid" @click="submit">
-          <span v-if="busy" class="spin" /><template v-else><Send :size="16" /> Submit</template>
+          <span v-if="busy" class="spin"></span>
+          <span v-else><Send :size="16" /> {{ isEdit ? 'Update' : 'Submit' }}</span>
         </button>
       </div>
     </div>
@@ -112,11 +113,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notification'
 import { leaveService } from '@/services/leaveService'
-import type { LeaveType } from '@/types/leave'
+import type { LeaveType, LeaveRequestListItem } from '@/types/leave'
 import type { AxiosError } from 'axios'
 import {
   ArrowLeft, Calendar, FileText, AlertCircle, Upload, Send, X
@@ -125,6 +126,7 @@ import Combobox from '@/components/Combobox.vue'
 import type { ComboboxOption } from '@/components/Combobox.vue'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const notificationStore = useNotificationStore()
 
@@ -133,6 +135,7 @@ const busy = ref(false)
 const errMsg = ref('')
 const customLabel = ref('')
 const fileRef = ref<HTMLInputElement | null>(null)
+const isEdit = ref(false)
 
 const form = reactive({
   leave_type_id: null as number | null,
@@ -194,24 +197,56 @@ async function submit() {
   if (!valid.value) return
   busy.value = true; errMsg.value = ''
   try {
-    await leaveService.createLeaveRequest({
+    const payload = {
       leave_type_id: form.leave_type_id,
       start_date: form.start_date,
       end_date: form.end_date,
       reason: form.reason.trim(),
       supporting_document: form.file,
       custom_leave_type: form.custom,
-    })
-    notificationStore.addNotification({ message: 'Leave request submitted!', type: 'success', read: false })
+    }
+
+    if (isEdit.value) {
+      const id = Number(route.params.id)
+      await leaveService.updateLeaveRequest(id, payload)
+      notificationStore.addNotification({ message: 'Leave request updated!', type: 'success', read: false })
+    } else {
+      await leaveService.createLeaveRequest(payload)
+      notificationStore.addNotification({ message: 'Leave request submitted!', type: 'success', read: false })
+    }
     router.push('/leave-requests')
   } catch (err) {
     errMsg.value = (err as AxiosError<{ message?: string }>).response?.data?.message || 'Failed to submit.'
   } finally { busy.value = false }
 }
 
+async function loadExisting(id: number) {
+  try {
+    const data = await leaveService.getLeaveRequest(id)
+    form.leave_type_id = data.leave_type_id
+    form.start_date = data.start_date
+    form.end_date = data.end_date
+    form.reason = data.reason
+    if (data.leave_type_name) {
+      customLabel.value = ''
+    }
+    isEdit.value = true
+  } catch (err) {
+    errMsg.value = 'Failed to load leave request details.'
+  }
+}
+
 onMounted(async () => {
-  try { types.value = await leaveService.getLeaveTypes() }
-  catch (err) { errMsg.value = 'Failed to load leave types.' }
+  try {
+    types.value = await leaveService.getLeaveTypes()
+    // Check if editing an existing request
+    const id = route.params.id
+    if (id) {
+      await loadExisting(Number(id))
+    }
+  } catch (err) {
+    if (!errMsg.value) errMsg.value = 'Failed to load data.'
+  }
 })
 </script>
 
