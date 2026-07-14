@@ -24,9 +24,7 @@
             <td>{{ request.startDate }}</td>
             <td>{{ request.endDate }}</td>
             <td>
-              <span class="badge" :class="request.status.toLowerCase()">
-                {{ request.status }}
-              </span>
+              <StatusBadge :status="request.status" />
             </td>
             <td>
               <RouterLink
@@ -48,6 +46,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import StatusBadge from '../components/StatusBadge.vue'
+
+
 const router = useRouter()
 function goToNewRequest() {
   router.push('/leave/new')
@@ -58,6 +59,7 @@ const requests = ref([
   { id: 1, student: 'Sok Dara', type: 'Sick Leave', startDate: 'Jul 8, 2026', endDate: 'Jul 9, 2026', status: 'Pending' },
   { id: 2, student: 'Chan Sophea', type: 'Personal Leave', startDate: 'Jul 10, 2026', endDate: 'Jul 10, 2026', status: 'Approved' },
   { id: 3, student: 'Vann Vuthy', type: 'Emergency Leave', startDate: 'Jul 5, 2026', endDate: 'Jul 6, 2026', status: 'Rejected' },
+  { id: 4, student: 'Chanthy Chet', type: 'Emergency Leave', startDate: 'Jul 5, 2026', endDate: 'Jul 6, 2026', status: 'Cancelled' },
 ])
 </script>
 
@@ -120,28 +122,6 @@ tbody tr {
 
 tbody tr:last-child {
   border-bottom: none;
-}
-
-.badge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.badge.pending {
-  background: #fef3c7;
-  color: #b45309;
-}
-
-.badge.approved {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.badge.rejected {
-  background: #fee2e2;
-  color: #b91c1c;
 }
 
 .edit-link {
