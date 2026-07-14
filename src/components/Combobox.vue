@@ -8,17 +8,18 @@
         type="text"
         class="combobox-input"
         :class="{ 'has-icon': !!icon }"
-        :placeholder="placeholder"
-        :disabled="disabled"
+        :placeholder="computedPlaceholder"
+        :disabled="disabled || isEmpty"
         @input="onInput"
         @focus="onFocus"
         @keydown="onKeydown"
+        @blur="onBlur"
       />
       <button
         type="button"
         class="combobox-toggle"
         @click="toggleOpen"
-        :disabled="disabled"
+        :disabled="disabled || isEmpty"
         tabindex="-1"
       >
         <ChevronDown class="toggle-icon" :size="16" :class="{ rotated: isOpen }" />
@@ -27,9 +28,25 @@
 
     <Transition name="dropdown">
       <div v-if="isOpen" class="combobox-dropdown">
+        <!-- Loading -->
+        <div v-if="isLoading" class="combobox-loading">
+          Loading leave types...
+        </div>
+
+        <!-- Error -->
+        <div v-else-if="fetchError" class="combobox-error-state">
+          <span>{{ fetchError }}</span>
+          <button type="button" class="combobox-retry" @click="retryFetch">Retry</button>
+        </div>
+
+        <!-- Empty state -->
+        <div v-else-if="isEmpty" class="combobox-empty">
+          No leave types available
+        </div>
+
         <!-- Create new option -->
         <button
-          v-if="showCreateOption"
+          v-else-if="showCreateOption"
           class="combobox-option create-option"
           @click="selectCustom"
           type="button"
@@ -40,9 +57,9 @@
           </span>
         </button>
 
-        <!-- No results -->
-        <div v-if="filteredOptions.length === 0 && !showCreateOption" class="combobox-empty">
-          No matching leave types found
+        <!-- No matching results -->
+        <div v-else-if="filteredOptions.length === 0" class="combobox-empty">
+          No matching leave type found
         </div>
 
         <!-- Filtered options -->
@@ -60,11 +77,17 @@
         </button>
       </div>
     </Transition>
+
+    <!-- Validation error -->
+    <div v-if="showValidationError" class="combobox-error">
+      Please select or enter a leave type.
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import api from '@/services/api'
 import { Briefcase, ChevronDown, Plus, Check } from 'lucide-vue-next'
 
 export interface ComboboxOption {
@@ -72,13 +95,23 @@ export interface ComboboxOption {
   name: string
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: number | string | null
-  options: ComboboxOption[]
+  options?: ComboboxOption[]
   placeholder?: string
   disabled?: boolean
   icon?: boolean
-}>()
+  editable?: boolean
+  required?: boolean
+  showError?: boolean
+  initialValue?: number | string
+}>(), {
+  disabled: false,
+  icon: false,
+  editable: false,
+  required: false,
+  showError: false,
+})
 
 const emit = defineEmits<{
   'update:modelValue': [value: number | string | null]
@@ -93,6 +126,17 @@ const isOpen = ref(false)
 const searchQuery = ref('')
 const highlightedIndex = ref(-1)
 const customType = ref<string | null>(null)
+const touched = ref(false)
+
+// API state
+const internalOptions = ref<ComboboxOption[]>([])
+const isLoading = ref(false)
+const fetchError = ref<string | null>(null)
+
+const options = computed(() => {
+  if (props.options !== undefined) return props.options
+  return internalOptions.value
+})
 
 const selectedId = computed(() => {
   if (typeof props.modelValue === 'number') return props.modelValue
@@ -100,8 +144,10 @@ const selectedId = computed(() => {
 })
 
 const selectedOption = computed(() => {
-  return props.options.find((o) => o.id === selectedId.value) || null
+  return options.value.find((o) => o.id === selectedId.value) || null
 })
+
+const isEmpty = computed(() => !isLoading.value && options.value.length === 0)
 
 const displayText = computed(() => {
   if (customType.value) return customType.value
@@ -111,16 +157,45 @@ const displayText = computed(() => {
 
 const filteredOptions = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
-  if (!query) return props.options
-  return props.options.filter((o) => o.name.toLowerCase().includes(query))
+  if (!query) return options.value
+  return options.value.filter((o) => o.name.toLowerCase().includes(query))
 })
 
 const showCreateOption = computed(() => {
+  if (!props.editable) return false
   const query = searchQuery.value.trim()
   if (!query) return false
-  // Only show if no existing option matches exactly
   return !filteredOptions.value.some((o) => o.name.toLowerCase() === query.toLowerCase())
 })
+
+const computedPlaceholder = computed(() => {
+  if (isEmpty.value) return 'No leave types available'
+  return props.placeholder || ''
+})
+
+const showValidationError = computed(() => {
+  const isEmptyValue = !selectedId.value && !customType.value
+  if (!isEmptyValue) return false
+  return props.showError || (props.required && touched.value)
+})
+
+// ─── API ───────────────────────────────────────
+async function fetchLeaveTypes() {
+  isLoading.value = true
+  fetchError.value = null
+  try {
+    const response = await api.get('/leave-types')
+    internalOptions.value = response.data as ComboboxOption[]
+  } catch (e: unknown) {
+    fetchError.value = 'Failed to load leave types'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function retryFetch() {
+  fetchLeaveTypes()
+}
 
 // ─── Methods ────────────────────────────────────
 function onInput(event: Event) {
@@ -129,25 +204,25 @@ function onInput(event: Event) {
   customType.value = null
   highlightedIndex.value = -1
 
-  // Emit the raw text so parent can capture custom type value
-  emit('custom-text', value)
+  const exactMatch = options.value.find((o) => o.name.toLowerCase() === value.toLowerCase())
 
-  // If empty, clear selection
-  if (!value.trim()) {
+  if (exactMatch) {
+    emit('update:modelValue', exactMatch.id)
+    emit('select', exactMatch)
+  } else if (!props.editable && value.trim()) {
+    searchQuery.value = ''
+    customType.value = null
+    emit('update:modelValue', selectedId.value)
+    emit('select', selectedOption.value)
+    emit('custom-text', '')
+    if (!isOpen.value) isOpen.value = true
+    return
+  } else {
     emit('update:modelValue', null)
     emit('select', null)
-  } else {
-    // Check for exact match
-    const exactMatch = props.options.find((o) => o.name.toLowerCase() === value.toLowerCase())
-    if (exactMatch) {
-      emit('update:modelValue', exactMatch.id)
-      emit('select', exactMatch)
-    } else {
-      // It's a custom type — emit null for leave_type_id
-      emit('update:modelValue', null)
-      emit('select', null)
-    }
   }
+
+  emit('custom-text', value)
 
   if (!isOpen.value) {
     isOpen.value = true
@@ -160,6 +235,17 @@ function onFocus() {
   }
 }
 
+function onBlur() {
+  touched.value = true
+  if (!props.editable && searchQuery.value.trim()) {
+    const exactMatch = options.value.find((o) => o.name.toLowerCase() === searchQuery.value.trim().toLowerCase())
+    if (!exactMatch) {
+      searchQuery.value = ''
+      customType.value = null
+    }
+  }
+}
+
 function toggleOpen() {
   if (isOpen.value) {
     closeDropdown()
@@ -169,7 +255,7 @@ function toggleOpen() {
 }
 
 function openDropdown() {
-  if (props.disabled) return
+  if (props.disabled || isEmpty.value) return
   isOpen.value = true
   highlightedIndex.value = -1
 }
@@ -244,7 +330,25 @@ function syncSearchWithSelection() {
   }
 }
 
-// Sync when modelValue changes externally (e.g. clear button)
+// Initial value support
+watch(
+  [() => props.initialValue, options],
+  ([newInitial, opts]) => {
+    if (newInitial == null || props.modelValue !== null) return
+    if (typeof newInitial === 'number') {
+      const found = opts.find((o) => o.id === newInitial)
+      if (found) {
+        emit('update:modelValue', found.id)
+      }
+    } else if (typeof newInitial === 'string') {
+      customType.value = newInitial
+      searchQuery.value = newInitial
+    }
+  },
+  { immediate: true }
+)
+
+// Sync when modelValue changes externally
 watch(
   () => props.modelValue,
   () => {
@@ -252,7 +356,30 @@ watch(
   }
 )
 
+// Expose methods
+function validate(): boolean {
+  touched.value = true
+  const isEmptyValue = !selectedId.value && !customType.value
+  return !isEmptyValue
+}
+
+function clear() {
+  searchQuery.value = ''
+  customType.value = null
+  touched.value = false
+  emit('update:modelValue', null)
+  emit('select', null)
+}
+
+defineExpose({
+  validate,
+  clear,
+})
+
 onMounted(() => {
+  if (props.options === undefined) {
+    fetchLeaveTypes()
+  }
   document.addEventListener('click', handleClickOutside)
   syncSearchWithSelection()
 })
@@ -423,6 +550,48 @@ onUnmounted(() => {
   text-align: center;
   color: #94a3b8;
   font-size: 13px;
+}
+
+.combobox-loading {
+  padding: 16px 14px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.combobox-error-state {
+  padding: 16px 14px;
+  text-align: center;
+  color: #dc2626;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.combobox-retry {
+  padding: 4px 12px;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.combobox-retry:hover {
+  background: #fee2e2;
+}
+
+.combobox-error {
+  font-size: 12px;
+  color: #dc2626;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* ─── Scrollbar ──────────────────────────────── */
