@@ -1,5 +1,5 @@
 <template>
-  <div class="relative">
+  <div class="relative" ref="menuRef">
     <button
       class="flex items-center gap-2 rounded-md border-none bg-transparent px-2.5 py-1.5 text-slate-700 cursor-pointer transition-colors hover:bg-slate-100"
       @click="toggleMenu"
@@ -14,7 +14,10 @@
       <ChevronDown class="text-slate-400" :size="14" />
     </button>
 
-    <div v-if="menuOpen" class="absolute right-0 top-[52px] z-10 min-w-[170px] overflow-hidden rounded-lg bg-white text-gray-800 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
+    <div
+      v-if="menuOpen"
+      class="absolute right-0 top-[52px] z-10 min-w-[170px] overflow-hidden rounded-lg bg-white text-gray-800 shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+    >
       <RouterLink
         to="/profile"
         class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-gray-800 no-underline hover:bg-gray-100"
@@ -24,18 +27,19 @@
         <span>Profile</span>
       </RouterLink>
       <button
-        class="flex w-full cursor-pointer items-center gap-2.5 border-none bg-transparent px-4 py-2.5 text-left text-sm text-red-500 hover:bg-gray-100"
+        class="flex w-full cursor-pointer items-center gap-2.5 border-none bg-transparent px-4 py-2.5 text-left text-sm text-red-500 hover:bg-gray-100 disabled:opacity-50"
+        :disabled="loggingOut"
         @click="logout"
       >
         <LogOut :size="16" />
-        <span>Logout</span>
+        <span>{{ loggingOut ? 'Logging out…' : 'Logout' }}</span>
       </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { User, ChevronDown, UserCircle, LogOut } from 'lucide-vue-next'
@@ -44,6 +48,8 @@ const router = useRouter()
 const auth = useAuthStore()
 
 const menuOpen = ref(false)
+const loggingOut = ref(false)
+const menuRef = ref<HTMLElement | null>(null)
 
 const userName = computed(() => auth.user?.name || 'Guest User')
 
@@ -58,9 +64,28 @@ function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
 
+function handleClickOutside(e: MouseEvent) {
+  if (menuRef.value && !menuRef.value.contains(e.target as Node)) {
+    menuOpen.value = false
+  }
+}
+
+onMounted(() => document.addEventListener('mousedown', handleClickOutside))
+onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
+
 async function logout() {
+  loggingOut.value = true
   menuOpen.value = false
-  await auth.logout()
-  router.push('/login')
+
+  auth.clearSession()
+  await router.push('/login')
+
+  try {
+    await auth.logout()
+  } catch {
+    // already navigated away
+  } finally {
+    loggingOut.value = false
+  }
 }
 </script>
