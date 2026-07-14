@@ -231,9 +231,13 @@ function markDirty() {
 }
 
 function toggle<K extends keyof typeof form>(section: K, key: keyof (typeof form)[K]) {
-  const target = form[section] as Record<string, boolean>
-  target[key as string] = !target[key as string]
-  markDirty()
+  const target = form[section] as Record<string, unknown>
+  const current = target[key as string]
+
+  if (typeof current === 'boolean') {
+    target[key as string] = !current
+    markDirty()
+  }
 }
 
 function saveAll() {

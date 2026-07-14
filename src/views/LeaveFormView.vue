@@ -117,7 +117,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notification'
 import { leaveService } from '@/services/leaveService'
-import type { LeaveType, LeaveRequestListItem } from '@/types/leave'
+import type { LeaveType } from '@/types/leave'
 import type { AxiosError } from 'axios'
 import {
   ArrowLeft, Calendar, FileText, AlertCircle, Upload, Send, X

@@ -55,7 +55,7 @@ export const router = createRouter({
         {
           path: '/leave-requests',
           name: 'LeaveRequests',
-          component: () => import('../views/LeaveRequestView.vue'),
+          component: () => import('../views/leave/LeaveRequestView.vue'),
           meta: { title: 'Leave Requests', requiresAuth: true },
         },
         {
