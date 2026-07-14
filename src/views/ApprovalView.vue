@@ -6,14 +6,14 @@
         <button
           v-for="tab in tabs"
           :key="tab"
-          class="flex items-center gap-1.5 rounded-md border-none bg-transparent px-3.5 py-[7px] text-[13px] font-medium text-slate-500 cursor-pointer"
+          class="flex items-center gap-1.5 rounded-md border-none bg-transparent px-3.5 py-[7px] text-[13px] font-medium text-slate-400 cursor-pointer"
           :class="activeTab === tab ? 'bg-white text-blue-600 shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : ''"
           @click="activeTab = tab"
         >
           {{ tab }}
           <span
             v-if="tab === 'Pending' && pendingCount > 0"
-            class="rounded-full bg-blue-600 px-1.5 text-[11px] font-semibold leading-snug text-white"
+            class="rounded-full bg-cyan-400 px-1.5 text-[11px] font-semibold leading-snug text-white"
           >{{ pendingCount }}</span>
         </button>
       </div>

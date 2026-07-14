@@ -4,12 +4,12 @@
       class="flex items-center gap-2 rounded-md border-none bg-transparent px-2.5 py-1.5 text-slate-700 cursor-pointer transition-colors hover:bg-slate-100"
       @click="toggleMenu"
     >
-      <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+      <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-white">
         <User :size="18" />
       </span>
       <span class="hidden flex-col items-start leading-tight lg:flex">
         <span class="text-sm font-medium">{{ userName }}</span>
-        <span class="text-[11px] font-medium uppercase tracking-wide text-blue-600">{{ roleLabel }}</span>
+        <span class="text-[11px] font-medium uppercase tracking-wide text-cyan-500">{{ roleLabel }}</span>
       </span>
       <ChevronDown class="text-slate-400" :size="14" />
     </button>
@@ -64,6 +64,7 @@ function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
 
+// Close on click outside
 function handleClickOutside(e: MouseEvent) {
   if (menuRef.value && !menuRef.value.contains(e.target as Node)) {
     menuOpen.value = false
@@ -76,14 +77,14 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
 async function logout() {
   loggingOut.value = true
   menuOpen.value = false
-
   auth.clearSession()
   await router.push('/login')
 
+  // Best-effort server-side token revocation
   try {
     await auth.logout()
   } catch {
-    // already navigated away
+    // Already navigated away — nothing to do
   } finally {
     loggingOut.value = false
   }

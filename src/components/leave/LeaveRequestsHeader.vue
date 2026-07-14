@@ -3,7 +3,7 @@
     <h1>Leave Requests</h1>
     <button
       v-if="showNewButton"
-      class="flex items-center gap-1.5 rounded-md border-none bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white cursor-pointer hover:bg-orange-600"
+      class="flex items-center gap-1.5 rounded-md border-none bg-[#f5a623] px-4 py-2.5 text-sm font-semibold text-white cursor-pointer hover:bg-[#e09510]"
       @click="$emit('new')"
     >
       <Plus :size="16" />

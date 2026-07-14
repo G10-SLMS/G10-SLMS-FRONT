@@ -2,7 +2,7 @@
   <div class="flex h-[calc(100vh-120px)] max-w-full flex-col">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <button class="flex h-9 w-9 items-center justify-center rounded-lg border-none bg-blue-100 text-blue-700 cursor-default" aria-hidden="true">
+        <button class="flex h-9 w-9 items-center justify-center rounded-lg border-none bg-cyan-400/20 text-cyan-600 cursor-default" aria-hidden="true">
           <CalendarDays :size="20" :stroke-width="1.8" />
         </button>
         <h1 class="m-0">Calendar</h1>
@@ -34,8 +34,8 @@
           <button
             v-for="v in views"
             :key="v"
-            class="rounded-md border-none bg-transparent px-3.5 py-1.5 text-[13px] font-medium text-slate-500 cursor-pointer"
-            :class="view === v ? 'bg-white text-blue-600 shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : ''"
+            class="rounded-md border-none bg-transparent px-3.5 py-1.5 text-[13px] font-medium text-slate-400 cursor-pointer"
+            :class="view === v ? 'bg-white text-cyan-500 shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : ''"
             @click="view = v"
           >
             {{ v }}
@@ -53,10 +53,10 @@
           :key="d.dateStr"
           class="flex flex-col items-center justify-center gap-0.5 px-1 py-2"
         >
-          <span class="text-[11px] font-semibold tracking-wide text-gray-500" :class="d.isToday ? 'text-blue-600' : ''">{{ d.dayName }}</span>
+          <span class="text-[11px] font-semibold tracking-wide text-gray-500" :class="d.isToday ? 'text-cyan-500' : ''">{{ d.dayName }}</span>
           <span
             class="flex h-[30px] w-[30px] items-center justify-center rounded-full text-base font-semibold text-gray-800"
-            :class="d.isToday ? 'bg-blue-600 text-white' : ''"
+            :class="d.isToday ? 'bg-cyan-400 text-white' : ''"
           >{{ d.dayNumber }}</span>
         </div>
       </div>
@@ -75,7 +75,6 @@
           <div v-for="d in weekDays" :key="d.dateStr" class="relative border-r border-gray-100 last:border-none">
             <div v-for="h in hours" :key="h" class="h-[56px] border-b border-gray-100"></div>
 
-            <!-- Leave requests shown as full-day booking blocks (Admin: all students. Student: own only.) -->
             <CalendarLeaveBlock
               v-for="(leave, i) in leavesFor(d.dateStr)"
               :key="leave.id"
@@ -123,45 +122,19 @@ const now = ref(new Date())
 let clockTimer = null
 
 onMounted(() => {
-  clockTimer = setInterval(() => {
-    now.value = new Date()
-  }, 60000)
+  clockTimer = setInterval(() => { now.value = new Date() }, 60000)
 })
 onUnmounted(() => clearInterval(clockTimer))
 
-const HOUR_HEIGHT = 56 // px per hour row, must match the h-[56px] hour row classes below
-const START_HOUR = 7 // 7 AM
-const END_HOUR = 23 // 11 PM
+const HOUR_HEIGHT = 56
+const START_HOUR = 7
+const END_HOUR = 23
 const hours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => i + START_HOUR)
 
 const leaveRequests = ref([
-  {
-    id: 101,
-    studentId: 101,
-    student: 'Sok Dara',
-    type: 'Sick Leave',
-    startDate: dateKey(addDays(startOfWeek(new Date()), 1)),
-    endDate: dateKey(addDays(startOfWeek(new Date()), 2)),
-    status: 'Pending',
-  },
-  {
-    id: 102,
-    studentId: 102,
-    student: 'Chan Sophea',
-    type: 'Personal Leave',
-    startDate: dateKey(addDays(startOfWeek(new Date()), 3)),
-    endDate: dateKey(addDays(startOfWeek(new Date()), 3)),
-    status: 'Approved',
-  },
-  {
-    id: 103,
-    studentId: 103,
-    student: 'Vann Vuthy',
-    type: 'Emergency Leave',
-    startDate: dateKey(addDays(startOfWeek(new Date()), 5)),
-    endDate: dateKey(addDays(startOfWeek(new Date()), 6)),
-    status: 'Rejected',
-  },
+  { id: 101, studentId: 101, student: 'Sok Dara', type: 'Sick Leave', startDate: dateKey(addDays(startOfWeek(new Date()), 1)), endDate: dateKey(addDays(startOfWeek(new Date()), 2)), status: 'Pending' },
+  { id: 102, studentId: 102, student: 'Chan Sophea', type: 'Personal Leave', startDate: dateKey(addDays(startOfWeek(new Date()), 3)), endDate: dateKey(addDays(startOfWeek(new Date()), 3)), status: 'Approved' },
+  { id: 103, studentId: 103, student: 'Vann Vuthy', type: 'Emergency Leave', startDate: dateKey(addDays(startOfWeek(new Date()), 5)), endDate: dateKey(addDays(startOfWeek(new Date()), 6)), status: 'Rejected' },
 ])
 
 const visibleLeaveRequests = computed(() => {
@@ -171,15 +144,11 @@ const visibleLeaveRequests = computed(() => {
 })
 
 function leavesFor(dateStr) {
-  return visibleLeaveRequests.value.filter(
-    (r) => dateStr >= r.startDate && dateStr <= r.endDate
-  )
+  return visibleLeaveRequests.value.filter((r) => dateStr >= r.startDate && dateStr <= r.endDate)
 }
 
 function leaveChipTitle(leave) {
-  const range = leave.startDate === leave.endDate
-    ? leave.startDate
-    : `${leave.startDate} – ${leave.endDate}`
+  const range = leave.startDate === leave.endDate ? leave.startDate : `${leave.startDate} – ${leave.endDate}`
   return auth.isAdmin
     ? `${leave.student} · ${leave.type} · ${range} · ${leave.status}`
     : `${leave.type} · ${range} · ${leave.status}`
@@ -208,16 +177,10 @@ function dateKey(date) {
 const weekDays = computed(() => {
   const start = startOfWeek(currentDate.value)
   const todayKey = dateKey(new Date())
-
   return Array.from({ length: 7 }, (_, i) => {
     const d = addDays(start, i)
     const key = dateKey(d)
-    return {
-      dateStr: key,
-      dayName: d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
-      dayNumber: d.getDate(),
-      isToday: key === todayKey,
-    }
+    return { dateStr: key, dayName: d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(), dayNumber: d.getDate(), isToday: key === todayKey }
   })
 })
 
@@ -226,17 +189,8 @@ const rangeLabel = computed(() => {
   const end = addDays(start, 6)
   const sameMonth = start.getMonth() === end.getMonth()
   const startLabel = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-
-  if (sameMonth) {
-    return `${startLabel} – ${end.getDate()}, ${end.getFullYear()}`
-  }
-
-  const endLabel = end.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-  return `${startLabel} – ${endLabel}`
+  if (sameMonth) return `${startLabel} – ${end.getDate()}, ${end.getFullYear()}`
+  return `${startLabel} – ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
 })
 
 function formatHour(h) {
@@ -248,12 +202,7 @@ function formatHour(h) {
 function leaveBlockStyle(index, total) {
   const widthPercent = 100 / total
   const left = index * widthPercent
-  return {
-    top: '0px',
-    height: `${hours.length * HOUR_HEIGHT}px`,
-    left: `calc(${left}% + 2px)`,
-    width: `calc(${widthPercent}% - 4px)`,
-  }
+  return { top: '0px', height: `${hours.length * HOUR_HEIGHT}px`, left: `calc(${left}% + 2px)`, width: `calc(${widthPercent}% - 4px)` }
 }
 
 const nowOffset = computed(() => {
@@ -266,15 +215,7 @@ const nowLineVisible = computed(() => {
   return hoursDecimal >= START_HOUR && hoursDecimal <= END_HOUR + 1
 })
 
-function prevWeek() {
-  currentDate.value = addDays(currentDate.value, -7)
-}
-
-function nextWeek() {
-  currentDate.value = addDays(currentDate.value, 7)
-}
-
-function goToday() {
-  currentDate.value = new Date()
-}
+function prevWeek() { currentDate.value = addDays(currentDate.value, -7) }
+function nextWeek() { currentDate.value = addDays(currentDate.value, 7) }
+function goToday() { currentDate.value = new Date() }
 </script>

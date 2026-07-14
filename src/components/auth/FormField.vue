@@ -9,14 +9,9 @@ withDefaults(
     autocomplete?: string
     required?: boolean
   }>(),
-  {
-    type: 'text',
-  }
+  { type: 'text' }
 )
-
-defineEmits<{
-  'update:modelValue': [value: string]
-}>()
+defineEmits<{ 'update:modelValue': [value: string] }>()
 </script>
 
 <template>
@@ -33,7 +28,7 @@ defineEmits<{
         :placeholder="placeholder"
         :autocomplete="autocomplete"
         :required="required"
-        class="w-full appearance-none rounded-[10px] border border-gray-300 bg-[#fbfbfc] py-3 pl-10 pr-3.5 text-[0.92rem] text-gray-900 transition-colors focus:border-blue-600 focus:bg-white focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)] focus:outline-none"
+        class="w-full appearance-none rounded-[10px] border border-gray-300 bg-[#fbfbfc] py-3 pl-10 pr-3.5 text-[0.92rem] text-gray-900 transition-colors focus:border-[#f5a623] focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,166,35,0.12)] focus:outline-none"
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       />
     </div>

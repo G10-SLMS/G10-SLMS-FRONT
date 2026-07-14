@@ -1,7 +1,13 @@
 <template>
   <Teleport to="body">
-    <div v-if="open" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/45 p-4" @click.self="$emit('cancel')">
-      <div class="w-full max-w-[420px] rounded-xl bg-white p-6 shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+    <div
+      v-if="open"
+      class="fixed inset-0 z-[100] flex items-center justify-center bg-white/45 p-4"
+      @click.self="$emit('cancel')"
+    >
+      <div
+        class="w-full max-w-[420px] rounded-xl bg-white p-6 shadow-[0_10px_30px_rgba(0,0,0,0.15)]"
+      >
         <h2 class="mb-4 text-lg">{{ isEditing ? 'Edit Leave Type' : 'Add Leave Type' }}</h2>
 
         <label class="mb-3.5 flex flex-col gap-1.5 text-[13px] text-gray-700">
@@ -38,9 +44,11 @@
           <button
             class="rounded-md border-none bg-gray-100 px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-gray-200"
             @click="$emit('cancel')"
-          >Cancel</button>
+          >
+            Cancel
+          </button>
           <button
-            class="inline-flex items-center gap-2 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-blue-700"
+            class="inline-flex items-center gap-2 rounded-md border-none bg-cyan-500 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-cyan-600"
             @click="$emit('save')"
           >
             {{ isEditing ? 'Save Changes' : 'Add Leave Type' }}
@@ -53,18 +61,18 @@
 
 <script setup lang="ts">
 defineProps<{
-  open: boolean
-  isEditing: boolean
+  open: boolean;
+  isEditing: boolean;
   form: {
-    name: string
-    defaultDays: number
-    requiresApproval: boolean
-    active: boolean
-  }
-}>()
+    name: string;
+    defaultDays: number;
+    requiresApproval: boolean;
+    active: boolean;
+  };
+}>();
 
 defineEmits<{
-  cancel: []
-  save: []
-}>()
+  cancel: [];
+  save: [];
+}>();
 </script>

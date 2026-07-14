@@ -2,7 +2,7 @@
   <div class="flex min-h-screen items-center justify-center bg-gray-100 p-4">
     <div class="w-full max-w-[360px] rounded-2xl bg-white p-10 text-center shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
       <template v-if="status === 'loading'">
-        <span class="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-blue-700 [&_svg]:animate-spin">
+        <span class="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-cyan-400/20 text-cyan-600 [&_svg]:animate-spin">
           <Loader2 :size="28" :stroke-width="1.8" />
         </span>
         <h1 class="mb-1.5 text-lg font-semibold text-gray-900">Signing you in…</h1>

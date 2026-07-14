@@ -50,7 +50,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-[#f1e6e6]">
+  <div class="flex min-h-screen bg-white">
     <AuthPanelLeft
       :logo-url="logoUrl"
       title="Join your institution's leave portal."
@@ -122,17 +122,17 @@ async function handleSubmit() {
           <p v-if="passwordMismatch" class="mt-1.5 text-[0.78rem] text-red-600">Passwords do not match.</p>
 
           <div class="mb-6 flex items-center gap-2.5">
-            <input id="terms" v-model="form.acceptTerms" type="checkbox" required class="h-4 w-4 accent-blue-600" />
+            <input id="terms" v-model="form.acceptTerms" type="checkbox" required class="h-4 w-4 accent-[#f5a623]" />
             <label for="terms" class="text-[0.88rem] text-gray-700">
               I agree to the
-              <a href="#" class="font-semibold text-[#56637c] transition-colors hover:text-blue-700 hover:underline">Terms of Service</a> and
-              <a href="#" class="font-semibold text-[#56637c] transition-colors hover:text-blue-700 hover:underline">Privacy Policy</a>
+              <a href="#" class="font-semibold text-[#56637c] transition-colors hover:text-[#e09510] hover:underline">Terms of Service</a> and
+              <a href="#" class="font-semibold text-[#56637c] transition-colors hover:text-[#e09510] hover:underline">Privacy Policy</a>
             </label>
           </div>
 
           <button
             type="submit"
-            class="w-full cursor-pointer rounded-[10px] border-none bg-linear-to-b from-[#2f6fed] to-blue-700 py-3.5 text-[0.96rem] font-bold text-white transition-transform hover:brightness-105 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+            class="w-full cursor-pointer rounded-[10px] border-none bg-[#f5a623] py-3.5 text-[0.96rem] font-bold text-white transition-transform hover:brightness-105 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
             :disabled="auth.loading || passwordMismatch"
           >
             {{ auth.loading ? 'Creating account…' : 'Create Account' }}
@@ -143,7 +143,7 @@ async function handleSubmit() {
 
         <p class="mt-7 text-center text-[0.85rem] text-gray-400">
           Already have an account?
-          <RouterLink to="/login" class="font-medium text-blue-600 hover:underline">Sign in instead</RouterLink>
+          <RouterLink to="/login" class="font-medium text-[#f5a623] hover:underline">Sign in instead</RouterLink>
         </p>
       </div>
     </main>
