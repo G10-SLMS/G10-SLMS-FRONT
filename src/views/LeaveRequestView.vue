@@ -2,7 +2,7 @@
   <div class="leave-requests">
     <div class="header-row">
       <h1>Leave Requests</h1>
-      <button class="new-btn">+ New Request</button>
+      <RouterLink to="/leave/new" class="new-btn">+ New Request</RouterLink>
     </div>
 
     <div class="table-card">
@@ -14,6 +14,7 @@
             <th>Start Date</th>
             <th>End Date</th>
             <th>Status</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -27,6 +28,16 @@
                 {{ request.status }}
               </span>
             </td>
+            <td>
+              <RouterLink
+                v-if="request.status === 'Pending'"
+                :to="`/leave/${request.id}/edit`"
+                class="edit-link"
+              >
+                Edit
+              </RouterLink>
+              <span v-else class="edit-disabled">Edit</span>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -34,7 +45,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 
 // Placeholder data — will come from GET /api/leave-requests later
@@ -65,6 +76,8 @@ const requests = ref([
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .new-btn:hover {
@@ -124,5 +137,21 @@ tbody tr:last-child {
 .badge.rejected {
   background: #fee2e2;
   color: #b91c1c;
+}
+
+.edit-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.edit-link:hover {
+  text-decoration: underline;
+}
+
+.edit-disabled {
+  color: #d1d5db;
+  font-size: 13px;
 }
 </style>
