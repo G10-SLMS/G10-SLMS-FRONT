@@ -8,7 +8,7 @@
     >
       <div
         v-if="modal.isOpen"
-        class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-5"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-white/50 p-5"
         @mousedown.self="handleOverlayClick"
       >
         <div
@@ -53,7 +53,9 @@
 
               <!-- Leave Type -->
               <div class="mb-[18px]">
-                <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-type">Leave Type</label>
+                <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-type">
+                  Leave Type <span class="text-red-600">*</span>
+                </label>
                 <div class="relative flex items-center">
                   <span class="absolute left-3 flex text-gray-400"><FileText :size="18" /></span>
                   <select
@@ -61,7 +63,7 @@
                     v-model="form.type"
                     required
                     :disabled="submitting"
-                    class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-[38px] pr-3 text-sm text-gray-800 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.1)] focus:outline-none"
+                    class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-[38px] pr-3 text-sm text-gray-800 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.1)] focus:outline-none"
                   >
                     <option value="" disabled>Select leave type</option>
                     <option value="Sick Leave">Sick Leave</option>
@@ -76,7 +78,9 @@
               <!-- Date range -->
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div class="mb-[18px]">
-                  <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-startDate">Start Date</label>
+                  <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-startDate">
+                    Start Date <span class="text-red-600">*</span>
+                  </label>
                   <div class="relative flex items-center">
                     <span class="absolute left-3 flex text-gray-400"><Calendar :size="18" /></span>
                     <input
@@ -86,14 +90,16 @@
                       :min="todayStr"
                       required
                       :disabled="submitting"
-                      class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-[38px] pr-3 text-sm text-gray-800 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.1)] focus:outline-none"
+                      class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-[38px] pr-3 text-sm text-gray-800 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.1)] focus:outline-none"
                       @change="onStartDateChange"
                     />
                   </div>
                 </div>
 
                 <div class="mb-[18px]">
-                  <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-endDate">End Date</label>
+                  <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-endDate">
+                    End Date <span class="text-red-600">*</span>
+                  </label>
                   <div class="relative flex items-center">
                     <span class="absolute left-3 flex text-gray-400"><Calendar :size="18" /></span>
                     <input
@@ -103,7 +109,7 @@
                       :min="form.startDate || todayStr"
                       required
                       :disabled="submitting"
-                      class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-[38px] pr-3 text-sm text-gray-800 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.1)] focus:outline-none"
+                      class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-[38px] pr-3 text-sm text-gray-800 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.1)] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -112,7 +118,9 @@
 
               <!-- Reason -->
               <div class="mb-[18px]">
-                <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-reason">Reason</label>
+                <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-reason">
+                  Reason <span class="text-red-600">*</span>
+                </label>
                 <textarea
                   id="m-reason"
                   v-model.trim="form.reason"
@@ -121,7 +129,7 @@
                   required
                   :disabled="submitting"
                   maxlength="500"
-                  class="w-full resize-y rounded-md border border-gray-300 px-3 py-2.5 font-sans text-sm text-gray-800 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.1)] focus:outline-none"
+                  class="w-full resize-y rounded-md border border-gray-300 px-3 py-2.5 font-sans text-sm text-gray-800 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.1)] focus:outline-none"
                 ></textarea>
                 <span class="mt-1 block text-right text-[11px] text-gray-400">{{ form.reason.length }}/500</span>
               </div>
@@ -176,7 +184,7 @@
             <button
               type="submit"
               form="leave-form"
-              class="rounded-md border-none bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white cursor-pointer enabled:hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              class="rounded-md border-none bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white cursor-pointer enabled:hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="!canSubmit"
             >
               {{ submitting ? (isEditMode ? 'Saving…' : 'Submitting…') : (isEditMode ? 'Save Changes' : 'Submit Request') }}

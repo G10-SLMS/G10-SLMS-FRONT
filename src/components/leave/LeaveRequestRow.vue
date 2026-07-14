@@ -10,7 +10,7 @@
     <td v-if="showActions" class="px-4 py-3.5 text-left">
       <button
         v-if="request.status === 'Pending'"
-        class="flex items-center gap-1 rounded-md border-none bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-600 cursor-pointer hover:bg-blue-100"
+        class="flex items-center gap-1 rounded-md border-none bg-blue-600/10 px-2.5 py-1.5 text-xs font-semibold text-blue-600 cursor-pointer hover:bg-blue-600/15"
         @click="$emit('edit', request.id)"
       >
         <Pencil :size="14" />

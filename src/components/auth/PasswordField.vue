@@ -11,10 +11,7 @@ defineProps<{
   required?: boolean
   minlength?: number
 }>()
-
-defineEmits<{
-  'update:modelValue': [value: string]
-}>()
+defineEmits<{ 'update:modelValue': [value: string] }>()
 
 const visible = ref(false)
 </script>
@@ -25,7 +22,6 @@ const visible = ref(false)
       <label class="text-[0.72rem] font-bold uppercase tracking-wide text-gray-700" :for="id">{{ label }}</label>
       <slot name="label-extra" />
     </div>
-
     <div class="relative flex items-center">
       <span class="pointer-events-none absolute left-3.5 flex items-center text-gray-400">
         <Lock :size="18" :stroke-width="1.8" />
@@ -38,12 +34,12 @@ const visible = ref(false)
         :autocomplete="autocomplete"
         :minlength="minlength"
         :required="required"
-        class="w-full appearance-none rounded-[10px] border border-gray-300 bg-[#fbfbfc] py-3 pl-10 pr-3.5 text-[0.92rem] text-gray-900 transition-colors focus:border-blue-600 focus:bg-white focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)] focus:outline-none"
+        class="w-full appearance-none rounded-[10px] border border-gray-300 bg-[#fbfbfc] py-3 pl-10 pr-10 text-[0.92rem] text-gray-900 transition-colors focus:border-[#f5a623] focus:bg-white focus:shadow-[0_0_0_3px_rgba(245,166,35,0.12)] focus:outline-none"
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       />
       <button
         type="button"
-        class="absolute right-3.5 flex items-center border-none bg-transparent p-0 text-gray-400 cursor-pointer"
+        class="absolute right-3.5 flex items-center border-none bg-transparent p-0 text-gray-400 cursor-pointer hover:text-gray-600"
         :aria-label="visible ? 'Hide password' : 'Show password'"
         @click="visible = !visible"
       >
@@ -51,7 +47,6 @@ const visible = ref(false)
         <Eye v-else :size="18" :stroke-width="1.8" />
       </button>
     </div>
-
     <slot name="error" />
   </div>
 </template>

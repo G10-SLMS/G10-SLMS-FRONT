@@ -30,7 +30,7 @@ const colorClasses = computed(() => {
     case 'red':
       return 'bg-red-100 text-red-700'
     default:
-      return 'bg-blue-100 text-blue-900'
+      return 'bg-blue-600/20 text-[#0a1628]'
   }
 })
 </script>

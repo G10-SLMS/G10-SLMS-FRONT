@@ -2,7 +2,7 @@
   <tr class="border-b border-gray-100 last:border-none">
     <td class="px-4 py-3.5 align-middle text-left">
       <div class="flex items-center gap-2.5 font-medium">
-        <span class="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-semibold text-blue-600">{{ initials(request.student) }}</span>
+        <span class="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-cyan-400 text-xs font-semibold text-white">{{ initials(request.student) }}</span>
         {{ request.student }}
       </div>
     </td>

@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-[900px] px-8 py-6">
     <header class="mb-6">
-      <RouterLink to="/profile" class="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 no-underline hover:text-blue-600">
+      <RouterLink to="/profile" class="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 no-underline hover:text-cyan-600">
         <ArrowLeft :size="16" />
         Back to Profile
       </RouterLink>
@@ -14,7 +14,7 @@
         <p class="mb-4 text-[13px] text-slate-400">Update your name, email, and photo.</p>
 
         <div class="mb-5 flex items-center gap-4 border-b border-slate-100 pb-5">
-          <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-[22px] font-bold text-white">
+          <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-[22px] font-bold text-white">
             <img v-if="avatarPreview" :src="avatarPreview" alt="Avatar preview" class="h-full w-full object-cover" />
             <span v-else>{{ initials }}</span>
           </div>
@@ -43,7 +43,7 @@
               v-model="form.name"
               type="text"
               required
-              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)] focus:outline-none"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.12)] focus:outline-none"
             />
           </div>
 
@@ -55,7 +55,7 @@
               type="email"
               required
               :disabled="isOAuthUser"
-              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)] focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.12)] focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"
             />
             <span v-if="isOAuthUser" class="text-xs text-slate-400">
               Email is managed by your {{ user?.provider }} account.
@@ -67,7 +67,7 @@
             <select
               id="gender"
               v-model="form.gender"
-              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)] focus:outline-none"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.12)] focus:outline-none"
             >
               <option value="">Prefer not to say</option>
               <option value="male">Male</option>
@@ -82,7 +82,7 @@
           <div class="flex justify-end">
             <button
               type="submit"
-              class="inline-flex items-center gap-1.5 rounded-lg border-none bg-blue-600 px-4 py-2 text-sm font-semibold text-white cursor-pointer hover:enabled:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              class="inline-flex items-center gap-1.5 rounded-lg border-none bg-cyan-500 px-4 py-2 text-sm font-semibold text-white cursor-pointer hover:enabled:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="savingProfile"
             >
               {{ savingProfile ? 'Saving…' : 'Save Changes' }}
@@ -110,7 +110,7 @@
                 v-model="passwordForm.current"
                 type="password"
                 required
-                class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)] focus:outline-none"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.12)] focus:outline-none"
               />
             </div>
             <div class="flex flex-col gap-1.5">
@@ -121,7 +121,7 @@
                 type="password"
                 required
                 minlength="8"
-                class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)] focus:outline-none"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.12)] focus:outline-none"
               />
             </div>
             <div class="flex flex-col gap-1.5">
@@ -132,7 +132,7 @@
                 type="password"
                 required
                 minlength="8"
-                class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)] focus:outline-none"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.12)] focus:outline-none"
               />
             </div>
 
@@ -142,7 +142,7 @@
             <div class="flex justify-end">
               <button
                 type="submit"
-                class="inline-flex items-center gap-1.5 rounded-lg border-none bg-blue-600 px-4 py-2 text-sm font-semibold text-white cursor-pointer hover:enabled:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                class="inline-flex items-center gap-1.5 rounded-lg border-none bg-cyan-500 px-4 py-2 text-sm font-semibold text-white cursor-pointer hover:enabled:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
                 :disabled="savingPassword"
               >
                 {{ savingPassword ? 'Updating…' : 'Update Password' }}
@@ -212,7 +212,7 @@ async function submitProfile() {
     if (avatarFile.value) payload.append('avatar', avatarFile.value);
 
     const { data: updatedUser } = await authService.updateProfile(payload);
-    auth.setUser(updatedUser); // ⚠️ confirm this matches your store's actual method name
+    auth.setUser(updatedUser); 
     profileSuccess.value = true;
   } catch (err: any) {
     profileError.value = err?.response?.data?.message ?? 'Could not update profile.';

@@ -8,7 +8,7 @@
     >
       <div
         v-if="isOpen"
-        class="fixed inset-x-0 bottom-0 top-[60px] z-[49] bg-slate-900/45 md:hidden"
+        class="fixed inset-x-0 bottom-0 top-[60px] z-[49] bg-white/45 md:hidden"
         aria-hidden="true"
         @click="close"
       />
@@ -34,7 +34,7 @@
 
         <button
           v-if="isOpen"
-          class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-none bg-transparent text-slate-500 cursor-pointer hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 max-md:absolute max-md:right-2.5 max-md:top-2.5"
+          class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-none bg-transparent text-slate-400 cursor-pointer hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 max-md:absolute max-md:right-2.5 max-md:top-2.5"
           aria-label="Close menu"
           @click="close"
         >
@@ -78,18 +78,18 @@
           @mouseenter="showTooltip($event, userName)"
           @mouseleave="hideTooltip"
         >
-          <div class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-xs font-semibold text-white">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white">
             <img v-if="userAvatar" :src="userAvatar" :alt="userName" class="h-full w-full object-cover" />
             <span v-else>{{ userInitials }}</span>
           </div>
           <div class="flex min-w-0 flex-col leading-tight" :class="collapsed ? 'hidden' : ''">
             <span class="overflow-hidden text-ellipsis whitespace-nowrap text-[13.5px] font-semibold text-slate-900">{{ userName }}</span>
-            <span class="text-xs text-slate-400">{{ userRole }}</span>
+            <span class="text-xs text-white">{{ userRole }}</span>
           </div>
         </RouterLink>
 
         <button
-          class="relative mx-2 flex w-[calc(100%-16px)] cursor-pointer items-center gap-2.5 rounded-md border-none bg-transparent px-5 py-2.5 text-left font-inherit text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          class="relative mx-2 flex w-[calc(100%-16px)] cursor-pointer items-center gap-2.5 rounded-md border-none bg-transparent px-5 py-2.5 text-left font-inherit text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
           :class="collapsed ? 'justify-center px-3' : ''"
           :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
           @click="collapsed = !collapsed"
@@ -110,7 +110,7 @@
     <Teleport to="body">
       <div
         v-if="collapsed && hoveredLabel"
-        class="fixed z-[200] -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-[0_2px_8px_rgba(0,0,0,0.18)] pointer-events-none animate-[tooltip-fade-in_0.12s_ease]"
+        class="fixed z-[200] -translate-y-1/2 whitespace-nowrap rounded-md bg-white px-2.5 py-1.5 text-xs font-medium text-white shadow-[0_2px_8px_rgba(0,0,0,0.18)] pointer-events-none animate-[tooltip-fade-in_0.12s_ease]"
         :style="{ top: tooltipStyle.top, left: tooltipStyle.left }"
       >
         {{ hoveredLabel }}

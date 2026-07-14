@@ -61,7 +61,7 @@
             <tr v-for="u in filteredUsers" :key="u.id" class="border-b border-gray-100 last:border-none">
               <td class="px-2 py-3 text-left">
                 <div class="flex items-center gap-2.5">
-                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-900">
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-xs font-semibold text-white">
                     {{ initials(u.name) }}
                   </span>
                   <p class="m-0 font-medium">{{ u.name }}</p>
@@ -72,7 +72,7 @@
                 <span
                   class="rounded-full px-2.5 py-1 text-xs font-medium capitalize"
                   :class="{
-                    'bg-blue-100 text-blue-900': u.role === 'admin',
+                    'bg-blue-600/20 text-[#0a1628]': u.role === 'admin',
                     'bg-green-100 text-green-700': u.role === 'trainer',
                     'bg-amber-100 text-amber-700': u.role === 'student',
                   }"
@@ -107,7 +107,7 @@
     </div>
 
     <Teleport to="body">
-      <div v-if="modalOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/45 p-4" @click.self="closeModal">
+      <div v-if="modalOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-white/45 p-4" @click.self="closeModal">
         <div class="w-full max-w-[420px] rounded-xl bg-white p-6 shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
           <h2 class="mb-4 text-lg">{{ editingUser ? 'Edit User' : 'Add User' }}</h2>
 
