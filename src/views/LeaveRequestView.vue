@@ -47,6 +47,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
+function goToNewRequest() {
+  router.push('/leave/new')
+}
 
 // Placeholder data — will come from GET /api/leave-requests later
 const requests = ref([
