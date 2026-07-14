@@ -110,7 +110,7 @@
     <Teleport to="body">
       <div
         v-if="collapsed && hoveredLabel"
-        class="fixed z-[200] -translate-y-1/2 whitespace-nowrap rounded-md bg-white px-2.5 py-1.5 text-xs font-medium text-white shadow-[0_2px_8px_rgba(0,0,0,0.18)] pointer-events-none animate-[tooltip-fade-in_0.12s_ease]"
+        class="fixed z-[200] -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-[0_2px_8px_rgba(0,0,0,0.18)] pointer-events-none animate-[tooltip-fade-in_0.12s_ease]"
         :style="{ top: tooltipStyle.top, left: tooltipStyle.left }"
       >
         {{ hoveredLabel }}
