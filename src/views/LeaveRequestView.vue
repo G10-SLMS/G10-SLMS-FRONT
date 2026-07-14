@@ -2,7 +2,7 @@
   <div class="leave-requests">
     <div class="header-row">
       <h1>Leave Requests</h1>
-      <button class="new-btn">+ New Request</button>
+      <button class="new-btn" @click="goToNewRequest">+ New Request</button>
     </div>
 
     <div class="table-card">
@@ -36,6 +36,11 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
+function goToNewRequest() {
+  router.push('/leave/new')
+}
 
 // Placeholder data — will come from GET /api/leave-requests later
 const requests = ref([
