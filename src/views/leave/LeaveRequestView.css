@@ -1,415 +1,5 @@
-<template>
-  <div class="lr-page">
-    <!-- ═══ Hero Header ═══ -->
-    <div class="lr-hero">
-      <div class="lr-hero-bg">
-        <div class="lr-hero-shape lr-hero-shape--1"></div>
-        <div class="lr-hero-shape lr-hero-shape--2"></div>
-        <div class="lr-hero-shape lr-hero-shape--3"></div>
-      </div>
-      <div class="lr-header">
-        <div class="lr-header-left">
-          <div class="lr-header-icon">
-            <FileText :size="22" />
-          </div>
-          <div>
-            <h1>Leave Requests</h1>
-            <p class="lr-header-sub" v-if="authStore.isStudent">
-              Manage and track your submitted leave requests
-            </p>
-          </div>
-        </div>
-        <button class="lr-btn lr-btn-primary" @click="$router.push('/leave/new')">
-          <Plus :size="18" />
-          <span>New Request</span>
-        </button>
-      </div>
-    </div>
+/* Extracted from LeaveRequestView.vue to keep the .vue file clean */
 
-    <!-- ═══ Stats Row ═══ -->
-    <div class="lr-stats">
-      <div class="lr-stat-card" v-for="s in stats" :key="s.label">
-        <div class="lr-stat-icon" :style="{ background: s.bg, color: s.fg }">
-          <component :is="s.icon" :size="20" />
-        </div>
-        <div class="lr-stat-info">
-          <span class="lr-stat-val">{{ s.count }}</span>
-          <span class="lr-stat-lbl">{{ s.label }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ Filter Bar ═══ -->
-    <div class="lr-filters" :class="{ 'has-active': hasActiveFilters }">
-      <div class="lr-filter-row">
-        <div class="lr-search-box">
-          <Search :size="16" class="lr-search-ico" />
-          <input
-            v-model="filters.search"
-            type="text"
-            placeholder="Search by ID or leave type..."
-            class="lr-search"
-            @input="onSearchDebounced"
-          />
-          <button v-if="filters.search" class="lr-search-clear" @click="clearSearch">
-            <X :size="14" />
-          </button>
-        </div>
-        <button v-if="hasActiveFilters" class="lr-filter-clear" @click="clearAllFilters">
-          <RotateCcw :size="14" />
-          Reset Filters
-        </button>
-      </div>
-      <div class="lr-filter-group">
-        <div class="lr-filter-item">
-          <select v-model="filters.leave_type_id" @change="fetchRequests(1)">
-            <option value="">All Types</option>
-            <option v-for="t in leaveTypes" :key="t.id" :value="t.id">{{ t.name }}</option>
-          </select>
-        </div>
-        <div class="lr-filter-item">
-          <select v-model="filters.status" @change="fetchRequests(1)">
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-        <div class="lr-filter-item lr-date-range">
-          <Calendar :size="14" class="lr-filter-ico" />
-          <input type="date" v-model="filters.date_from" @change="fetchRequests(1)" placeholder="From" title="From date" />
-          <span class="lr-date-sep">—</span>
-          <input type="date" v-model="filters.date_to" @change="fetchRequests(1)" placeholder="To" title="To date" />
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ Error Banner ═══ -->
-    <Transition name="slide-down">
-      <div v-if="errMsg" class="lr-banner lr-banner-err">
-        <AlertCircle :size="16" />
-        <span>{{ errMsg }}</span>
-        <button @click="errMsg = ''"><X :size="14" /></button>
-      </div>
-    </Transition>
-
-    <!-- ═══ Table Card ═══ -->
-    <div class="lr-card">
-      <!-- Loading skeleton -->
-      <div v-if="loading" class="lr-loading">
-        <div class="lr-skeleton-row" v-for="n in 4" :key="n">
-          <div class="lr-sk lr-sk-id"></div>
-          <div class="lr-sk lr-sk-type"></div>
-          <div class="lr-sk lr-sk-date"></div>
-          <div class="lr-sk lr-sk-date"></div>
-          <div class="lr-sk lr-sk-days"></div>
-          <div class="lr-sk lr-sk-date"></div>
-          <div class="lr-sk lr-sk-status"></div>
-          <div class="lr-sk lr-sk-actions"></div>
-        </div>
-      </div>
-
-      <!-- Empty -->
-      <div v-else-if="items.length === 0" class="lr-empty">
-        <div class="lr-empty-illust">
-          <svg width="120" height="100" viewBox="0 0 120 100" fill="none">
-            <rect x="10" y="20" width="100" height="65" rx="8" stroke="#e2e8f0" stroke-width="2" fill="#f8fafc"/>
-            <rect x="20" y="32" width="80" height="4" rx="2" fill="#e2e8f0"/>
-            <rect x="20" y="42" width="60" height="4" rx="2" fill="#e2e8f0"/>
-            <rect x="20" y="52" width="70" height="4" rx="2" fill="#e2e8f0"/>
-            <circle cx="60" cy="72" r="12" fill="#e2e8f0"/>
-            <path d="M56 72h8M60 68v8" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
-            <circle cx="30" cy="72" r="4" fill="#e2e8f0"/>
-            <circle cx="90" cy="72" r="4" fill="#e2e8f0"/>
-            <path d="M5 30l-3 8M115 30l3 8" stroke="#e2e8f0" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h3>No leave requests yet</h3>
-        <p>{{ hasActiveFilters ? 'Try adjusting your search or filters' : 'Submit your first leave request to get started' }}</p>
-        <button v-if="!hasActiveFilters" class="lr-btn lr-btn-primary" @click="$router.push('/leave/new')">
-          <Plus :size="16" /> Submit a Request
-        </button>
-        <button v-else class="lr-btn lr-btn-ghost" @click="clearAllFilters">
-          <RotateCcw :size="16" /> Clear Filters
-        </button>
-      </div>
-
-      <!-- Table -->
-      <div v-else class="lr-table-wrap">
-        <table class="lr-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Leave Type</th>
-              <th>Duration</th>
-              <th class="td-center">Days</th>
-              <th>Submitted</th>
-              <th>Status</th>
-              <th class="td-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="r in items" :key="r.id" class="lr-row" @click="viewRequest(r.id)">
-              <td class="td-id">#{{ r.id }}</td>
-              <td>
-                <span class="lr-type-label">{{ r.leave_type_name }}</span>
-              </td>
-              <td class="td-date">
-                <span class="lr-date">{{ formatDate(r.start_date) }}</span>
-                <ArrowRight :size="12" class="lr-date-arrow" />
-                <span class="lr-date">{{ formatDate(r.end_date) }}</span>
-              </td>
-              <td class="td-center">
-                <span class="lr-days-badge">{{ r.total_days }}d</span>
-              </td>
-              <td class="td-date-sm">{{ r.submission_date }}</td>
-              <td>
-                <span class="lr-status" :class="`lr-status--${r.status}`">
-                  <span class="lr-status-dot" />
-                  {{ statusLabel(r.status) }}
-                </span>
-              </td>
-              <td class="td-right">
-                <div class="lr-actions" @click.stop>
-                  <button class="lr-act lr-act--view" title="View details" @click="viewRequest(r.id)">
-                    <Eye :size="15" />
-                  </button>
-                  <button
-                    class="lr-act lr-act--edit"
-                    title="Edit request"
-                    :disabled="r.status !== 'pending'"
-                    @click="editRequest(r.id)"
-                  >
-                    <Edit :size="15" />
-                  </button>
-                  <button
-                    class="lr-act lr-act--cancel"
-                    title="Cancel request"
-                    :disabled="r.status !== 'pending'"
-                    @click="confirmCancel(r)"
-                  >
-                    <XCircle :size="15" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div v-if="items.length > 0" class="lr-pagination">
-        <div class="lr-page-info">
-          Showing <strong>{{ from }}</strong>–<strong>{{ to }}</strong> of <strong>{{ total }}</strong> requests
-        </div>
-        <div class="lr-page-controls">
-          <button class="lr-page-btn" :disabled="page <= 1" @click="fetchRequests(page - 1)" title="Previous">
-            <ChevronLeft :size="16" />
-          </button>
-          <template v-for="p in visiblePages" :key="p">
-            <span v-if="p === -1" class="lr-page-ellipsis">...</span>
-            <button
-              v-else
-              class="lr-page-btn"
-              :class="{ active: p === page }"
-              @click="fetchRequests(p)"
-            >{{ p }}</button>
-          </template>
-          <button class="lr-page-btn" :disabled="page >= totalPages" @click="fetchRequests(page + 1)" title="Next">
-            <ChevronRight :size="16" />
-          </button>
-        </div>
-        <div class="lr-page-size">
-          <select v-model.number="perPage" @change="fetchRequests(1)">
-            <option :value="5">5 / page</option>
-            <option :value="10">10 / page</option>
-            <option :value="20">20 / page</option>
-            <option :value="50">50 / page</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ Confirm Cancel Modal ═══ -->
-    <Teleport to="body">
-      <Transition name="modal">
-        <div v-if="cancelTarget" class="lr-modal-overlay" @click.self="cancelTarget = null">
-          <div class="lr-modal">
-            <div class="lr-modal-glow" />
-            <div class="lr-modal-head">
-              <div class="lr-modal-icon lr-modal-icon--warn">
-                <AlertTriangle :size="22" />
-              </div>
-              <div>
-                <h3>Cancel Leave Request</h3>
-                <p>This will change the status to <strong>Cancelled</strong></p>
-              </div>
-              <button class="lr-modal-x" @click="cancelTarget = null"><X :size="18" /></button>
-            </div>
-            <div class="lr-modal-body">
-              <div class="lr-modal-detail" v-if="cancelTarget">
-                <div class="lr-modal-detail-row">
-                  <span>Leave Type</span>
-                  <strong>{{ cancelTarget.leave_type_name }}</strong>
-                </div>
-                <div class="lr-modal-detail-row">
-                  <span>Date Range</span>
-                  <strong>{{ formatDate(cancelTarget.start_date) }} — {{ formatDate(cancelTarget.end_date) }}</strong>
-                </div>
-                <div class="lr-modal-detail-row">
-                  <span>Total Days</span>
-                  <strong>{{ cancelTarget.total_days }} day{{ cancelTarget.total_days !== 1 ? 's' : '' }}</strong>
-                </div>
-              </div>
-              <p class="lr-modal-note">This action cannot be undone. The request will remain in the system with a "Cancelled" status.</p>
-            </div>
-            <div class="lr-modal-foot">
-              <button class="lr-btn lr-btn-ghost" @click="cancelTarget = null">Keep Request</button>
-              <button class="lr-btn lr-btn-danger" :disabled="cancelling" @click="doCancel">
-                <span v-if="cancelling" class="lr-spin-sm"></span>
-                <span v-else class="lr-btn-content"><XCircle :size="16" /> Yes, Cancel Request</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { useNotificationStore } from '@/stores/notification'
-import { leaveService } from '@/services/leaveService'
-import type { LeaveRequestListItem, LeaveType } from '@/types/leave'
-import type { AxiosError } from 'axios'
-import {
-  Search, X, Calendar, FileText, AlertCircle, AlertTriangle, Plus,
-  Eye, Edit, XCircle, ChevronLeft, ChevronRight, ArrowRight,
-  RotateCcw, Inbox, Clock, CheckCircle, AlertOctagon, Ban
-} from 'lucide-vue-next'
-
-const router = useRouter()
-const authStore = useAuthStore()
-const notificationStore = useNotificationStore()
-
-const items = ref<LeaveRequestListItem[]>([])
-const leaveTypes = ref<LeaveType[]>([])
-const loading = ref(true)
-const errMsg = ref('')
-const page = ref(1)
-const total = ref(0)
-const lastPage = ref(1)
-const perPage = ref(10)
-const cancelTarget = ref<LeaveRequestListItem | null>(null)
-const cancelling = ref(false)
-
-let searchTimeout: ReturnType<typeof setTimeout> | null = null
-
-const filters = reactive({
-  search: '',
-  leave_type_id: '' as string | number,
-  status: '',
-  date_from: '',
-  date_to: '',
-})
-
-const totalPages = computed(() => lastPage.value)
-const from = computed(() => total.value === 0 ? 0 : (page.value - 1) * perPage.value + 1)
-const to = computed(() => Math.min(page.value * perPage.value, total.value))
-
-const hasActiveFilters = computed(() =>
-  !!filters.search || !!filters.leave_type_id || !!filters.status || !!filters.date_from || !!filters.date_to
-)
-
-const stats = computed(() => {
-  const pending = items.value.filter(i => i.status === 'pending').length
-  const approved = items.value.filter(i => i.status === 'approved').length
-  const rejected = items.value.filter(i => i.status === 'rejected').length
-  const cancelled = items.value.filter(i => i.status === 'cancelled').length
-  return [
-    { icon: Clock, count: pending, label: 'Pending', bg: '#fef3c7', fg: '#d97706' },
-    { icon: CheckCircle, count: approved, label: 'Approved', bg: '#dcfce7', fg: '#16a34a' },
-    { icon: AlertOctagon, count: rejected, label: 'Rejected', bg: '#fee2e2', fg: '#dc2626' },
-    { icon: Ban, count: cancelled, label: 'Cancelled', bg: '#f1f5f9', fg: '#64748b' },
-  ]
-})
-
-const visiblePages = computed(() => {
-  const current = page.value
-  const last = lastPage.value
-  const delta = 2
-  const range: number[] = []
-  for (let i = Math.max(2, current - delta); i <= Math.min(last - 1, current + delta); i++) range.push(i)
-  const pages: number[] = [1]
-  if (range[0] > 2) pages.push(-1)
-  pages.push(...range)
-  if (range[range.length - 1] < last - 1) pages.push(-1)
-  if (last > 1) pages.push(last)
-  return pages
-})
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return '—'
-  const d = new Date(dateStr + 'T00:00:00')
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-function statusLabel(status: string): string {
-  return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown'
-}
-function onSearchDebounced() {
-  if (searchTimeout) clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => fetchRequests(1), 400)
-}
-function clearSearch() { filters.search = ''; fetchRequests(1) }
-function clearAllFilters() {
-  filters.search = ''; filters.leave_type_id = ''; filters.status = ''
-  filters.date_from = ''; filters.date_to = ''; fetchRequests(1)
-}
-
-async function fetchRequests(p: number = 1) {
-  loading.value = true; errMsg.value = ''; page.value = p
-  try {
-    const params: Record<string, string | number | undefined> = { page: p, per_page: perPage.value }
-    if (filters.search) params.search = filters.search
-    if (filters.leave_type_id) params.leave_type_id = filters.leave_type_id
-    if (filters.status) params.status = filters.status
-    if (filters.date_from) params.date_from = filters.date_from
-    if (filters.date_to) params.date_to = filters.date_to
-    const result = await leaveService.getLeaveRequests(params)
-    items.value = result.data; total.value = result.total; lastPage.value = result.last_page
-  } catch (err) {
-    errMsg.value = (err as AxiosError<{ message?: string }>).response?.data?.message || 'Failed to load leave requests.'
-    items.value = []
-  } finally { loading.value = false }
-}
-
-function viewRequest(id: number) { router.push(`/leave/${id}/edit`) }
-function editRequest(id: number) { router.push(`/leave/${id}/edit`) }
-function confirmCancel(r: LeaveRequestListItem) { cancelTarget.value = r }
-
-async function doCancel() {
-  if (!cancelTarget.value) return
-  cancelling.value = true
-  try {
-    await leaveService.cancelLeaveRequest(cancelTarget.value.id)
-    notificationStore.addNotification({ message: 'Leave request cancelled successfully.', type: 'success', read: false })
-    cancelTarget.value = null; await fetchRequests(page.value)
-  } catch (err) {
-    errMsg.value = (err as AxiosError<{ message?: string }>).response?.data?.message || 'Failed to cancel request.'
-  } finally { cancelling.value = false }
-}
-
-onMounted(async () => {
-  try { leaveTypes.value = await leaveService.getLeaveTypes() } catch {}
-  await fetchRequests()
-})
-</script>
-
-<style scoped>
 /* ═══════════════════════════════════════════════════
    LAYOUT & PAGE
    ═══════════════════════════════════════════════════ */
@@ -850,9 +440,7 @@ onMounted(async () => {
 .lr-row:hover {
   background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
 }
-.lr-row:active {
-  background: #e2e8f0;
-}
+.lr-row:active { background: #e2e8f0; }
 .lr-row td {
   padding: 14px 16px;
   color: #334155;
@@ -879,19 +467,13 @@ onMounted(async () => {
   color: #475569;
   white-space: nowrap;
 }
-.lr-date-arrow {
-  color: #cbd5e1;
-  flex-shrink: 0;
-}
+.lr-date-arrow { color: #cbd5e1; flex-shrink: 0; }
 .td-date-sm {
   font-size: 13px;
   color: #64748b;
   white-space: nowrap;
 }
-.lr-type-label {
-  font-weight: 600;
-  color: #0f172a;
-}
+.lr-type-label { font-weight: 600; color: #0f172a; }
 .lr-days-badge {
   display: inline-flex;
   align-items: center;
@@ -996,7 +578,8 @@ onMounted(async () => {
   padding: 7px 30px 7px 12px;
   border: 1.5px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 12px; font-weight: 600;
+  font-size: 12px;
+  font-weight: 600;
   color: #475569;
   background: #fff;
   outline: none;
@@ -1101,13 +684,8 @@ onMounted(async () => {
    RESPONSIVE
    ═══════════════════════════════════════════════════ */
 @media (max-width: 900px) {
-  .lr-stats {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  .lr-skeleton-row {
-    grid-template-columns: 40px 1fr 1fr 50px 80px 90px;
-  }
+  .lr-stats { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .lr-skeleton-row { grid-template-columns: 40px 1fr 1fr 50px 80px 90px; }
   .lr-skeleton-row .lr-sk:nth-child(3),
   .lr-skeleton-row .lr-sk:nth-child(4) { display: none; }
   .lr-table thead th:nth-child(3),
@@ -1155,4 +733,4 @@ onMounted(async () => {
   .lr-stats { grid-template-columns: repeat(2, 1fr); }
   .lr-stat-val { font-size: 18px; }
 }
-</style>
+
