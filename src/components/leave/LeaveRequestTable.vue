@@ -1,14 +1,14 @@
 <template>
-  <div class="table-card">
-    <table v-if="requests.length">
+  <div class="overflow-x-auto rounded-[10px] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
+    <table v-if="requests.length" class="w-full border-collapse text-sm">
       <thead>
         <tr>
-          <th>Student</th>
-          <th>Leave Type</th>
-          <th>Leave Date</th>
-          <th>Submitted</th>
-          <th>Status</th>
-          <th v-if="showActions">Actions</th>
+          <th class="border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">Student</th>
+          <th class="border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">Leave Type</th>
+          <th class="border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">Leave Date</th>
+          <th class="border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">Submitted</th>
+          <th class="border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">Status</th>
+          <th v-if="showActions" class="border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -26,44 +26,23 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import LeaveRequestRow from './LeaveRequestRow.vue'
 import LeaveRequestEmptyState from './LeaveRequestEmptyState.vue'
 
-defineProps({
-  requests: {
-    type: Array,
-    required: true,
-  },
-  showActions: {
-    type: Boolean,
-    default: false,
-  },
-})
+interface LeaveRequest {
+  id: number
+  student: string
+  type: string
+  leaveDate: string
+  submittedAt: string
+  status: string
+}
 
-defineEmits(['edit'])
+defineProps<{
+  requests: LeaveRequest[]
+  showActions?: boolean
+}>()
+
+defineEmits<{ edit: [id: number] }>()
 </script>
-
-<style scoped>
-.table-card {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-th {
-  text-align: left;
-  padding: 14px 16px;
-  color: #6b7280;
-  font-weight: 500;
-  font-size: 13px;
-  border-bottom: 1px solid #e5e7eb;
-}
-</style>

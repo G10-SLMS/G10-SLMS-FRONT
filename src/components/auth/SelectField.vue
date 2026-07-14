@@ -12,16 +12,17 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="form-row">
-    <label class="form-label" :for="id">{{ label }}</label>
-    <div class="input-wrap">
-      <span class="input-icon">
+  <div class="mb-[1.1rem]">
+    <label class="mb-1.5 block text-[0.72rem] font-bold uppercase tracking-wide text-gray-700" :for="id">{{ label }}</label>
+    <div class="relative flex items-center">
+      <span class="pointer-events-none absolute left-3.5 flex items-center text-gray-400">
         <slot name="icon" />
       </span>
       <select
         :id="id"
         :value="modelValue"
         :required="required"
+        class="w-full appearance-none rounded-[10px] border border-gray-300 bg-[#fbfbfc] py-3 pl-10 pr-3.5 text-[0.92rem] text-gray-900 transition-colors focus:border-blue-600 focus:bg-white focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)] focus:outline-none"
         @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
       >
         <slot />

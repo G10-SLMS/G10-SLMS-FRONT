@@ -1,5 +1,5 @@
 <template>
-  <div class="leave-requests">
+  <div class="max-w-full">
     <LeaveRequestsHeader
       :show-new-button="auth.isStudent"
       @new="leaveModal.openCreate()"
@@ -13,7 +13,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
@@ -68,8 +68,3 @@ const requests = computed(() =>
 )
 </script>
 
-<style scoped>
-.leave-requests {
-  max-width: 100%;
-}
-</style>

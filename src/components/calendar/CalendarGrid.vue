@@ -1,5 +1,5 @@
 <template>
-  <div class="calendar-grid">
+  <div class="grid grid-cols-7 gap-px">
     <slot />
   </div>
 </template>

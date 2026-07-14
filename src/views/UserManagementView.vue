@@ -1,48 +1,43 @@
 <template>
-  <div class="user-mgmt-view">
-    <div class="header-row">
+  <div class="max-w-full">
+    <div class="mb-5 flex items-start justify-between">
       <div>
         <h1>User Management</h1>
-        <p class="sub-label">Manage students, trainers, and admin accounts</p>
+        <p class="mt-1 text-[13px] text-gray-500">Manage students, trainers, and admin accounts</p>
       </div>
-      <button class="primary-btn" @click="openAddModal">
+      <button
+        class="inline-flex items-center gap-2 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-blue-700"
+        @click="openAddModal"
+      >
         <UserPlus :size="16" :stroke-width="1.8" />
         Add User
       </button>
     </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <span class="stat-icon icon-blue"><Users :size="18" :stroke-width="1.8" /></span>
-        <p class="stat-label">Total Users</p>
-        <p class="stat-value">{{ users.length }}</p>
-      </div>
-      <div class="stat-card">
-        <span class="stat-icon icon-green"><GraduationCap :size="18" :stroke-width="1.8" /></span>
-        <p class="stat-label">Students</p>
-        <p class="stat-value">{{ counts.student }}</p>
-      </div>
-      <div class="stat-card">
-        <span class="stat-icon icon-amber"><UserCheck :size="18" :stroke-width="1.8" /></span>
-        <p class="stat-label">Trainers</p>
-        <p class="stat-value">{{ counts.trainer }}</p>
-      </div>
-      <div class="stat-card">
-        <span class="stat-icon icon-blue"><ShieldCheck :size="18" :stroke-width="1.8" /></span>
-        <p class="stat-label">Admins</p>
-        <p class="stat-value">{{ counts.admin }}</p>
-      </div>
+    <div class="mb-5 grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
+      <StatCard :icon="Users" label="Total Users" :value="users.length" color="blue" />
+      <StatCard :icon="GraduationCap" label="Students" :value="counts.student" color="green" />
+      <StatCard :icon="UserCheck" label="Trainers" :value="counts.trainer" color="amber" />
+      <StatCard :icon="ShieldCheck" label="Admins" :value="counts.admin" color="blue" />
     </div>
 
-    <div class="card table-card">
-      <div class="card-header">
-        <h2>All Users</h2>
-        <div class="toolbar">
-          <div class="search-box">
+    <div class="rounded-[10px] bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
+        <h2 class="m-0 text-base">All Users</h2>
+        <div class="flex flex-wrap gap-2.5">
+          <div class="flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-2 text-gray-500">
             <Search :size="15" :stroke-width="1.8" />
-            <input v-model="search" type="text" placeholder="Search by name or email" />
+            <input
+              v-model="search"
+              type="text"
+              placeholder="Search by name or email"
+              class="w-[200px] border-none bg-transparent text-[13px] text-gray-900 outline-none max-sm:w-[140px]"
+            />
           </div>
-          <select v-model="roleFilter" class="role-select">
+          <select
+            v-model="roleFilter"
+            class="rounded-md border border-gray-200 bg-white px-2.5 py-2 text-[13px] text-gray-700"
+          >
             <option value="all">All roles</option>
             <option value="admin">Admin</option>
             <option value="trainer">Trainer</option>
@@ -51,43 +46,60 @@
         </div>
       </div>
 
-      <div class="table-scroll">
-        <table>
+      <div class="w-full overflow-x-auto">
+        <table class="w-full min-w-[640px] border-collapse text-sm md:min-w-0">
           <thead>
             <tr>
-              <th>User</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Joined</th>
-              <th></th>
+              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">User</th>
+              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Email</th>
+              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Role</th>
+              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Joined</th>
+              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500"></th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="u in filteredUsers" :key="u.id">
-              <td>
-                <div class="user-cell">
-                  <span class="avatar-dot">{{ initials(u.name) }}</span>
-                  <p class="user-name">{{ u.name }}</p>
+            <tr v-for="u in filteredUsers" :key="u.id" class="border-b border-gray-100 last:border-none">
+              <td class="px-2 py-3 text-left">
+                <div class="flex items-center gap-2.5">
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-900">
+                    {{ initials(u.name) }}
+                  </span>
+                  <p class="m-0 font-medium">{{ u.name }}</p>
                 </div>
               </td>
-              <td>{{ u.email }}</td>
-              <td>
-                <span class="badge" :class="u.role">{{ roleLabel(u.role) }}</span>
+              <td class="px-2 py-3 text-left">{{ u.email }}</td>
+              <td class="px-2 py-3 text-left">
+                <span
+                  class="rounded-full px-2.5 py-1 text-xs font-medium capitalize"
+                  :class="{
+                    'bg-blue-100 text-blue-900': u.role === 'admin',
+                    'bg-green-100 text-green-700': u.role === 'trainer',
+                    'bg-amber-100 text-amber-700': u.role === 'student',
+                  }"
+                >{{ roleLabel(u.role) }}</span>
               </td>
-              <td>{{ u.joined }}</td>
-              <td>
-                <div class="row-actions">
-                  <button class="icon-btn" aria-label="Edit user" @click="openEditModal(u)">
+              <td class="px-2 py-3 text-left">{{ u.joined }}</td>
+              <td class="px-2 py-3 text-left">
+                <div class="flex gap-1.5">
+                  <button
+                    class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 text-gray-700 cursor-pointer hover:bg-gray-200"
+                    aria-label="Edit user"
+                    @click="openEditModal(u)"
+                  >
                     <Pencil :size="15" :stroke-width="1.8" />
                   </button>
-                  <button class="icon-btn danger" aria-label="Remove user" @click="removeUser(u.id)">
+                  <button
+                    class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 text-gray-700 cursor-pointer hover:bg-red-100 hover:text-red-700"
+                    aria-label="Remove user"
+                    @click="removeUser(u.id)"
+                  >
                     <Trash2 :size="15" :stroke-width="1.8" />
                   </button>
                 </div>
               </td>
             </tr>
             <tr v-if="filteredUsers.length === 0">
-              <td colspan="5" class="empty-row">No users match your search.</td>
+              <td colspan="5" class="px-2 py-6 text-center text-gray-400">No users match your search.</td>
             </tr>
           </tbody>
         </table>
@@ -95,32 +107,51 @@
     </div>
 
     <Teleport to="body">
-      <div v-if="modalOpen" class="modal-backdrop" @click.self="closeModal">
-        <div class="modal">
-          <h2>{{ editingUser ? 'Edit User' : 'Add User' }}</h2>
+      <div v-if="modalOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/45 p-4" @click.self="closeModal">
+        <div class="w-full max-w-[420px] rounded-xl bg-white p-6 shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+          <h2 class="mb-4 text-lg">{{ editingUser ? 'Edit User' : 'Add User' }}</h2>
 
-          <label class="field">
+          <label class="mb-3.5 flex flex-col gap-1.5 text-[13px] text-gray-700">
             <span>Full Name</span>
-            <input v-model="form.name" type="text" placeholder="e.g. Sokha Chan" />
+            <input
+              v-model="form.name"
+              type="text"
+              placeholder="e.g. Sokha Chan"
+              class="rounded-md border border-gray-200 px-2.5 py-[9px] text-sm text-gray-900 focus:border-blue-600 focus:outline-none"
+            />
           </label>
 
-          <label class="field">
+          <label class="mb-3.5 flex flex-col gap-1.5 text-[13px] text-gray-700">
             <span>Email</span>
-            <input v-model="form.email" type="email" placeholder="name@example.com" />
+            <input
+              v-model="form.email"
+              type="email"
+              placeholder="name@example.com"
+              class="rounded-md border border-gray-200 px-2.5 py-[9px] text-sm text-gray-900 focus:border-blue-600 focus:outline-none"
+            />
           </label>
 
-          <label class="field">
+          <label class="mb-3.5 flex flex-col gap-1.5 text-[13px] text-gray-700">
             <span>Role</span>
-            <select v-model="form.role">
+            <select
+              v-model="form.role"
+              class="rounded-md border border-gray-200 px-2.5 py-[9px] text-sm text-gray-900 focus:border-blue-600 focus:outline-none"
+            >
               <option value="student">Student</option>
               <option value="trainer">Trainer</option>
               <option value="admin">Admin</option>
             </select>
           </label>
 
-          <div class="modal-actions">
-            <button class="secondary-btn" @click="closeModal">Cancel</button>
-            <button class="primary-btn" @click="saveUser">
+          <div class="mt-5 flex justify-end gap-2.5">
+            <button
+              class="rounded-md border-none bg-gray-100 px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-gray-200"
+              @click="closeModal"
+            >Cancel</button>
+            <button
+              class="rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white cursor-pointer hover:bg-blue-700"
+              @click="saveUser"
+            >
               {{ editingUser ? 'Save Changes' : 'Add User' }}
             </button>
           </div>
@@ -143,6 +174,7 @@ import {
   Trash2,
 } from 'lucide-vue-next'
 import type { UserRole } from '@/types/user'
+import StatCard from '@/components/ui/StatCard.vue'
 
 interface ManagedUser {
   id: number
@@ -180,12 +212,7 @@ const filteredUsers = computed(() =>
 )
 
 function initials(name: string) {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
+  return name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
 }
 
 function roleLabel(role: UserRole) {
@@ -220,13 +247,11 @@ function saveUser() {
   if (!form.name.trim() || !form.email.trim()) return
 
   if (editingUser.value) {
-    // Will call PUT /api/users/:id later
     const idx = users.value.findIndex((u) => u.id === editingUser.value!.id)
     if (idx !== -1) {
       users.value[idx] = { ...users.value[idx], name: form.name, email: form.email, role: form.role }
     }
   } else {
-    // Will call POST /api/users later
     users.value.push({
       id: Math.max(0, ...users.value.map((u) => u.id)) + 1,
       name: form.name,
@@ -240,339 +265,6 @@ function saveUser() {
 }
 
 function removeUser(id: number) {
-  // Will call DELETE /api/users/:id later
   users.value = users.value.filter((u) => u.id !== id)
 }
 </script>
-
-<style scoped>
-.user-mgmt-view {
-  max-width: 100%;
-}
-
-.header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-
-.sub-label {
-  font-size: 13px;
-  color: #6b7280;
-  margin-top: 4px;
-}
-
-.primary-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.primary-btn:hover {
-  background: #1d4ed8;
-}
-
-.secondary-btn {
-  background: #f3f4f6;
-  color: #374151;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.secondary-btn:hover {
-  background: #e5e7eb;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  background: white;
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.stat-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-}
-
-.icon-blue {
-  background: #dbeafe;
-  color: #1e3a8a;
-}
-
-.icon-amber {
-  background: #fef3c7;
-  color: #b45309;
-}
-
-.icon-green {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.stat-label {
-  font-size: 13px;
-  color: #6b7280;
-  margin: 0 0 6px;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.card {
-  background: white;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.card h2 {
-  font-size: 16px;
-  margin: 0;
-}
-
-.toolbar {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 8px 10px;
-  color: #6b7280;
-}
-
-.search-box input {
-  border: none;
-  background: none;
-  outline: none;
-  font-size: 13px;
-  width: 200px;
-  color: #111827;
-}
-
-.role-select {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 13px;
-  color: #374151;
-  background: white;
-}
-
-.table-scroll {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.table-scroll table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-@media (max-width: 768px) {
-  .table-scroll table {
-    min-width: 640px;
-  }
-}
-
-.table-scroll th,
-.table-scroll td {
-  text-align: left;
-  padding: 12px 8px;
-}
-
-.table-scroll th {
-  color: #6b7280;
-  font-weight: 500;
-  font-size: 13px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.table-scroll tbody tr {
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.table-scroll tbody tr:last-child {
-  border-bottom: none;
-}
-
-.user-cell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.avatar-dot {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #dbeafe;
-  color: #1e3a8a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.user-name {
-  margin: 0;
-  font-weight: 500;
-}
-
-.badge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: capitalize;
-}
-
-.badge.admin {
-  background: #dbeafe;
-  color: #1e3a8a;
-}
-
-.badge.trainer {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.badge.student {
-  background: #fef3c7;
-  color: #b45309;
-}
-
-.row-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  border: none;
-  background: #f3f4f6;
-  color: #374151;
-  cursor: pointer;
-}
-
-.icon-btn:hover {
-  background: #e5e7eb;
-}
-
-.icon-btn.danger:hover {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.empty-row {
-  text-align: center;
-  color: #9ca3af;
-  padding: 24px 8px;
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 16px;
-}
-
-.modal {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-}
-
-.modal h2 {
-  font-size: 18px;
-  margin: 0 0 16px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 14px;
-  font-size: 13px;
-  color: #374151;
-}
-
-.field input,
-.field select {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 9px 10px;
-  font-size: 14px;
-  color: #111827;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-@media (max-width: 640px) {
-  .search-box input {
-    width: 140px;
-  }
-}
-</style>
