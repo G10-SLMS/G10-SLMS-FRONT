@@ -15,13 +15,11 @@
           class="flex max-h-[90vh] w-full max-w-[560px] flex-col rounded-xl bg-white shadow-xl"
           role="dialog"
           aria-modal="true"
-          :aria-label="isEditMode ? 'Edit Leave Request' : 'New Leave Request'"
+          :aria-label="modalTitle"
         >
           <!-- Header -->
           <div class="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4.5">
-            <h2 class="m-0 text-base font-semibold text-gray-900">
-              {{ isEditMode ? 'Edit Leave Request' : 'New Leave Request' }}
-            </h2>
+            <h2 class="m-0 text-base font-semibold text-gray-900">{{ modalTitle }}</h2>
             <button
               type="button"
               class="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
@@ -38,11 +36,11 @@
               {{ loadError }}
             </div>
 
-            <div v-else-if="isEditMode && !editableLoaded" class="flex flex-col items-center justify-center gap-2.5 px-5 py-8 text-center text-gray-500">
+            <div v-else-if="needsLoad && !editableLoaded" class="flex flex-col items-center justify-center gap-2.5 px-5 py-8 text-center text-gray-500">
               Loading request…
             </div>
 
-            <div v-else-if="isEditMode && !canEdit" class="flex flex-col items-center justify-center gap-2.5 px-5 py-8 text-center text-gray-500 [&_svg]:text-amber-500">
+            <div v-else-if="isEditMode && editableLoaded && !canEdit" class="flex flex-col items-center justify-center gap-2.5 px-5 py-8 text-center text-gray-500 [&_svg]:text-amber-500">
               <Lock :size="32" :stroke-width="1.5" />
               <p>This request can no longer be edited because its status is <strong>{{ originalStatus }}</strong>.</p>
               <button
@@ -65,22 +63,33 @@
                   Leave Type <span class="text-red-600">*</span>
                 </label>
                 <div class="relative flex items-center">
-                  <span class="absolute left-3 flex text-gray-400 pointer-events-none"><FileText :size="18" /></span>
+                  <span class="pointer-events-none absolute left-3 flex text-gray-400"><FileText :size="18" /></span>
                   <select
                     id="m-type"
-                    v-model="form.type"
+                    v-model="form.leaveTypeId"
                     required
-                    :disabled="submitting"
-                    class="w-full appearance-none rounded-md border border-gray-300 bg-white py-2.5浏览 pl-10 pr-10 text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
+                    :disabled="isViewMode || submitting || typesLoading"
+                    class="w-full appearance-none rounded-md border border-gray-300 bg-white py-2.5 pl-10 pr-10 text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10 disabled:bg-gray-50 disabled:text-gray-500"
                   >
-                    <option value="" disabled>Select leave type</option>
-                    <option value="Sick Leave">Sick Leave</option>
-                    <option value="Personal Leave">Personal Leave</option>
-                    <option value="Emergency Leave">Emergency Leave</option>
-                    <option value="Academic Leave">Academic Leave</option>
-                    <option value="Other">Other</option>
+                    <option value="" disabled>{{ typesLoading ? 'Loading leave types…' : 'Select leave type' }}</option>
+                    <option v-for="type in activeLeaveTypes" :key="type.id" :value="type.id">{{ type.name }}</option>
+                    <option value="other">Other (specify)</option>
                   </select>
                 </div>
+              </div>
+
+              <div v-if="form.leaveTypeId === 'other'" class="mb-4">
+                <label class="mb-1.5 block text-xs font-medium text-gray-700" for="m-custom-type">
+                  Specify Leave Type <span class="text-red-600">*</span>
+                </label>
+                <input
+                  id="m-custom-type"
+                  v-model.trim="form.customType"
+                  type="text"
+                  placeholder="e.g. Bereavement Leave"
+                  :disabled="isViewMode || submitting"
+                  class="w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10 disabled:bg-gray-50 disabled:text-gray-500"
+                />
               </div>
 
               <!-- Date Range -->
@@ -90,15 +99,15 @@
                     Start Date <span class="text-red-600">*</span>
                   </label>
                   <div class="relative flex items-center">
-                    <span class="absolute left-3 flex text-gray-400 pointer-events-none"><Calendar :size="18" /></span>
+                    <span class="pointer-events-none absolute left-3 flex text-gray-400"><Calendar :size="18" /></span>
                     <input
                       id="m-startDate"
                       v-model="form.startDate"
                       type="date"
                       :min="todayStr"
                       required
-                      :disabled="submitting"
-                      class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
+                      :disabled="isViewMode || submitting"
+                      class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10 disabled:bg-gray-50 disabled:text-gray-500"
                       @change="onStartDateChange"
                     />
                   </div>
@@ -109,15 +118,15 @@
                     End Date <span class="text-red-600">*</span>
                   </label>
                   <div class="relative flex items-center">
-                    <span class="absolute left-3 flex text-gray-400 pointer-events-none"><Calendar :size="18" /></span>
+                    <span class="pointer-events-none absolute left-3 flex text-gray-400"><Calendar :size="18" /></span>
                     <input
                       id="m-endDate"
                       v-model="form.endDate"
                       type="date"
                       :min="form.startDate || todayStr"
                       required
-                      :disabled="submitting"
-                      class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
+                      :disabled="isViewMode || submitting"
+                      class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10 disabled:bg-gray-50 disabled:text-gray-500"
                     />
                   </div>
                 </div>
@@ -135,15 +144,15 @@
                   rows="4"
                   placeholder="Briefly explain the reason for your leave"
                   required
-                  :disabled="submitting"
+                  :disabled="isViewMode || submitting"
                   maxlength="500"
-                  class="w-full resize-y rounded-md border border-gray-300 px-3 py-2.5 font-sans text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
+                  class="w-full resize-y rounded-md border border-gray-300 px-3 py-2.5 font-sans text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10 disabled:bg-gray-50 disabled:text-gray-500"
                 />
-                <span class="mt-1 block text-right text-[11px] text-gray-400">{{ form.reason.length }}/500</span>
+                <span v-if="!isViewMode" class="mt-1 block text-right text-[11px] text-gray-400">{{ form.reason.length }}/500</span>
               </div>
 
               <!-- Attachment -->
-              <div class="mb-4">
+              <div v-if="!isViewMode" class="mb-4">
                 <label class="mb-1.5 block text-xs font-medium text-gray-700" for="m-attachment">Supporting Document (optional)</label>
                 <div class="flex items-center gap-2">
                   <label
@@ -178,7 +187,7 @@
 
           <!-- Footer -->
           <div
-            v-if="!loadError && !(isEditMode && !editableLoaded) && !(isEditMode && !canEdit)"
+            v-if="!loadError && editableLoaded && !(isEditMode && !canEdit)"
             class="flex shrink-0 justify-end gap-2.5 border-t border-gray-100 px-6 py-4"
           >
             <button
@@ -187,9 +196,10 @@
               :disabled="submitting"
               @click="handleClose"
             >
-              Cancel
+              {{ isViewMode ? 'Close' : 'Cancel' }}
             </button>
             <button
+              v-if="!isViewMode"
               type="submit"
               form="leave-form"
               class="rounded-md bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
@@ -208,16 +218,23 @@
 import { computed, reactive, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
+import { leaveService } from '@/services/leaveService'
+import type { LeaveType, LeaveRequestPayload } from '@/types/leave'
+import type { AxiosError } from 'axios'
 import { FileText, Calendar, Paperclip, X, Lock } from 'lucide-vue-next'
-
-const emit = defineEmits<{
-  (e: 'submitted'): void
-}>()
 
 const auth = useAuthStore()
 const modal = useLeaveFormModalStore()
 
-const isEditMode = computed(() => modal.editingId !== null)
+const isEditMode = computed(() => modal.mode === 'edit')
+const isViewMode = computed(() => modal.mode === 'view')
+const needsLoad = computed(() => isEditMode.value || isViewMode.value)
+
+const modalTitle = computed(() => {
+  if (isViewMode.value) return 'Leave Request Details'
+  return isEditMode.value ? 'Edit Leave Request' : 'New Leave Request'
+})
+
 const submitting = ref(false)
 const submitError = ref('')
 const loadError = ref('')
@@ -225,10 +242,15 @@ const editableLoaded = ref(false)
 const canEdit = ref(true)
 const originalStatus = ref('')
 
+const leaveTypes = ref<LeaveType[]>([])
+const typesLoading = ref(false)
+const activeLeaveTypes = computed(() => leaveTypes.value.filter((t) => t.active))
+
 const todayStr = new Date().toISOString().slice(0, 10)
 
 const form = reactive({
-  type: '',
+  leaveTypeId: '' as number | string,
+  customType: '',
   startDate: '',
   endDate: '',
   reason: '',
@@ -236,7 +258,8 @@ const form = reactive({
 })
 
 function resetForm() {
-  form.type = ''
+  form.leaveTypeId = ''
+  form.customType = ''
   form.startDate = ''
   form.endDate = ''
   form.reason = ''
@@ -253,13 +276,15 @@ const dateRangeError = computed(() => {
   return form.endDate < form.startDate ? 'End date cannot be before start date.' : ''
 })
 
-const canSubmit = computed(() =>
-  !submitting.value &&
-  form.type.length > 0 &&
-  form.startDate.length > 0 &&
-  form.endDate.length > 0 &&
-  form.reason.trim().length > 0 &&
-  !dateRangeError.value
+const canSubmit = computed(
+  () =>
+    !submitting.value &&
+    form.leaveTypeId !== '' &&
+    (form.leaveTypeId !== 'other' || form.customType.length > 0) &&
+    form.startDate.length > 0 &&
+    form.endDate.length > 0 &&
+    form.reason.trim().length > 0 &&
+    !dateRangeError.value,
 )
 
 function onStartDateChange() {
@@ -299,47 +324,51 @@ function handleEscape(e: KeyboardEvent) {
 onMounted(() => window.addEventListener('keydown', handleEscape))
 onUnmounted(() => window.removeEventListener('keydown', handleEscape))
 
+async function ensureLeaveTypes() {
+  if (leaveTypes.value.length > 0 || typesLoading.value) return
+  typesLoading.value = true
+  try {
+    leaveTypes.value = await leaveService.getLeaveTypes()
+  } catch {
+    // Leave types are non-critical for viewing; the "Other" option still works.
+  } finally {
+    typesLoading.value = false
+  }
+}
+
 watch(
   () => modal.isOpen,
   async (open) => {
     if (!open) return
     resetForm()
-    if (!isEditMode.value) return
+    ensureLeaveTypes()
+
+    if (!needsLoad.value) {
+      editableLoaded.value = true
+      return
+    }
 
     try {
-      const data = await fakeFetchRequest(String(modal.editingId))
+      const data = await leaveService.getLeaveRequest(Number(modal.editingId))
 
-      if (data.studentId !== auth.user?.id) {
+      if (isEditMode.value && data.user_id !== auth.user?.id) {
         loadError.value = 'You do not have permission to edit this request.'
         return
       }
 
       originalStatus.value = data.status
-      canEdit.value = data.status === 'Pending'
-      form.type = data.type
-      form.startDate = data.startDate
-      form.endDate = data.endDate
+      canEdit.value = data.status === 'pending'
+      form.leaveTypeId = data.leave_type_id
+      form.startDate = data.start_date
+      form.endDate = data.end_date
       form.reason = data.reason
     } catch {
       loadError.value = 'Failed to load this leave request.'
     } finally {
       editableLoaded.value = true
     }
-  }
+  },
 )
-
-async function fakeFetchRequest(id: string) {
-  await new Promise((r) => setTimeout(r, 300))
-  return {
-    id,
-    studentId: auth.user?.id,
-    type: 'Sick Leave',
-    startDate: '2026-07-08',
-    endDate: '2026-07-09',
-    reason: 'Fever and flu symptoms.',
-    status: 'Pending',
-  }
-}
 
 async function handleSubmit() {
   if (!canSubmit.value) return
@@ -348,23 +377,26 @@ async function handleSubmit() {
   submitError.value = ''
 
   try {
-    const payload = new FormData()
-    payload.append('type', form.type)
-    payload.append('startDate', form.startDate)
-    payload.append('endDate', form.endDate)
-    payload.append('reason', form.reason)
-    if (form.attachment) payload.append('attachment', form.attachment)
-
-    if (isEditMode.value) {
-      await new Promise((r) => setTimeout(r, 500))
-    } else {
-      await new Promise((r) => setTimeout(r, 500))
+    const payload: LeaveRequestPayload = {
+      leave_type_id: form.leaveTypeId === 'other' ? null : Number(form.leaveTypeId),
+      custom_leave_type: form.leaveTypeId === 'other' ? form.customType : null,
+      start_date: form.startDate,
+      end_date: form.endDate,
+      reason: form.reason,
+      supporting_document: form.attachment,
     }
 
-    emit('submitted')
+    if (isEditMode.value) {
+      await leaveService.updateLeaveRequest(Number(modal.editingId), payload)
+    } else {
+      await leaveService.createLeaveRequest(payload)
+    }
+
+    modal.notifySubmitted()
     modal.close()
-  } catch {
-    submitError.value = 'Something went wrong. Please try again.'
+  } catch (err) {
+    submitError.value =
+      (err as AxiosError<{ message?: string }>).response?.data?.message || 'Something went wrong. Please try again.'
   } finally {
     submitting.value = false
   }

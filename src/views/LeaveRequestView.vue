@@ -1,70 +1,101 @@
 <template>
-  <div class="max-w-full">
-    <LeaveRequestsHeader
-      :show-new-button="auth.isStudent"
-      @new="leaveModal.openCreate()"
+  <div class="mx-auto max-w-[1120px]">
+    <LeaveRequestsHero />
+
+    <LeaveStatsRow :stats="stats" />
+
+    <LeaveFiltersBar
+      :filters="filters"
+      :leaveTypes="leaveTypes"
+      :hasActiveFilters="hasActiveFilters"
+      :onSearchDebounced="onSearchDebounced"
+      :clearSearch="clearSearch"
+      :clearAllFilters="clearAllFilters"
+      :fetchRequests="fetchRequests"
     />
 
-    <LeaveRequestTable
-      :requests="requests"
-      :show-actions="auth.isStudent"
-      @edit="leaveModal.openEdit($event)"
+    <LeaveErrorBanner :message="errMsg" @close="errMsg = ''" />
+
+    <div class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+      <LeaveLoadingSkeleton v-if="loading" />
+
+      <LeaveEmptyState
+        v-else-if="items.length === 0"
+        :hasActiveFilters="hasActiveFilters"
+        @clear-filters="clearAllFilters"
+      />
+
+      <LeaveRequestsTable
+        v-else
+        :items="items"
+        :formatDate="formatDate"
+        :viewRequest="viewRequest"
+        :editRequest="editRequest"
+        :confirmCancel="confirmCancel"
+      />
+
+      <LeaveRequestsPagination
+        v-if="items.length > 0"
+        :page="page"
+        :totalPages="totalPages"
+        :total="total"
+        :from="from"
+        :to="to"
+        :perPage="perPage"
+        :visiblePages="visiblePages"
+        :fetchRequests="fetchRequests"
+        @update:per-page="perPage = $event"
+      />
+    </div>
+
+    <CancelLeaveModal
+      :cancelTarget="cancelTarget"
+      :cancelling="cancelling"
+      :formatDate="formatDate"
+      :doCancel="doCancel"
+      :emitClose="() => (cancelTarget = null)"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
-import LeaveRequestsHeader from '@/components/leave/LeaveRequestsHeader.vue'
-import LeaveRequestTable from '@/components/leave/LeaveRequestTable.vue'
+import { useLeaveRequests } from '@/composables/useLeaveRequests'
 
-const auth = useAuthStore()
-const leaveModal = useLeaveFormModalStore()
+import LeaveRequestsHero from '@/components/leave/LeaveRequestsHero.vue'
+import LeaveStatsRow from '@/components/leave/LeaveStatsRow.vue'
+import LeaveFiltersBar from '@/components/leave/LeaveFiltersBar.vue'
+import LeaveErrorBanner from '@/components/leave/LeaveErrorBanner.vue'
+import LeaveLoadingSkeleton from '@/components/leave/LeaveLoadingSkeleton.vue'
+import LeaveEmptyState from '@/components/leave/LeaveEmptyState.vue'
+import LeaveRequestsTable from '@/components/leave/LeaveRequestsTable.vue'
+import LeaveRequestsPagination from '@/components/leave/LeaveRequestsPagination.vue'
+import CancelLeaveModal from '@/components/leave/CancelLeaveModal.vue'
 
-const allRequests = ref([
-  {
-    id: 1,
-    studentId: 101,
-    student: 'Sok Dara',
-    type: 'Sick Leave',
-    leaveDate: 'Jul 9, 2026',
-    status: 'Pending',
-    submittedAt: '2026-07-13T06:30:00',
-  },
-  {
-    id: 2,
-    studentId: 102,
-    student: 'Chan Sophea',
-    type: 'Personal Leave',
-    leaveDate: 'Jul 10, 2026',
-    status: 'Approved',
-    submittedAt: '2026-07-12T14:00:00',
-  },
-  {
-    id: 3,
-    studentId: 103,
-    student: 'Vann Vuthy',
-    type: 'Emergency Leave',
-    leaveDate: 'Jul 6, 2026',
-    status: 'Rejected',
-    submittedAt: '2026-07-05T09:15:00',
-  },
-])
-
-// Role-based visibility: admins see every request, students only see their own.
-const visibleRequests = computed(() => {
-  if (auth.isAdmin) return allRequests.value
-  if (auth.isStudent) return allRequests.value.filter((r) => r.studentId === auth.user?.id)
-  return []
-})
-
-// Most recently submitted requests first.
-const requests = computed(() =>
-  [...visibleRequests.value].sort(
-    (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-  )
-)
+const {
+  items,
+  leaveTypes,
+  loading,
+  errMsg,
+  page,
+  total,
+  perPage,
+  cancelTarget,
+  cancelling,
+  filters,
+  totalPages,
+  from,
+  to,
+  hasActiveFilters,
+  stats,
+  visiblePages,
+  formatDate,
+  onSearchDebounced,
+  clearSearch,
+  clearAllFilters,
+  fetchRequests,
+  viewRequest,
+  editRequest,
+  confirmCancel,
+  doCancel,
+} = useLeaveRequests()
 </script>
-
