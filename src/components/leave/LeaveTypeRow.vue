@@ -1,48 +1,51 @@
 <template>
-  <tr class="border-b border-gray-100 last:border-none">
-    <td class="px-4 py-3.5 text-left text-sm">
-      <div class="flex items-center gap-2 font-medium text-gray-900">
-        <FileText :size="15" :stroke-width="1.8" />
+  <tr class="border-b border-slate-100 last:border-none hover:bg-slate-50/60">
+    <td class="px-2 py-4 text-left text-sm">
+      <div class="flex items-center gap-2 font-semibold text-slate-900">
+        <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-cyan-50 text-cyan-600">
+          <FileText :size="14" :stroke-width="2" />
+        </span>
         {{ leaveType.name }}
-        <span class="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-normal uppercase tracking-wide text-gray-500">{{ leaveType.code }}</span>
+        <span class="rounded-full bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">{{ leaveType.code }}</span>
       </div>
-      <div v-if="leaveType.description" class="mt-0.5 pl-[23px] text-xs text-gray-400">{{ leaveType.description }}</div>
+      <div v-if="leaveType.description" class="mt-1 pl-9 text-xs text-slate-400">{{ leaveType.description }}</div>
     </td>
-    <td class="px-4 py-3.5 text-left text-sm text-gray-700">{{ leaveType.max_days_per_year }} days</td>
-    <td class="px-4 py-3.5 text-left text-sm text-gray-700">{{ leaveType.requires_attachment ? 'Yes' : 'No' }}</td>
-    <td class="px-4 py-3.5 text-left text-sm">
+    <td class="px-2 py-4 text-left text-sm text-slate-700">{{ leaveType.max_days_per_year }} days</td>
+    <td class="px-2 py-4 text-left text-sm text-slate-700">{{ leaveType.requires_attachment ? 'Yes' : 'No' }}</td>
+    <td class="px-2 py-4 text-left text-sm">
       <span
-        class="rounded-full px-2.5 py-1 text-xs font-medium"
-        :class="leaveType.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
+        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
+        :class="leaveType.is_active ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'"
       >
+        <span class="h-1.5 w-1.5 rounded-full bg-current" />
         {{ leaveType.is_active ? 'Active' : 'Inactive' }}
       </span>
     </td>
-    <td class="px-4 py-3.5 text-left text-sm">
+    <td class="px-2 py-4 text-left text-sm">
       <div class="flex gap-1.5">
         <button
           type="button"
-          class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md bg-gray-100 text-gray-700 transition-colors hover:bg-gray-200"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700"
           aria-label="Edit leave type"
           @click="emit('edit')"
         >
-          <Pencil :size="15" :stroke-width="1.8" />
+          <Pencil :size="14" :stroke-width="2" />
         </button>
         <button
           type="button"
-          class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md bg-gray-100 text-gray-700 transition-colors hover:bg-gray-200"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
           aria-label="Toggle status"
           @click="emit('toggle')"
         >
-          <Power :size="15" :stroke-width="1.8" />
+          <Power :size="14" :stroke-width="2" />
         </button>
         <button
           type="button"
-          class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md bg-gray-100 text-gray-700 transition-colors hover:bg-red-100 hover:text-red-700"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
           aria-label="Remove leave type"
           @click="emit('remove')"
         >
-          <Trash2 :size="15" :stroke-width="1.8" />
+          <Trash2 :size="14" :stroke-width="2" />
         </button>
       </div>
     </td>

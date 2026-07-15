@@ -13,21 +13,23 @@
         <p v-if="error" class="mb-3.5 rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">{{ error }}</p>
 
         <label class="mb-3.5 flex flex-col gap-1.5 text-xs text-gray-700">
-          <span>Name</span>
+          <span>Name <span class="text-red-500">*</span></span>
           <input
             v-model="form.name"
             type="text"
             placeholder="e.g. Sick Leave"
+            required
             class="rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
           />
         </label>
 
         <label class="mb-3.5 flex flex-col gap-1.5 text-xs text-gray-700">
-          <span>Code</span>
+          <span>Code <span class="text-red-500">*</span></span>
           <input
             v-model="form.code"
             type="text"
             placeholder="e.g. SICK"
+            required
             class="rounded-md border border-gray-200 px-3 py-2.5 text-sm uppercase text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
           />
         </label>
@@ -42,11 +44,12 @@
         </label>
 
         <label class="mb-3.5 flex flex-col gap-1.5 text-xs text-gray-700">
-          <span>Max Days / Year</span>
+          <span>Max Days / Year <span class="text-red-500">*</span></span>
           <input
             v-model.number="form.max_days_per_year"
             type="number"
             min="0"
+            required
             class="rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
           />
         </label>
