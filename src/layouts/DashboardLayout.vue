@@ -19,7 +19,7 @@ import { ref } from 'vue'
 import Navbar from '@/components/layout/Navbar.vue'
 import Sidebar from '@/components/layout/Sidebar.vue'
 import Footer from '@/components/layout/Footer.vue'
-import LeaveFormModal from '@/components/leave/LeaveFormModal.vue'
+import LeaveFormModal from '@/components/leave-request/LeaveFormModal.vue'
 
 const sidebarOpen = ref(false)
 </script>
