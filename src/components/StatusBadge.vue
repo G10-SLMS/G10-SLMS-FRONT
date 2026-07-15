@@ -7,20 +7,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps<{
-  status: string
-}>()
-
-const statusMap: Record<string, { label: string; className: string }> = {
+const STATUS_MAP: Record<string, { label: string; className: string }> = {
   pending: { label: 'Pending', className: 'pending' },
   approved: { label: 'Approved', className: 'approved' },
   rejected: { label: 'Rejected', className: 'rejected' },
   cancelled: { label: 'Cancelled', className: 'cancelled' },
 }
 
+const props = defineProps<{
+  status: string
+}>()
+
 const badgeInfo = computed(() => {
   const key = (props.status ?? '').trim().toLowerCase()
-  return statusMap[key] || { label: 'Unknown', className: 'unknown' }
+  return STATUS_MAP[key] || { label: 'Unknown', className: 'unknown' }
 })
 
 const badgeLabel = computed(() => badgeInfo.value.label)
