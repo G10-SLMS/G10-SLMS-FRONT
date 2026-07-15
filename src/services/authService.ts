@@ -2,6 +2,7 @@ import type { AxiosResponse } from 'axios'
 import api from './api'
 import type {
   AuthResponse,
+  DefaultAvatar,
   LoginPayload,
   RegisterPayload,
   ResetPasswordPayload,
@@ -45,13 +46,14 @@ export const authService = {
   getProfile(): Promise<AxiosResponse<User>> {
     return api.get('/profile')
   },
-
-  updateProfile(payload: UpdateProfilePayload | FormData): Promise<AxiosResponse<User>> {
-    if (payload instanceof FormData) {
-      payload.append('_method', 'PUT')
-      return api.post('/profile', payload)
-    }
-
+  
+  updateProfile(
+    payload: UpdateProfilePayload,
+  ): Promise<AxiosResponse<{ message: string; user: User }>> {
     return api.put('/profile', payload)
+  },
+
+  getDefaultAvatars(): Promise<AxiosResponse<{ avatars: DefaultAvatar[]; count: number }>> {
+    return api.get('/default-avatars')
   },
 }

@@ -128,6 +128,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { authService } from '@/services/authService'
 import logoUrl from '@/assets/image/logo.png'
 import SidebarNavLink from '@/components/layout/SidebarNavLink.vue'
 import {
@@ -158,7 +159,22 @@ const tooltipStyle = ref({ top: '0px', left: '0px' })
 const canApprove = computed(() => auth.isTrainer || auth.isAdmin)
 const isAdmin = computed(() => auth.isAdmin)
 const userName = computed(() => auth.user?.name ?? 'Guest')
-const userAvatar = computed(() => auth.user?.avatar ?? null)
+
+// The backend stores only `avatar_id` on the user — resolve it against the
+// default-avatars list to get a displayable URL.
+const defaultAvatars = ref<{ id: number; url: string }[]>([])
+const userAvatar = computed(
+  () => defaultAvatars.value.find((a) => a.id === auth.user?.avatar_id)?.url ?? null,
+)
+
+onMounted(async () => {
+  try {
+    const { data } = await authService.getDefaultAvatars()
+    defaultAvatars.value = data.avatars
+  } catch {
+    defaultAvatars.value = []
+  }
+})
 
 const userRole = computed(() => {
   if (isAdmin.value) return 'Admin'

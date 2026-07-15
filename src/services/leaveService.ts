@@ -1,10 +1,34 @@
 import api from './api'
-import type { LeaveType, LeaveRequestPayload, LeaveRequestResponse, LeaveRequestListItem, PaginatedResponse } from '@/types/leave'
+import type {
+  LeaveType,
+  LeaveTypePayload,
+  LeaveTypeResponse,
+  LeaveRequestPayload,
+  LeaveRequestResponse,
+  LeaveRequestListItem,
+  PaginatedResponse,
+} from '@/types/leave'
+
+export const LEAVE_REQUESTS_API_AVAILABLE = false
 
 export const leaveService = {
   async getLeaveTypes(): Promise<LeaveType[]> {
     const { data } = await api.get<{ success: boolean; message: string; data: LeaveType[] }>('/leave-types')
     return data.data
+  },
+
+  async createLeaveType(payload: LeaveTypePayload): Promise<LeaveType> {
+    const { data } = await api.post<LeaveTypeResponse>('/leave-types', payload)
+    return data.data
+  },
+
+  async updateLeaveType(id: number, payload: Partial<LeaveTypePayload>): Promise<LeaveType> {
+    const { data } = await api.put<LeaveTypeResponse>(`/leave-types/${id}`, payload)
+    return data.data
+  },
+
+  async deleteLeaveType(id: number): Promise<void> {
+    await api.delete(`/leave-types/${id}`)
   },
 
   async getLeaveRequests(params?: {

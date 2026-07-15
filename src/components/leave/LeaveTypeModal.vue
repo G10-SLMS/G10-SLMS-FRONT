@@ -10,6 +10,8 @@
           {{ isEditing ? 'Edit Leave Type' : 'Add Leave Type' }}
         </h2>
 
+        <p v-if="error" class="mb-3.5 rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">{{ error }}</p>
+
         <label class="mb-3.5 flex flex-col gap-1.5 text-xs text-gray-700">
           <span>Name</span>
           <input
@@ -21,9 +23,28 @@
         </label>
 
         <label class="mb-3.5 flex flex-col gap-1.5 text-xs text-gray-700">
-          <span>Default Days / Year</span>
+          <span>Code</span>
           <input
-            v-model.number="form.defaultDays"
+            v-model="form.code"
+            type="text"
+            placeholder="e.g. SICK"
+            class="rounded-md border border-gray-200 px-3 py-2.5 text-sm uppercase text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
+          />
+        </label>
+
+        <label class="mb-3.5 flex flex-col gap-1.5 text-xs text-gray-700">
+          <span>Description (optional)</span>
+          <textarea
+            v-model="form.description"
+            rows="2"
+            class="resize-none rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
+          />
+        </label>
+
+        <label class="mb-3.5 flex flex-col gap-1.5 text-xs text-gray-700">
+          <span>Max Days / Year</span>
+          <input
+            v-model.number="form.max_days_per_year"
             type="number"
             min="0"
             class="rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
@@ -32,16 +53,16 @@
 
         <label class="mb-3.5 flex flex-row items-center gap-2 text-xs text-gray-700">
           <input
-            v-model="form.requiresApproval"
+            v-model="form.requires_attachment"
             type="checkbox"
             class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
           />
-          <span>Requires approval</span>
+          <span>Requires supporting attachment</span>
         </label>
 
         <label class="mb-3.5 flex flex-row items-center gap-2 text-xs text-gray-700">
           <input
-            v-model="form.active"
+            v-model="form.is_active"
             type="checkbox"
             class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
           />
@@ -58,10 +79,11 @@
           </button>
           <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-md bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-600"
+            class="inline-flex items-center gap-2 rounded-md bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:enabled:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="saving"
             @click="emit('save')"
           >
-            {{ isEditing ? 'Save Changes' : 'Add Leave Type' }}
+            {{ saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Add Leave Type' }}
           </button>
         </div>
       </div>
@@ -70,12 +92,14 @@
 </template>
 
 <script setup lang="ts">
-import type { LeaveType } from '@/types/leave'
+import type { LeaveTypePayload } from '@/types/leave'
 
 defineProps<{
   open: boolean
   isEditing: boolean
-  form: LeaveType
+  form: LeaveTypePayload
+  saving?: boolean
+  error?: string
 }>()
 
 const emit = defineEmits<{
