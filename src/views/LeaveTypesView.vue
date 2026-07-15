@@ -1,40 +1,40 @@
 <template>
   <div class="max-w-full">
-    <div class="mb-5 flex items-start justify-between">
+    <div class="mb-6 flex items-start justify-between">
       <div>
-        <h1>Leave Types Management</h1>
-        <p class="mt-1 text-[13px] text-gray-500">Define the leave categories available to students and trainers</p>
+        <h1 class="text-[22px] font-bold tracking-tight text-slate-900">Leave Types Management</h1>
+        <p class="mt-1 text-[13px] text-slate-500">Define the leave categories available to students and trainers</p>
       </div>
       <button
-        class="inline-flex items-center gap-2 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-blue-700"
+        class="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
         @click="openAddModal"
       >
-        <Plus :size="16" :stroke-width="1.8" />
+        <Plus :size="16" :stroke-width="2" />
         Add Leave Type
       </button>
     </div>
 
-    <p v-if="errMsg" class="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{{ errMsg }}</p>
+    <p v-if="errMsg" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{{ errMsg }}</p>
 
-    <div class="rounded-[10px] bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_4px_rgba(15,23,42,0.06)]">
       <div class="mb-4 flex items-center justify-between">
-        <h2 class="m-0 text-base">All Leave Types</h2>
+        <h2 class="m-0 text-base font-bold text-slate-900">All Leave Types</h2>
       </div>
 
       <div class="w-full overflow-x-auto">
         <table class="w-full min-w-[560px] border-collapse text-sm md:min-w-0">
           <thead>
             <tr>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Leave Type</th>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Max Days / Year</th>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Requires Attachment</th>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Status</th>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Action</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Leave Type</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Max Days / Year</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Requires Attachment</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Status</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Action</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td colspan="5" class="px-2 py-6 text-center text-gray-400">Loading leave types…</td>
+              <td colspan="5" class="px-2 py-8 text-center text-sm text-slate-400">Loading leave types…</td>
             </tr>
             <template v-else>
               <LeaveTypeRow
@@ -42,11 +42,11 @@
                 :key="lt.id"
                 :leave-type="lt"
                 @edit="openEditModal(lt)"
-                @toggle="toggleActive(lt)"
-                @remove="removeType(lt)"
+                @toggle="confirmToggle(lt)"
+                @remove="confirmRemove(lt)"
               />
               <tr v-if="leaveTypes.length === 0">
-                <td colspan="5" class="px-2 py-6 text-center text-gray-400">No leave types yet. Add one to get started.</td>
+                <td colspan="5" class="px-2 py-8 text-center text-sm text-slate-400">No leave types yet. Add one to get started.</td>
               </tr>
             </template>
           </tbody>
@@ -63,15 +63,26 @@
       @cancel="closeModal"
       @save="saveType"
     />
+
+    <ConfirmDialog
+      :open="confirmOpen"
+      :title="confirmTitle"
+      :message="confirmMessage"
+      :confirm-label="confirmLabel"
+      :loading="confirmLoading"
+      @confirm="handleConfirmed"
+      @cancel="cancelConfirm"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { Plus } from 'lucide-vue-next'
 import type { AxiosError } from 'axios'
 import LeaveTypeRow from '@/components/leave/LeaveTypeRow.vue'
 import LeaveTypeModal from '@/components/leave/LeaveTypeModal.vue'
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import { leaveService } from '@/services/leaveService'
 import type { LeaveType, LeaveTypePayload } from '@/types/leave'
 
@@ -83,6 +94,24 @@ const modalOpen = ref(false)
 const editingType = ref<LeaveType | null>(null)
 const saving = ref(false)
 const formError = ref('')
+
+type PendingAction = { type: 'delete' | 'deactivate'; leaveType: LeaveType }
+const pendingAction = ref<PendingAction | null>(null)
+const confirmOpen = ref(false)
+const confirmLoading = ref(false)
+
+const confirmTitle = computed(() =>
+  pendingAction.value?.type === 'delete' ? 'Delete leave type?' : 'Deactivate leave type?',
+)
+const confirmMessage = computed(() => {
+  const name = pendingAction.value?.leaveType.name ?? ''
+  return pendingAction.value?.type === 'delete'
+    ? `Are you sure you want to delete '${name}'? This cannot be undone.`
+    : `Are you sure you want to deactivate '${name}'? Students and trainers won't be able to select it until it's reactivated.`
+})
+const confirmLabel = computed(() =>
+  pendingAction.value?.type === 'delete' ? 'Delete' : 'Deactivate',
+)
 
 const form = reactive<LeaveTypePayload>({
   name: '',
@@ -152,6 +181,10 @@ async function saveType() {
     formError.value = 'Name and code are required.'
     return
   }
+  if (!form.max_days_per_year || form.max_days_per_year <= 0) {
+    formError.value = 'Max days per year must be greater than 0.'
+    return
+  }
 
   saving.value = true
   formError.value = ''
@@ -172,6 +205,25 @@ async function saveType() {
   }
 }
 
+function confirmRemove(lt: LeaveType) {
+  pendingAction.value = { type: 'delete', leaveType: lt }
+  confirmOpen.value = true
+}
+
+function confirmToggle(lt: LeaveType) {
+  if (!lt.is_active) {
+    toggleActive(lt)
+    return
+  }
+  pendingAction.value = { type: 'deactivate', leaveType: lt }
+  confirmOpen.value = true
+}
+
+function cancelConfirm() {
+  confirmOpen.value = false
+  pendingAction.value = null
+}
+
 async function toggleActive(lt: LeaveType) {
   if (!lt.id) return
   const previous = lt.is_active
@@ -185,14 +237,27 @@ async function toggleActive(lt: LeaveType) {
   }
 }
 
-async function removeType(lt: LeaveType) {
-  if (!lt.id) return
+async function handleConfirmed() {
+  const action = pendingAction.value
+  if (!action?.leaveType.id) return
+
+  confirmLoading.value = true
   try {
-    await leaveService.deleteLeaveType(lt.id)
-    leaveTypes.value = leaveTypes.value.filter((item) => item.id !== lt.id)
+    if (action.type === 'delete') {
+      await leaveService.deleteLeaveType(action.leaveType.id)
+      leaveTypes.value = leaveTypes.value.filter((item) => item.id !== action.leaveType.id)
+    } else {
+      const updated = await leaveService.updateLeaveType(action.leaveType.id, { is_active: false })
+      Object.assign(action.leaveType, updated)
+    }
+    confirmOpen.value = false
+    pendingAction.value = null
   } catch (err) {
-    // Backend returns 409 when the leave type is in use by existing leave requests.
-    errMsg.value = extractError(err, 'Failed to delete leave type.')
+    const fallback = action.type === 'delete' ? 'Failed to delete leave type.' : 'Failed to deactivate leave type.'
+    errMsg.value = extractError(err, fallback)
+    confirmOpen.value = false
+  } finally {
+    confirmLoading.value = false
   }
 }
 
