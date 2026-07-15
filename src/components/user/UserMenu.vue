@@ -5,8 +5,11 @@
       class="flex items-center gap-2 rounded-md bg-transparent px-2.5 py-1.5 text-slate-700 transition-colors hover:bg-slate-100"
       @click="toggleMenu"
     >
-      <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-white">
-        <User :size="18" />
+      <span
+        class="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-white"
+      >
+        <img v-if="avatarUrl" :src="avatarUrl" alt="" class="h-full w-full object-cover" />
+        <User v-else :size="18" />
       </span>
       <span class="hidden flex-col items-start leading-tight lg:flex">
         <span class="text-sm font-medium">{{ userName }}</span>
@@ -44,16 +47,19 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useDefaultAvatars } from '@/composables/useDefaultAvatars'
 import { User, ChevronDown, UserCircle, LogOut } from 'lucide-vue-next'
 
 const router = useRouter()
 const auth = useAuthStore()
+const { urlFor } = useDefaultAvatars()
 
 const menuOpen = ref(false)
 const loggingOut = ref(false)
 const menuRef = ref<HTMLElement | null>(null)
 
 const userName = computed(() => auth.user?.name || 'Guest User')
+const avatarUrl = computed(() => urlFor(auth.user?.avatar_id))
 
 const roleLabel = computed(() => {
   if (auth.isAdmin) return 'Admin'
