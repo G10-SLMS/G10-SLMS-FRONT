@@ -1,22 +1,23 @@
 <template>
   <tr class="border-b border-gray-100 last:border-none">
-    <td class="px-4 py-3.5 text-left">{{ request.student }}</td>
-    <td class="px-4 py-3.5 text-left">{{ request.type }}</td>
-    <td class="px-4 py-3.5 text-left">{{ request.leaveDate }}</td>
-    <td class="whitespace-nowrap px-4 py-3.5 text-left text-gray-500">{{ timeAgo }}</td>
+    <td class="px-4 py-3.5 text-left text-sm text-gray-900">{{ request.student }}</td>
+    <td class="px-4 py-3.5 text-left text-sm text-gray-700">{{ request.type }}</td>
+    <td class="px-4 py-3.5 text-left text-sm text-gray-700">{{ request.leaveDate }}</td>
+    <td class="whitespace-nowrap px-4 py-3.5 text-left text-sm text-gray-500">{{ timeAgo }}</td>
     <td class="px-4 py-3.5 text-left">
       <LeaveStatusBadge :status="request.status" />
     </td>
     <td v-if="showActions" class="px-4 py-3.5 text-left">
       <button
         v-if="request.status === 'Pending'"
-        class="flex items-center gap-1 rounded-md border-none bg-blue-600/10 px-2.5 py-1.5 text-xs font-semibold text-blue-600 cursor-pointer hover:bg-blue-600/15"
-        @click="$emit('edit', request.id)"
+        type="button"
+        class="flex items-center gap-1 rounded-md bg-blue-600/10 px-2.5 py-1.5 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-600/15"
+        @click="emit('edit', request.id)"
       >
         <Pencil :size="14" />
         Edit
       </button>
-      <span v-else class="text-[13px] text-gray-400">—</span>
+      <span v-else class="text-sm text-gray-400">—</span>
     </td>
   </tr>
 </template>
@@ -25,19 +26,21 @@
 import { computed } from 'vue'
 import { Pencil } from 'lucide-vue-next'
 import LeaveStatusBadge from './LeaveStatusBadge.vue'
+import type { LeaveRequest } from '@/types/leave'
 
-const props = defineProps({
-  request: {
-    type: Object,
-    required: true,
-  },
-  showActions: {
-    type: Boolean,
-    default: false,
-  },
-})
+const props = withDefaults(
+  defineProps<{
+    request: LeaveRequest
+    showActions?: boolean
+  }>(),
+  {
+    showActions: false,
+  }
+)
 
-defineEmits(['edit'])
+const emit = defineEmits<{
+  (e: 'edit', id: string | number): void
+}>()
 
 const timeAgo = computed(() => {
   const submitted = new Date(props.request.submittedAt)
@@ -53,6 +56,10 @@ const timeAgo = computed(() => {
   if (hours < 24) return `${hours}h ago`
   if (days < 7) return `${days}d ago`
 
-  return submitted.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+  return submitted.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
 })
 </script>

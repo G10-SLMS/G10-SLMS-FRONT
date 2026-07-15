@@ -1,15 +1,18 @@
 <template>
   <nav class="mb-8 flex border-b border-gray-200">
     <RouterLink
-      to="/login"
-      class="flex-1 border-b-[2px] pb-3.5 text-center text-base font-semibold no-underline transition-colors duration-200"
-      :class="active === 'login' ? 'border-[#f5a623] text-[#f5a623]' : 'border-transparent text-[#0a1628]/50 hover:text-[#0a1628]'"
-    >Sign In</RouterLink>
-    <RouterLink
-      to="/register"
-      class="flex-1 border-b-[2px] pb-3.5 text-center text-base font-semibold no-underline transition-colors duration-200"
-      :class="active === 'register' ? 'border-[#f5a623] text-[#f5a623]' : 'border-transparent text-[#0a1628]/50 hover:text-[#0a1628]'"
-    >Create Account</RouterLink>
+      v-for="tab in tabs"
+      :key="tab.id"
+      :to="tab.path"
+      class="flex-1 border-b-2 pb-3.5 text-center text-base font-semibold transition-colors duration-200"
+      :class="
+        active === tab.id
+          ? 'border-[#f5a623] text-[#f5a623]'
+          : 'border-transparent text-slate-400 hover:text-slate-800'
+      "
+    >
+      {{ tab.label }}
+    </RouterLink>
   </nav>
 </template>
 
@@ -17,4 +20,9 @@
 defineProps<{
   active: 'login' | 'register'
 }>()
+
+const tabs = [
+  { id: 'login', path: '/login', label: 'Sign In' },
+  { id: 'register', path: '/register', label: 'Create Account' }
+] as const
 </script>

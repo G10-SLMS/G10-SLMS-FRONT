@@ -1,7 +1,8 @@
 <template>
-  <div class="relative" ref="menuRef">
+  <div ref="menuRef" class="relative">
     <button
-      class="flex items-center gap-2 rounded-md border-none bg-transparent px-2.5 py-1.5 text-slate-700 cursor-pointer transition-colors hover:bg-slate-100"
+      type="button"
+      class="flex items-center gap-2 rounded-md bg-transparent px-2.5 py-1.5 text-slate-700 transition-colors hover:bg-slate-100"
       @click="toggleMenu"
     >
       <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-white">
@@ -9,30 +10,31 @@
       </span>
       <span class="hidden flex-col items-start leading-tight lg:flex">
         <span class="text-sm font-medium">{{ userName }}</span>
-        <span class="text-[11px] font-medium uppercase tracking-wide text-cyan-500">{{ roleLabel }}</span>
+        <span class="text-[10px] font-semibold uppercase tracking-wide text-cyan-600">{{ roleLabel }}</span>
       </span>
-      <ChevronDown class="text-slate-400" :size="14" />
+      <ChevronDown class="text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': menuOpen }" :size="14" />
     </button>
 
     <div
       v-if="menuOpen"
-      class="absolute right-0 top-[52px] z-10 min-w-[170px] overflow-hidden rounded-lg bg-white text-gray-800 shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+      class="absolute right-0 top-full z-10 mt-1 min-w-[170px] overflow-hidden rounded-lg bg-white text-gray-800 shadow-md border border-gray-100"
     >
       <RouterLink
         to="/profile"
-        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-gray-800 no-underline hover:bg-gray-100"
+        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
         @click="menuOpen = false"
       >
         <UserCircle :size="16" />
         <span>Profile</span>
       </RouterLink>
       <button
-        class="flex w-full cursor-pointer items-center gap-2.5 border-none bg-transparent px-4 py-2.5 text-left text-sm text-red-500 hover:bg-gray-100 disabled:opacity-50"
+        type="button"
+        class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-gray-50 disabled:opacity-50"
         :disabled="loggingOut"
         @click="logout"
       >
         <LogOut :size="16" />
-        <span>{{ loggingOut ? 'Logging out…' : 'Logout' }}</span>
+        <span>{{ loggingOut ? 'Logging out...' : 'Logout' }}</span>
       </button>
     </div>
   </div>
@@ -64,7 +66,6 @@ function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
 
-// Close on click outside
 function handleClickOutside(e: MouseEvent) {
   if (menuRef.value && !menuRef.value.contains(e.target as Node)) {
     menuOpen.value = false
@@ -77,16 +78,15 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
 async function logout() {
   loggingOut.value = true
   menuOpen.value = false
-  auth.clearSession()
-  await router.push('/login')
 
-  // Best-effort server-side token revocation
   try {
     await auth.logout()
   } catch {
-    // Already navigated away — nothing to do
-  } finally {
-    loggingOut.value = false
+    // Silent catch if API fails
   }
+
+  auth.clearSession()
+  await router.push('/login')
+  loggingOut.value = false
 }
 </script>
