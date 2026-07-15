@@ -1,38 +1,41 @@
 <template>
   <div class="max-w-full">
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-      <h1 class="m-0">Approvals</h1>
-      <div class="flex gap-0.5 rounded-lg bg-slate-100 p-[3px]">
+      <h1 class="text-2xl font-bold text-gray-900">Approvals</h1>
+      <div class="flex gap-0.5 rounded-lg bg-slate-100 p-0.5">
         <button
           v-for="tab in tabs"
           :key="tab"
-          class="flex items-center gap-1.5 rounded-md border-none bg-transparent px-3.5 py-[7px] text-[13px] font-medium text-slate-400 cursor-pointer"
-          :class="activeTab === tab ? 'bg-white text-blue-600 shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : ''"
+          type="button"
+          class="flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs font-medium text-slate-500 transition-all"
+          :class="activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'hover:text-slate-800'"
           @click="activeTab = tab"
         >
           {{ tab }}
           <span
             v-if="tab === 'Pending' && pendingCount > 0"
-            class="rounded-full bg-cyan-400 px-1.5 text-[11px] font-semibold leading-snug text-white"
-          >{{ pendingCount }}</span>
+            class="rounded-full bg-cyan-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white"
+          >
+            {{ pendingCount }}
+          </span>
         </button>
       </div>
     </div>
 
-    <div class="overflow-x-auto rounded-[10px] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
+    <div class="overflow-x-auto rounded-xl bg-white shadow-sm border border-gray-100">
       <table v-if="filteredRequests.length" class="w-full border-collapse text-sm">
         <thead>
-          <tr>
-            <th class="whitespace-nowrap border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">Student</th>
-            <th class="whitespace-nowrap border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">Leave Type</th>
-            <th class="whitespace-nowrap border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">Start Date</th>
-            <th class="whitespace-nowrap border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">End Date</th>
-            <th class="whitespace-nowrap border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">Reason</th>
-            <th class="whitespace-nowrap border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">Status</th>
-            <th v-if="activeTab === 'Pending'" class="whitespace-nowrap border-b border-gray-200 px-4 py-3.5 text-left text-[13px] font-medium text-gray-500">Actions</th>
+          <tr class="border-b border-gray-100 bg-gray-50/50">
+            <th class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">Student</th>
+            <th class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">Leave Type</th>
+            <th class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">Start Date</th>
+            <th class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">End Date</th>
+            <th class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">Reason</th>
+            <th class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">Status</th>
+            <th v-if="activeTab === 'Pending'" class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-gray-100">
           <ApprovalRow
             v-for="request in filteredRequests"
             :key="request.id"
@@ -43,9 +46,9 @@
         </tbody>
       </table>
 
-      <div v-else class="flex flex-col items-center justify-center gap-2.5 px-5 py-[60px] text-center text-gray-400">
+      <div v-else class="flex flex-col items-center justify-center gap-2 px-5 py-16 text-center text-gray-400">
         <CheckCircle2 :size="36" :stroke-width="1.5" />
-        <p>No {{ activeTab.toLowerCase() }} requests.</p>
+        <p class="text-sm">No {{ activeTab.toLowerCase() }} requests.</p>
       </div>
     </div>
   </div>
@@ -57,7 +60,9 @@ import { CheckCircle2 } from 'lucide-vue-next'
 import ApprovalRow from '@/components/approval/ApprovalRow.vue'
 
 const tabs = ['Pending', 'Approved', 'Rejected'] as const
-const activeTab = ref<(typeof tabs)[number]>('Pending')
+type TabType = (typeof tabs)[number]
+
+const activeTab = ref<TabType>('Pending')
 
 interface LeaveRequest {
   id: number

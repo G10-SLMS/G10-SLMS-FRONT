@@ -12,18 +12,19 @@
         @mousedown.self="handleOverlayClick"
       >
         <div
-          class="flex max-h-[90vh] w-full max-w-[560px] flex-col rounded-xl bg-white shadow-[0_20px_40px_rgba(0,0,0,0.2)]"
+          class="flex max-h-[90vh] w-full max-w-[560px] flex-col rounded-xl bg-white shadow-xl"
           role="dialog"
           aria-modal="true"
           :aria-label="isEditMode ? 'Edit Leave Request' : 'New Leave Request'"
         >
           <!-- Header -->
-          <div class="flex shrink-0 items-center justify-between border-b border-gray-100 px-[22px] py-[18px]">
-            <h2 class="m-0 text-[17px] font-semibold text-gray-900">
+          <div class="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4.5">
+            <h2 class="m-0 text-base font-semibold text-gray-900">
               {{ isEditMode ? 'Edit Leave Request' : 'New Leave Request' }}
             </h2>
             <button
-              class="flex h-8 w-8 items-center justify-center rounded-md border-none bg-transparent text-gray-500 cursor-pointer hover:bg-gray-100 hover:text-gray-900"
+              type="button"
+              class="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
               aria-label="Close"
               @click="handleClose"
             >
@@ -32,38 +33,45 @@
           </div>
 
           <!-- Body -->
-          <div class="flex-1 overflow-y-auto px-[22px] py-5">
-            <div v-if="loadError" class="mb-4 rounded-md bg-red-100 px-3.5 py-2.5 text-[13px] text-red-700" role="alert">{{ loadError }}</div>
+          <div class="flex-1 overflow-y-auto px-6 py-5">
+            <div v-if="loadError" class="mb-4 rounded-md bg-red-100 px-3.5 py-2.5 text-xs text-red-700" role="alert">
+              {{ loadError }}
+            </div>
 
-            <div v-else-if="isEditMode && !editableLoaded" class="flex flex-col items-center justify-center gap-2.5 px-5 py-[30px] text-center text-gray-500">
+            <div v-else-if="isEditMode && !editableLoaded" class="flex flex-col items-center justify-center gap-2.5 px-5 py-8 text-center text-gray-500">
               Loading request…
             </div>
 
-            <div v-else-if="isEditMode && !canEdit" class="flex flex-col items-center justify-center gap-2.5 px-5 py-[30px] text-center text-gray-500 [&_svg]:text-amber-500">
+            <div v-else-if="isEditMode && !canEdit" class="flex flex-col items-center justify-center gap-2.5 px-5 py-8 text-center text-gray-500 [&_svg]:text-amber-500">
               <Lock :size="32" :stroke-width="1.5" />
               <p>This request can no longer be edited because its status is <strong>{{ originalStatus }}</strong>.</p>
               <button
-                class="rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
+                type="button"
+                class="rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
                 @click="handleClose"
-              >Close</button>
+              >
+                Close
+              </button>
             </div>
 
             <form v-else id="leave-form" @submit.prevent="handleSubmit" novalidate>
-              <div v-if="submitError" class="mb-4 rounded-md bg-red-100 px-3.5 py-2.5 text-[13px] text-red-700" role="alert">{{ submitError }}</div>
+              <div v-if="submitError" class="mb-4 rounded-md bg-red-100 px-3.5 py-2.5 text-xs text-red-700" role="alert">
+                {{ submitError }}
+              </div>
 
               <!-- Leave Type -->
-              <div class="mb-[18px]">
-                <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-type">
+              <div class="mb-4">
+                <label class="mb-1.5 block text-xs font-medium text-gray-700" for="m-type">
                   Leave Type <span class="text-red-600">*</span>
                 </label>
                 <div class="relative flex items-center">
-                  <span class="absolute left-3 flex text-gray-400"><FileText :size="18" /></span>
+                  <span class="absolute left-3 flex text-gray-400 pointer-events-none"><FileText :size="18" /></span>
                   <select
                     id="m-type"
                     v-model="form.type"
                     required
                     :disabled="submitting"
-                    class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-[38px] pr-3 text-sm text-gray-800 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.1)] focus:outline-none"
+                    class="w-full appearance-none rounded-md border border-gray-300 bg-white py-2.5浏览 pl-10 pr-10 text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
                   >
                     <option value="" disabled>Select leave type</option>
                     <option value="Sick Leave">Sick Leave</option>
@@ -75,14 +83,14 @@
                 </div>
               </div>
 
-              <!-- Date range -->
+              <!-- Date Range -->
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div class="mb-[18px]">
-                  <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-startDate">
+                <div class="mb-4">
+                  <label class="mb-1.5 block text-xs font-medium text-gray-700" for="m-startDate">
                     Start Date <span class="text-red-600">*</span>
                   </label>
                   <div class="relative flex items-center">
-                    <span class="absolute left-3 flex text-gray-400"><Calendar :size="18" /></span>
+                    <span class="absolute left-3 flex text-gray-400 pointer-events-none"><Calendar :size="18" /></span>
                     <input
                       id="m-startDate"
                       v-model="form.startDate"
@@ -90,18 +98,18 @@
                       :min="todayStr"
                       required
                       :disabled="submitting"
-                      class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-[38px] pr-3 text-sm text-gray-800 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.1)] focus:outline-none"
+                      class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
                       @change="onStartDateChange"
                     />
                   </div>
                 </div>
 
-                <div class="mb-[18px]">
-                  <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-endDate">
+                <div class="mb-4">
+                  <label class="mb-1.5 block text-xs font-medium text-gray-700" for="m-endDate">
                     End Date <span class="text-red-600">*</span>
                   </label>
                   <div class="relative flex items-center">
-                    <span class="absolute left-3 flex text-gray-400"><Calendar :size="18" /></span>
+                    <span class="absolute left-3 flex text-gray-400 pointer-events-none"><Calendar :size="18" /></span>
                     <input
                       id="m-endDate"
                       v-model="form.endDate"
@@ -109,16 +117,16 @@
                       :min="form.startDate || todayStr"
                       required
                       :disabled="submitting"
-                      class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-[38px] pr-3 text-sm text-gray-800 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.1)] focus:outline-none"
+                      class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
                     />
                   </div>
                 </div>
               </div>
-              <p v-if="dateRangeError" class="-mt-3 mb-4 text-xs text-red-700">{{ dateRangeError }}</p>
+              <p v-if="dateRangeError" class="-mt-2 mb-4 text-xs text-red-700">{{ dateRangeError }}</p>
 
               <!-- Reason -->
-              <div class="mb-[18px]">
-                <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-reason">
+              <div class="mb-4">
+                <label class="mb-1.5 block text-xs font-medium text-gray-700" for="m-reason">
                   Reason <span class="text-red-600">*</span>
                 </label>
                 <textarea
@@ -129,21 +137,21 @@
                   required
                   :disabled="submitting"
                   maxlength="500"
-                  class="w-full resize-y rounded-md border border-gray-300 px-3 py-2.5 font-sans text-sm text-gray-800 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.1)] focus:outline-none"
-                ></textarea>
+                  class="w-full resize-y rounded-md border border-gray-300 px-3 py-2.5 font-sans text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
+                />
                 <span class="mt-1 block text-right text-[11px] text-gray-400">{{ form.reason.length }}/500</span>
               </div>
 
               <!-- Attachment -->
-              <div class="mb-[18px]">
-                <label class="mb-1.5 block text-[13px] font-medium text-gray-700" for="m-attachment">Supporting Document (optional)</label>
+              <div class="mb-4">
+                <label class="mb-1.5 block text-xs font-medium text-gray-700" for="m-attachment">Supporting Document (optional)</label>
                 <div class="flex items-center gap-2">
                   <label
                     for="m-attachment"
-                    class="flex flex-1 cursor-pointer items-center gap-2 rounded-md border border-dashed border-gray-300 px-3.5 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50"
+                    class="flex flex-1 cursor-pointer items-center gap-2 rounded-md border border-dashed border-gray-300 px-3.5 py-2.5 text-xs text-gray-700 transition-colors hover:bg-gray-50"
                   >
                     <Paperclip :size="16" />
-                    {{ form.attachment ? form.attachment.name : 'Choose file' }}
+                    <span class="truncate">{{ form.attachment ? form.attachment.name : 'Choose file' }}</span>
                   </label>
                   <input
                     id="m-attachment"
@@ -156,7 +164,7 @@
                   <button
                     v-if="form.attachment"
                     type="button"
-                    class="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-md border-none bg-red-100 text-red-700 cursor-pointer hover:bg-red-200"
+                    class="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-md bg-red-100 text-red-700 transition-colors hover:bg-red-200"
                     :disabled="submitting"
                     @click="removeFile"
                   >
@@ -171,11 +179,11 @@
           <!-- Footer -->
           <div
             v-if="!loadError && !(isEditMode && !editableLoaded) && !(isEditMode && !canEdit)"
-            class="flex shrink-0 justify-end gap-2.5 border-t border-gray-100 px-[22px] py-4"
+            class="flex shrink-0 justify-end gap-2.5 border-t border-gray-100 px-6 py-4"
           >
             <button
               type="button"
-              class="rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 cursor-pointer enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+              class="rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="submitting"
               @click="handleClose"
             >
@@ -184,7 +192,7 @@
             <button
               type="submit"
               form="leave-form"
-              class="rounded-md border-none bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white cursor-pointer enabled:hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
+              class="rounded-md bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="!canSubmit"
             >
               {{ submitting ? (isEditMode ? 'Saving…' : 'Submitting…') : (isEditMode ? 'Save Changes' : 'Submit Request') }}
@@ -202,13 +210,14 @@ import { useAuthStore } from '@/stores/auth'
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
 import { FileText, Calendar, Paperclip, X, Lock } from 'lucide-vue-next'
 
-const emit = defineEmits<{ submitted: [] }>()
+const emit = defineEmits<{
+  (e: 'submitted'): void
+}>()
 
 const auth = useAuthStore()
 const modal = useLeaveFormModalStore()
 
 const isEditMode = computed(() => modal.editingId !== null)
-
 const submitting = ref(false)
 const submitError = ref('')
 const loadError = ref('')
@@ -319,7 +328,6 @@ watch(
   }
 )
 
-// Placeholder loader — remove once wired to the real API
 async function fakeFetchRequest(id: string) {
   await new Promise((r) => setTimeout(r, 300))
   return {
@@ -348,10 +356,8 @@ async function handleSubmit() {
     if (form.attachment) payload.append('attachment', form.attachment)
 
     if (isEditMode.value) {
-      // TODO: await api.patch(`/leave-requests/${modal.editingId}`, payload)
       await new Promise((r) => setTimeout(r, 500))
     } else {
-      // TODO: await api.post('/leave-requests', payload)
       await new Promise((r) => setTimeout(r, 500))
     }
 

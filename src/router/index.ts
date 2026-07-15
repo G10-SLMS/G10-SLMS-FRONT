@@ -1,14 +1,14 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import type { UserRole } from '@/types/user';
+import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import type { UserRole } from '@/types/user'
 
 declare module 'vue-router' {
   interface RouteMeta {
-    title?: string;
-    requiresAuth?: boolean;
-    guestOnly?: boolean;
-    roles?: UserRole[];
-    provider?: 'google' | 'github';
+    title?: string
+    requiresAuth?: boolean
+    guestOnly?: boolean
+    roles?: UserRole[]
+    provider?: 'google' | 'github'
   }
 }
 
@@ -33,18 +33,18 @@ export const router = createRouter({
       path: '/auth/google/callback',
       name: 'GoogleCallback',
       component: () => import('../views/AuthCallbackView.vue'),
-      meta: { title: 'Signing in…', provider: 'google' },
+      meta: { title: 'Signing in...', provider: 'google' },
     },
     {
       path: '/auth/github/callback',
       name: 'GithubCallback',
       component: () => import('../views/AuthCallbackView.vue'),
-      meta: { title: 'Signing in…', provider: 'github' },
+      meta: { title: 'Signing in...', provider: 'github' },
     },
     {
       path: '/dashboard-panel',
       component: () => import('../layouts/DashboardLayout.vue'),
-      meta: { title: 'Dashboard', requiresAuth: true },
+      meta: { requiresAuth: true },
       children: [
         {
           path: '/dashboard',
@@ -109,31 +109,27 @@ export const router = createRouter({
       meta: { title: 'Page Not Found' },
     },
   ],
-});
+})
 
 router.beforeEach((to) => {
-  const auth = useAuthStore();
+  const auth = useAuthStore()
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    return { name: 'Login', query: { redirect: to.fullPath } };
+    return { name: 'Login', query: { redirect: to.fullPath } }
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {
-    return { name: 'Dashboard' };
+    return { name: 'Dashboard' }
   }
 
-  // Role-based access control: if the route restricts roles and the
-  // logged-in user's role isn't in the list, bounce them to the dashboard.
   if (to.meta.roles && auth.user && !to.meta.roles.includes(auth.user.role)) {
-    return { name: 'Dashboard' };
+    return { name: 'Dashboard' }
   }
 
-  return true;
-});
+  const title = to.meta.title || 'SLMS'
+  document.title = `${title} · SLMS`
 
-router.beforeEach((to) => {
-  const title = to.meta.title || 'SLMS';
-  document.title = `${title} · SLMS`;
-});
+  return true
+})
 
-export default router;
+export default router

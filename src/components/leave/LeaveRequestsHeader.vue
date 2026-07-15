@@ -1,10 +1,11 @@
 <template>
   <div class="mb-5 flex items-center justify-between">
-    <h1>Leave Requests</h1>
+    <h1 class="text-xl font-bold text-gray-900">Leave Requests</h1>
     <button
       v-if="showNewButton"
-      class="flex items-center gap-1.5 rounded-md border-none bg-[#f5a623] px-4 py-2.5 text-sm font-semibold text-white cursor-pointer hover:bg-[#e09510]"
-      @click="$emit('new')"
+      type="button"
+      class="flex items-center gap-1.5 rounded-md bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-600"
+      @click="emit('new')"
     >
       <Plus :size="16" />
       New Request
@@ -15,12 +16,17 @@
 <script setup lang="ts">
 import { Plus } from 'lucide-vue-next'
 
-defineProps({
-  showNewButton: {
-    type: Boolean,
-    default: false,
-  },
-})
+withDefaults(
+  defineProps<{
+    showNewButton?: boolean
+  }>(),
+  {
+    showNewButton: false,
+  }
+)
 
-defineEmits(['new'])
+const emit = defineEmits<{
+  (e: 'new'): void
+}>()
+
 </script>

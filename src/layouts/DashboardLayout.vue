@@ -1,10 +1,10 @@
 <template>
-  <div class="flex min-h-screen bg-[#f5f6fa]">
+  <div class="flex min-h-screen bg-slate-50 text-slate-900">
     <Sidebar :is-open="sidebarOpen" @close="sidebarOpen = false" />
 
     <div class="flex min-w-0 flex-1 flex-col">
       <Navbar @toggle-sidebar="sidebarOpen = !sidebarOpen" />
-      <main class="min-w-0 flex-1 bg-[#f5f6fa] p-6 max-lg:p-4">
+      <main class="min-w-0 flex-1 p-4 lg:p-6">
         <RouterView />
       </main>
       <Footer />

@@ -29,20 +29,23 @@
 <script setup lang="ts">
 import LeaveRequestRow from './LeaveRequestRow.vue'
 import LeaveRequestEmptyState from './LeaveRequestEmptyState.vue'
-
-interface LeaveRequest {
-  id: number
-  student: string
-  type: string
+import type { LeaveRequest } from '@/types/leave'
+interface TableLeaveRequest extends LeaveRequest {
   leaveDate: string
   submittedAt: string
-  status: string
 }
 
-defineProps<{
-  requests: LeaveRequest[]
-  showActions?: boolean
-}>()
+withDefaults(
+  defineProps<{
+    requests: TableLeaveRequest[]
+    showActions?: boolean
+  }>(),
+  {
+    showActions: false,
+  }
+)
 
-defineEmits<{ edit: [id: number] }>()
+const emit = defineEmits<{
+  (e: 'edit', id: number): void
+}>()
 </script>

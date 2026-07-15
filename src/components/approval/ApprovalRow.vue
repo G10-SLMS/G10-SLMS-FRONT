@@ -2,34 +2,36 @@
   <tr class="border-b border-gray-100 last:border-none">
     <td class="px-4 py-3.5 align-middle text-left">
       <div class="flex items-center gap-2.5 font-medium">
-        <span class="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-cyan-400 text-xs font-semibold text-white">{{ initials(request.student) }}</span>
+        <span class="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-cyan-400 text-xs font-semibold text-white">
+          {{ getInitials(request.student) }}
+        </span>
         {{ request.student }}
       </div>
     </td>
+
     <td class="px-4 py-3.5 align-middle text-left">{{ request.type }}</td>
     <td class="px-4 py-3.5 align-middle text-left">{{ request.startDate }}</td>
     <td class="px-4 py-3.5 align-middle text-left">{{ request.endDate }}</td>
-    <td class="max-w-[220px] overflow-hidden text-ellipsis whitespace-nowrap px-4 py-3.5 align-middle text-left text-gray-500">{{ request.reason }}</td>
+
+    <td class="max-w-[220px] overflow-hidden text-ellipsis whitespace-nowrap px-4 py-3.5 align-middle text-left text-gray-500">
+      {{ request.reason }}
+    </td>
+
     <td class="px-4 py-3.5 align-middle text-left">
       <LeaveStatusBadge :status="request.status" />
     </td>
+
     <td v-if="showActions" class="px-4 py-3.5 align-middle text-left">
       <div class="flex gap-2">
         <button
-          class="flex items-center gap-1 whitespace-nowrap rounded-md border border-transparent bg-green-100 px-2.5 py-1.5 text-xs font-semibold text-green-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60 enabled:hover:bg-green-200"
+          v-for="action in actions"
+          :key="action.decision"
+          :class="[actionButtonBaseClasses, action.classes]"
           :disabled="request.processing"
-          @click="$emit('decide', 'Approved')"
+          @click="$emit('decide', action.decision)"
         >
-          <Check :size="15" />
-          Approve
-        </button>
-        <button
-          class="flex items-center gap-1 whitespace-nowrap rounded-md border border-transparent bg-red-100 px-2.5 py-1.5 text-xs font-semibold text-red-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60 enabled:hover:bg-red-200"
-          :disabled="request.processing"
-          @click="$emit('decide', 'Rejected')"
-        >
-          <X :size="15" />
-          Reject
+          <component :is="action.icon" :size="15" />
+          {{ action.label }}
         </button>
       </div>
     </td>
@@ -39,31 +41,33 @@
 <script setup lang="ts">
 import { Check, X } from 'lucide-vue-next'
 import LeaveStatusBadge from '@/components/leave/LeaveStatusBadge.vue'
+import { getInitials } from '@/utils/initials'
+import type { LeaveRequest, LeaveStatus } from '@/types/leave'
 
 defineProps<{
-  request: {
-    id: number
-    student: string
-    type: string
-    startDate: string
-    endDate: string
-    reason: string
-    status: 'Pending' | 'Approved' | 'Rejected'
-    processing?: boolean
-  }
+  request: LeaveRequest
   showActions?: boolean
 }>()
 
 defineEmits<{
-  decide: [decision: 'Approved' | 'Rejected']
+  decide: [decision: LeaveStatus]
 }>()
 
-function initials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-}
+const actionButtonBaseClasses =
+  'flex items-center gap-1 whitespace-nowrap rounded-md border border-transparent px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60'
+
+const actions = [
+  {
+    decision: 'Approved' as const,
+    label: 'Approve',
+    icon: Check,
+    classes: 'bg-green-100 text-green-700 enabled:hover:bg-green-200',
+  },
+  {
+    decision: 'Rejected' as const,
+    label: 'Reject',
+    icon: X,
+    classes: 'bg-red-100 text-red-700 enabled:hover:bg-red-200',
+  },
+]
 </script>
