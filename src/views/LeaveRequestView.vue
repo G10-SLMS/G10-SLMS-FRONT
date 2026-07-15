@@ -61,15 +61,15 @@
 <script setup lang="ts">
 import { useLeaveRequests } from '@/composables/useLeaveRequests'
 
-import LeaveRequestsHero from '@/components/leave/LeaveRequestsHero.vue'
-import LeaveStatsRow from '@/components/leave/LeaveStatsRow.vue'
-import LeaveFiltersBar from '@/components/leave/LeaveFiltersBar.vue'
-import LeaveErrorBanner from '@/components/leave/LeaveErrorBanner.vue'
-import LeaveLoadingSkeleton from '@/components/leave/LeaveLoadingSkeleton.vue'
-import LeaveEmptyState from '@/components/leave/LeaveEmptyState.vue'
-import LeaveRequestsTable from '@/components/leave/LeaveRequestsTable.vue'
-import LeaveRequestsPagination from '@/components/leave/LeaveRequestsPagination.vue'
-import CancelLeaveModal from '@/components/leave/CancelLeaveModal.vue'
+import LeaveRequestsHero from '@/components/leave-request/LeaveRequestsHero.vue'
+import LeaveStatsRow from '@/components/leave-request/LeaveStatsRow.vue'
+import LeaveFiltersBar from '@/components/leave-request/LeaveFiltersBar.vue'
+import LeaveErrorBanner from '@/components/leave-request/LeaveErrorBanner.vue'
+import LeaveLoadingSkeleton from '@/components/leave-request/LeaveLoadingSkeleton.vue'
+import LeaveEmptyState from '@/components/leave-request/LeaveEmptyState.vue'
+import LeaveRequestsTable from '@/components/leave-request/LeaveRequestsTable.vue'
+import LeaveRequestsPagination from '@/components/leave-request/LeaveRequestsPagination.vue'
+import CancelLeaveModal from '@/components/leave-request/CancelLeaveModal.vue'
 
 const {
   items,

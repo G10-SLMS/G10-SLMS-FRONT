@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import { Check, X } from 'lucide-vue-next'
-import LeaveStatusBadge from '@/components/leave/LeaveStatusBadge.vue'
+import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
 import { getInitials } from '@/utils/initials'
 import type { LeaveRequest, LeaveStatus } from '@/types/leave'
 
