@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-[880px] px-6 py-10">
+  <div class="w-full px-6 py-10">
     <header class="mb-8 flex items-center justify-between">
       <div>
         <p class="mb-0.5 font-mono text-[11px] uppercase tracking-[0.22em] text-slate-400">
@@ -17,6 +17,7 @@
     </header>
 
     <ProfileBadgeCard
+      class="w-full"
       :avatar-url="avatarUrl"
       :initials="initials"
       :name="user?.name || 'Guest User'"
@@ -28,35 +29,56 @@
       :bar-heights="barHeights"
     />
 
-    <ProfileSecuritySection />
+    <ProfileSecuritySection @change-password="openPasswordModal" />
+
+    <ChangePasswordModal
+      :open="showPasswordModal"
+      v-model:next="passwordForm.next"
+      v-model:confirm="passwordForm.confirm"
+      :error="passwordError"
+      :success="passwordSuccess"
+      :saving="savingPassword"
+      @close="closePasswordModal"
+      @submit="submitPassword(() => (showPasswordModal = false))"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
-import { authService } from '@/services/authService';
+import { useDefaultAvatars } from '@/composables/useDefaultAvatars';
+import { useChangePassword } from '@/composables/useChangePassword';
 import { Pencil, Mail, Phone, User, GraduationCap, MapPin } from 'lucide-vue-next';
 import ProfileBadgeCard from '@/components/user/ProfileBadgeCard.vue';
 import ProfileSecuritySection from '@/components/user/ProfileSecuritySection.vue';
-import type { DefaultAvatar } from '@/types/user';
+import ChangePasswordModal from '@/components/user/ChangePasswordModal.vue';
 
 const auth = useAuthStore();
 const user = computed(() => auth.user);
 
-const defaultAvatars = ref<DefaultAvatar[]>([]);
-const avatarUrl = computed(
-  () => defaultAvatars.value.find((a) => a.id === user.value?.avatar_id)?.url ?? null,
-);
+const { urlFor } = useDefaultAvatars();
+const avatarUrl = computed(() => urlFor(user.value?.avatar_id));
 
-onMounted(async () => {
-  try {
-    const { data } = await authService.getDefaultAvatars();
-    defaultAvatars.value = data.avatars;
-  } catch {
-    defaultAvatars.value = [];
-  }
-});
+const showPasswordModal = ref(false);
+const {
+  form: passwordForm,
+  saving: savingPassword,
+  error: passwordError,
+  success: passwordSuccess,
+  submit: submitPassword,
+  reset: resetPasswordForm,
+} = useChangePassword({ autoCloseMs: 1200 });
+
+function openPasswordModal() {
+  resetPasswordForm();
+  showPasswordModal.value = true;
+}
+
+function closePasswordModal() {
+  showPasswordModal.value = false;
+  resetPasswordForm();
+}
 
 const initials = computed(() =>
   (user.value?.name ?? '')

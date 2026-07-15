@@ -70,4 +70,11 @@ export interface DefaultAvatar {
   id: number
   filename: string
   url: string
+  gender: Gender | null
+}
+
+export interface ChangePasswordPayload {
+  current_password: string
+  new_password: string
+  new_password_confirmation: string
 }

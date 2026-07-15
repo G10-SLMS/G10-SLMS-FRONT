@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-[900px] px-8 py-10">
+  <div class="w-full px-8 py-10">
     <header class="mb-8">
       <RouterLink
         to="/profile"
@@ -14,11 +14,11 @@
       <h1 class="text-[26px] font-bold tracking-tight text-slate-900">Edit Profile</h1>
     </header>
 
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+    <div class="flex flex-col gap-6">
       <ProfileSectionCard>
         <template #icon>
           <span
-            class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-white"
+            class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-white"
           >
             <span class="text-[0.7rem]">I</span>
           </span>
@@ -32,41 +32,42 @@
           :selected-avatar-url="selectedAvatarUrl"
           :initials="initials"
           :loading="loadingAvatars"
+          :preferred-gender="form.gender"
           @update:selectedId="(value) => (form.avatar_id = value)"
         />
 
-        <form class="flex flex-col gap-4" @submit.prevent="submitProfile">
-          <ProfileFormField id="name" label="Full Name">
-            <input
-              id="name"
-              v-model="form.name"
-              type="text"
-              required
-              class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
-            />
-          </ProfileFormField>
+        <form class="flex flex-col gap-5" @submit.prevent="submitProfile">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <ProfileFormField id="name" label="Full Name">
+              <input
+                id="name"
+                v-model="form.name"
+                type="text"
+                required
+                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+              />
+            </ProfileFormField>
 
-          <ProfileFormField id="email" label="Email Address">
-            <input
-              id="email"
-              v-model="form.email"
-              type="email"
-              required
-              class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
-            />
-          </ProfileFormField>
+            <ProfileFormField id="email" label="Email Address">
+              <input
+                id="email"
+                v-model="form.email"
+                type="email"
+                required
+                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+              />
+            </ProfileFormField>
 
-          <ProfileFormField id="phone" label="Phone">
-            <input
-              id="phone"
-              v-model="form.phone"
-              type="text"
-              class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
-            />
-          </ProfileFormField>
+            <ProfileFormField id="phone" label="Phone">
+              <input
+                id="phone"
+                v-model="form.phone"
+                type="text"
+                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+              />
+            </ProfileFormField>
 
-          <template v-if="isStudent">
-            <ProfileFormField id="gender" label="Gender">
+            <ProfileFormField v-if="isStudent" id="gender" label="Gender">
               <select
                 id="gender"
                 v-model="form.gender"
@@ -77,42 +78,51 @@
                 <option value="female">Female</option>
               </select>
             </ProfileFormField>
+          </div>
 
-            <ProfileFormField id="id_card" label="ID Card Number">
-              <input
-                id="id_card"
-                v-model="form.id_card"
-                type="text"
-                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
-              />
-            </ProfileFormField>
+          <template v-if="isStudent">
+            <div class="border-t border-dotted border-slate-200 pt-5">
+              <p class="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-slate-400">
+                Student Record
+              </p>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <ProfileFormField id="id_card" label="ID Card Number">
+                  <input
+                    id="id_card"
+                    v-model="form.id_card"
+                    type="text"
+                    class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+                  />
+                </ProfileFormField>
 
-            <ProfileFormField id="class" label="Class">
-              <input
-                id="class"
-                v-model="form.class"
-                type="text"
-                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
-              />
-            </ProfileFormField>
+                <ProfileFormField id="class" label="Class">
+                  <input
+                    id="class"
+                    v-model="form.class"
+                    type="text"
+                    class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+                  />
+                </ProfileFormField>
 
-            <ProfileFormField id="generation" label="Generation">
-              <input
-                id="generation"
-                v-model="form.generation"
-                type="text"
-                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
-              />
-            </ProfileFormField>
+                <ProfileFormField id="generation" label="Generation">
+                  <input
+                    id="generation"
+                    v-model="form.generation"
+                    type="text"
+                    class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+                  />
+                </ProfileFormField>
 
-            <ProfileFormField id="province" label="Province">
-              <input
-                id="province"
-                v-model="form.province"
-                type="text"
-                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
-              />
-            </ProfileFormField>
+                <ProfileFormField id="province" label="Province">
+                  <input
+                    id="province"
+                    v-model="form.province"
+                    type="text"
+                    class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+                  />
+                </ProfileFormField>
+              </div>
+            </div>
           </template>
 
           <p v-if="profileError" class="rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-600">
@@ -137,55 +147,36 @@
         </form>
       </ProfileSectionCard>
 
-      <ProfileSectionCard>
-        <template #title>Change Password</template>
-        <template #description>Choose a strong password you don't use elsewhere.</template>
-
-        <form class="flex flex-col gap-4" @submit.prevent="submitPassword">
-          <ProfileFormField id="new-password" label="New Password">
-            <input
-              id="new-password"
-              v-model="passwordForm.next"
-              type="password"
-              required
-              minlength="8"
-              class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
-            />
-          </ProfileFormField>
-
-          <ProfileFormField id="confirm-password" label="Confirm New Password">
-            <input
-              id="confirm-password"
-              v-model="passwordForm.confirm"
-              type="password"
-              required
-              minlength="8"
-              class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
-            />
-          </ProfileFormField>
-
-          <p v-if="passwordError" class="rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-600">
-            {{ passwordError }}
+      <section
+        class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-6 py-5"
+      >
+        <div>
+          <h3 class="text-[15px] font-bold text-slate-900">Change Password</h3>
+          <p class="text-[13px] text-slate-400">
+            Choose a strong password you don't use elsewhere.
           </p>
-          <p
-            v-if="passwordSuccess"
-            class="rounded-lg bg-green-50 px-3 py-2 text-[13px] text-green-700"
-          >
-            Password updated successfully.
-          </p>
-
-          <div class="flex justify-end pt-2">
-            <button
-              type="submit"
-              class="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:enabled:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-              :disabled="savingPassword"
-            >
-              {{ savingPassword ? 'Updating…' : 'Update Password' }}
-            </button>
-          </div>
-        </form>
-      </ProfileSectionCard>
+        </div>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+          @click="openPasswordModal"
+        >
+          <Lock :size="15" />
+          Change Password
+        </button>
+      </section>
     </div>
+
+    <ChangePasswordModal
+      :open="showPasswordModal"
+      v-model:next="passwordForm.next"
+      v-model:confirm="passwordForm.confirm"
+      :error="passwordError"
+      :success="passwordSuccess"
+      :saving="savingPassword"
+      @close="closePasswordModal"
+      @submit="submitPassword(() => (showPasswordModal = false))"
+    />
   </div>
 </template>
 
@@ -193,12 +184,14 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { ArrowLeft, Lock } from 'lucide-vue-next';
-import { authService } from '../services/authService';
-import type { AxiosError } from 'axios';
-import type { DefaultAvatar, Gender } from '../types/user';
+import { useDefaultAvatars } from '../composables/useDefaultAvatars';
+import { useChangePassword } from '../composables/useChangePassword';
+import { extractErrorMessage } from '../utils/errors';
+import type { Gender } from '../types/user';
 import ProfileSectionCard from '../components/user/ProfileSectionCard.vue';
 import AvatarPicker from '../components/user/AvatarPicker.vue';
 import ProfileFormField from '../components/user/ProfileFormField.vue';
+import ChangePasswordModal from '../components/user/ChangePasswordModal.vue';
 const auth = useAuthStore();
 const user = computed(() => auth.user);
 const isStudent = computed(() => user.value?.role === 'student');
@@ -213,33 +206,20 @@ const initials = computed(() =>
     .toUpperCase(),
 );
 
-const defaultAvatars = ref<DefaultAvatar[]>([]);
-const loadingAvatars = ref(true);
-const selectedAvatarUrl = computed(
-  () => defaultAvatars.value.find((a) => a.id === form.avatar_id)?.url ?? null,
-);
+const { avatars: defaultAvatars, loading: loadingAvatars, urlFor } = useDefaultAvatars();
+const selectedAvatarUrl = computed(() => urlFor(form.avatar_id));
 
 const form = reactive({
   name: user.value?.name ?? '',
   email: user.value?.email ?? '',
   phone: user.value?.phone ?? '',
   gender: (user.value?.gender ?? '') as Gender | '',
-  id_card: user.value?.id_card ?? '',
+  id_card: user.value?.id_card != null ? String(user.value.id_card) : '',
   class: user.value?.class ?? '',
   generation: user.value?.generation ?? '',
   province: user.value?.province ?? '',
   avatar_id: user.value?.avatar_id ?? null,
 });
-
-function extractError(err: unknown, fallback: string): string {
-  const axiosErr = err as AxiosError<{ message?: string; errors?: Record<string, string[]> }>;
-  const errors = axiosErr.response?.data?.errors;
-  if (errors) {
-    const first = Object.values(errors)[0]?.[0];
-    if (first) return first;
-  }
-  return axiosErr.response?.data?.message ?? fallback;
-}
 
 const savingProfile = ref(false);
 const profileError = ref('');
@@ -267,54 +247,35 @@ async function submitProfile() {
     });
     profileSuccess.value = true;
   } catch (err) {
-    profileError.value = extractError(err, 'Could not update profile.');
+    profileError.value = extractErrorMessage(err, 'Could not update profile.');
   } finally {
     savingProfile.value = false;
   }
 }
 
-const passwordForm = reactive({ next: '', confirm: '' });
-const savingPassword = ref(false);
-const passwordError = ref('');
-const passwordSuccess = ref(false);
+const showPasswordModal = ref(false);
+const {
+  form: passwordForm,
+  saving: savingPassword,
+  error: passwordError,
+  success: passwordSuccess,
+  submit: submitPassword,
+  reset: resetPasswordForm,
+} = useChangePassword({ autoCloseMs: 1200 });
 
-async function submitPassword() {
-  passwordError.value = '';
-  passwordSuccess.value = false;
-
-  if (passwordForm.next !== passwordForm.confirm) {
-    passwordError.value = 'New password and confirmation do not match.';
-    return;
-  }
-
-  savingPassword.value = true;
-  try {
-    await auth.updateProfile({
-      password: passwordForm.next,
-      password_confirmation: passwordForm.confirm,
-    });
-    passwordSuccess.value = true;
-    passwordForm.next = '';
-    passwordForm.confirm = '';
-  } catch (err) {
-    passwordError.value = extractError(err, 'Could not update password.');
-  } finally {
-    savingPassword.value = false;
-  }
+function openPasswordModal() {
+  resetPasswordForm();
+  showPasswordModal.value = true;
 }
 
-onMounted(async () => {
-  try {
-    const { data } = await authService.getDefaultAvatars();
-    defaultAvatars.value = data.avatars;
-  } catch {
-    defaultAvatars.value = [];
-  } finally {
-    loadingAvatars.value = false;
-  }
+function closePasswordModal() {
+  showPasswordModal.value = false;
+  resetPasswordForm();
+}
 
+onMounted(() => {
   if (window.location.hash === '#security') {
-    document.getElementById('security')?.scrollIntoView({ behavior: 'smooth' });
+    openPasswordModal();
   }
 });
 </script>

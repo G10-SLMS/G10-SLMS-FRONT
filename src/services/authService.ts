@@ -2,7 +2,9 @@ import type { AxiosResponse } from 'axios'
 import api from './api'
 import type {
   AuthResponse,
+  ChangePasswordPayload,
   DefaultAvatar,
+  Gender,
   LoginPayload,
   RegisterPayload,
   ResetPasswordPayload,
@@ -46,14 +48,22 @@ export const authService = {
   getProfile(): Promise<AxiosResponse<User>> {
     return api.get('/profile')
   },
-  
+
   updateProfile(
     payload: UpdateProfilePayload,
   ): Promise<AxiosResponse<{ message: string; user: User }>> {
     return api.put('/profile', payload)
   },
 
-  getDefaultAvatars(): Promise<AxiosResponse<{ avatars: DefaultAvatar[]; count: number }>> {
-    return api.get('/default-avatars')
+  changePassword(
+    payload: ChangePasswordPayload,
+  ): Promise<AxiosResponse<{ message: string }>> {
+    return api.put('/profile/change-password', payload)
+  },
+
+  getDefaultAvatars(
+    gender?: Gender,
+  ): Promise<AxiosResponse<{ avatars: DefaultAvatar[]; count: number }>> {
+    return api.get('/default-avatars', { params: gender ? { gender } : undefined })
   },
 }
