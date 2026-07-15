@@ -1,5 +1,5 @@
 <template>
-  <div class="file-upload">
+  <div class="rounded-lg border border-dashed border-gray-300 p-4">
     <slot />
   </div>
 </template>

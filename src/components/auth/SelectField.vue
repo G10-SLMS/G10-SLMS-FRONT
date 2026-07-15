@@ -1,31 +1,43 @@
-<script setup lang="ts">
-defineProps<{
-  id: string
-  label: string
-  modelValue: string
-  required?: boolean
-}>()
-
-defineEmits<{
-  'update:modelValue': [value: string]
-}>()
-</script>
-
 <template>
-  <div class="form-row">
-    <label class="form-label" :for="id">{{ label }}</label>
-    <div class="input-wrap">
-      <span class="input-icon">
+  <div class="mb-4">
+    <label :for="id" class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-700">
+      {{ label }}
+    </label>
+
+    <div class="relative flex items-center">
+      <span class="pointer-events-none absolute left-3.5 flex items-center text-gray-400">
         <slot name="icon" />
       </span>
+
       <select
         :id="id"
-        :value="modelValue"
+        v-model="selectValue"
         :required="required"
-        @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
+        class="w-full appearance-none rounded-xl border border-gray-300 bg-[#fbfbfc] py-3 pl-10 pr-10 text-[0.92rem] text-gray-900 transition-colors focus:border-[#f5a623] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#f5a623]/10"
       >
         <slot />
       </select>
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+
+const props = defineProps<{
+  id: string
+  label: string
+  modelValue: string
+  required?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string): void
+}>()
+
+const selectValue = computed({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value)
+})
+</script>
+

@@ -1,10 +1,10 @@
-import { computed, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notification'
+import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
 import { leaveService } from '@/services/leaveService'
 import type { AxiosError } from 'axios'
-import type { LeaveRequestListItem, LeaveType, LeaveRequestPayload } from '@/types/leave'
+import type { LeaveRequestListItem, LeaveType } from '@/types/leave'
 import {
   AlertOctagon,
   Ban,
@@ -13,9 +13,9 @@ import {
 } from 'lucide-vue-next'
 
 export function useLeaveRequests() {
-  const router = useRouter()
   const authStore = useAuthStore()
   const notificationStore = useNotificationStore()
+  const leaveModal = useLeaveFormModalStore()
 
   const items = ref<LeaveRequestListItem[]>([])
   const leaveTypes = ref<LeaveType[]>([])
@@ -140,11 +140,11 @@ export function useLeaveRequests() {
   }
 
   function viewRequest(id: number) {
-    router.push(`/leave/${id}/edit`)
+    leaveModal.openView(id)
   }
 
   function editRequest(id: number) {
-    router.push(`/leave/${id}/edit`)
+    leaveModal.openEdit(id)
   }
 
   function confirmCancel(r: LeaveRequestListItem) {
@@ -177,6 +177,13 @@ export function useLeaveRequests() {
     } catch {}
     await fetchRequests()
   })
+
+  // Keeps the table in sync after the create/edit modal submits, without
+  // any manual event wiring in the layout that hosts the modal.
+  watch(
+    () => leaveModal.refreshToken,
+    () => fetchRequests(page.value),
+  )
 
   return {
     authStore,
@@ -212,6 +219,3 @@ export function useLeaveRequests() {
     doCancel,
   }
 }
-
-// Keeps compatibility for future refactors; not used directly in this view.
-export type { LeaveRequestPayload }

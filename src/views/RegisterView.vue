@@ -50,23 +50,23 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="auth-page">
+  <div class="flex min-h-screen bg-white">
     <AuthPanelLeft
       :logo-url="logoUrl"
       title="Join your institution's leave portal."
       description="Create your account to submit leave requests, track attendance, and stay in sync with your institution."
     />
 
-    <main class="auth-panel-right">
-      <div class="auth-card">
+    <main class="flex flex-1 basis-[55%] items-center justify-center px-8 py-10">
+      <div class="w-full max-w-[420px]">
         <AuthTabs active="register" />
 
-        <div class="auth-heading">
-          <h2>Create your account</h2>
-          <p>Set up access to your institutional dashboard</p>
+        <div class="mb-7">
+          <h2 class="mb-1.5 text-2xl font-extrabold text-gray-900">Create your account</h2>
+          <p class="text-[0.92rem] text-gray-500">Set up access to your institutional dashboard</p>
         </div>
 
-        <div v-if="auth.error" class="form-error-banner">{{ auth.error }}</div>
+        <div v-if="auth.error" class="mb-[1.1rem] rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-[0.85rem] text-red-700">{{ auth.error }}</div>
 
         <form @submit.prevent="handleSubmit" novalidate>
           <FormField
@@ -98,7 +98,7 @@ async function handleSubmit() {
             <option value="trainer">Trainer</option>
           </SelectField>
 
-          <div class="form-row-split">
+          <div class="flex gap-4">
             <PasswordField
               id="regPassword"
               label="Password"
@@ -106,6 +106,7 @@ async function handleSubmit() {
               autocomplete="new-password"
               :minlength="8"
               required
+              class="flex-1"
             />
 
             <PasswordField
@@ -115,35 +116,36 @@ async function handleSubmit() {
               autocomplete="new-password"
               :minlength="8"
               required
+              class="flex-1"
             />
           </div>
-          <p v-if="passwordMismatch" class="field-error">Passwords do not match.</p>
+          <p v-if="passwordMismatch" class="mt-1.5 text-[0.78rem] text-red-600">Passwords do not match.</p>
 
-          <div class="form-checkbox-row">
-            <input id="terms" v-model="form.acceptTerms" type="checkbox" required />
-            <label for="terms">
+          <div class="mb-6 flex items-center gap-2.5">
+            <input id="terms" v-model="form.acceptTerms" type="checkbox" required class="h-4 w-4 accent-[#f5a623]" />
+            <label for="terms" class="text-[0.88rem] text-gray-700">
               I agree to the
-              <a href="#" class="form-link">Terms of Service</a> and
-              <a href="#" class="form-link">Privacy Policy</a>
+              <a href="#" class="font-semibold text-[#56637c] transition-colors hover:text-[#e09510] hover:underline">Terms of Service</a> and
+              <a href="#" class="font-semibold text-[#56637c] transition-colors hover:text-[#e09510] hover:underline">Privacy Policy</a>
             </label>
           </div>
 
-          <button type="submit" class="btn-primary" :disabled="auth.loading || passwordMismatch">
+          <button
+            type="submit"
+            class="w-full cursor-pointer rounded-[10px] border-none bg-[#f5a623] py-3.5 text-[0.96rem] font-bold text-white transition-transform hover:brightness-105 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="auth.loading || passwordMismatch"
+          >
             {{ auth.loading ? 'Creating account…' : 'Create Account' }}
           </button>
         </form>
 
         <SocialAuthButtons @login="socialLogin" />
 
-        <p class="auth-footer">
+        <p class="mt-7 text-center text-[0.85rem] text-gray-400">
           Already have an account?
-          <RouterLink to="/login">Sign in instead</RouterLink>
+          <RouterLink to="/login" class="font-medium text-[#f5a623] hover:underline">Sign in instead</RouterLink>
         </p>
       </div>
     </main>
   </div>
 </template>
-
-<style>
-@import '@/assets/styles/main.css';
-</style>

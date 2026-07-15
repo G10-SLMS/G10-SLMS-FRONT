@@ -3,8 +3,8 @@ import type { LeaveType, LeaveRequestPayload, LeaveRequestResponse, LeaveRequest
 
 export const leaveService = {
   async getLeaveTypes(): Promise<LeaveType[]> {
-    const { data } = await api.get<LeaveType[]>('/leave-types')
-    return data
+    const { data } = await api.get<{ success: boolean; message: string; data: LeaveType[] }>('/leave-types')
+    return data.data
   },
 
   async getLeaveRequests(params?: {

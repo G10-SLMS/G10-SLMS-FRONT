@@ -79,15 +79,13 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout(): Promise<void> {
-    loading.value = true
+    // Attempt server-side token revocation.
+    // clearSession() is called by the caller BEFORE this so the UI
+    // is already clean even if this request fails or hangs.
     try {
       await authService.logout()
     } catch {
-      // Even if the request fails (e.g. token already expired),
-      // clear local state so the user isn't stuck "logged in".
-    } finally {
-      clearSession()
-      loading.value = false
+      // Server unreachable or token already expired — safe to ignore.
     }
   }
   function socialLogin(provider: 'google' | 'office365' | 'github'): void {

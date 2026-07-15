@@ -1,3 +1,5 @@
+// ── API-driven leave request types (used by leaveService + useLeaveRequests) ──
+
 export interface LeaveRequestPayload {
   leave_type_id: number | null
   start_date: string
@@ -53,9 +55,28 @@ export interface PaginatedResponse<T> {
   total: number
 }
 
-export interface LeaveType {
+// ── UI-facing types (used by the Approvals table) ──
+
+export type LeaveStatus = 'Pending' | 'Approved' | 'Rejected'
+
+export interface LeaveRequest {
   id: number
+  student: string
+  type: string
+  startDate: string
+  endDate: string
+  reason: string
+  status: LeaveStatus
+  processing?: boolean
+}
+
+// ── Leave type configuration (used by Leave Types management) ──
+
+export interface LeaveType {
+  id?: number | string
   name: string
   description?: string
-  default_days?: number
+  defaultDays: number
+  requiresApproval: boolean
+  active: boolean
 }
