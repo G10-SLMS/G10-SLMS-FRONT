@@ -5,7 +5,8 @@
         <tr>
           <th>ID</th>
           <th>Leave Type</th>
-          <th>Duration</th>
+          <th>Start Date</th>
+          <th>End Date</th>
           <th class="td-center">Days</th>
           <th>Submitted</th>
           <th>Status</th>
@@ -20,7 +21,8 @@
           </td>
           <td class="td-date">
             <span class="lr-date">{{ formatDate(r.start_date) }}</span>
-            <ArrowRight :size="12" class="lr-date-arrow" />
+          </td>
+          <td class="td-date">
             <span class="lr-date">{{ formatDate(r.end_date) }}</span>
           </td>
           <td class="td-center">
@@ -28,10 +30,7 @@
           </td>
           <td class="td-date-sm">{{ r.submission_date }}</td>
           <td>
-            <span class="lr-status" :class="`lr-status--${r.status}`">
-              <span class="lr-status-dot" />
-              {{ statusLabel(r.status) }}
-            </span>
+            <StatusBadge :status="r.status" />
           </td>
           <td class="td-right">
             <div class="lr-actions" @click.stop>
@@ -65,13 +64,13 @@
 </template>
 
 <script setup lang="ts">
+import StatusBadge from '@/components/StatusBadge.vue'
 import type { LeaveRequestListItem } from '@/types/leave'
-import { ArrowRight, Eye, Edit, XCircle } from 'lucide-vue-next'
+import { Eye, Edit, XCircle } from 'lucide-vue-next'
 
 defineProps<{
   items: LeaveRequestListItem[]
   formatDate: (s: string) => string
-  statusLabel: (status: string) => string
   viewRequest: (id: number) => void
   editRequest: (id: number) => void
   confirmCancel: (r: LeaveRequestListItem) => void

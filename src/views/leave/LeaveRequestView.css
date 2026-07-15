@@ -487,31 +487,6 @@
   color: #475569;
 }
 
-/* ═══ Status Badge ═══ */
-.lr-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 14px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-.lr-status-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.lr-status--pending { background: #fef3c7; color: #d97706; }
-.lr-status--pending .lr-status-dot { background: #f59e0b; }
-.lr-status--approved { background: #dcfce7; color: #16a34a; }
-.lr-status--approved .lr-status-dot { background: #22c55e; }
-.lr-status--rejected { background: #fee2e2; color: #dc2626; }
-.lr-status--rejected .lr-status-dot { background: #ef4444; }
-.lr-status--cancelled { background: #f1f5f9; color: #64748b; }
-.lr-status--cancelled .lr-status-dot { background: #94a3b8; }
-
 /* ═══ Actions ═══ */
 .lr-actions { display: inline-flex; gap: 4px; }
 .lr-act {

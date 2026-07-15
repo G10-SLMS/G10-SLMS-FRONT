@@ -97,7 +97,6 @@
         v-else
         :items="items"
         :formatDate="formatDate"
-        :statusLabel="statusLabel"
         :viewRequest="viewRequest"
         :editRequest="editRequest"
         :confirmCancel="confirmCancel"
