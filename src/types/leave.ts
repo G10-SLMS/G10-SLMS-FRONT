@@ -71,12 +71,33 @@ export interface LeaveRequest {
 }
 
 // ── Leave type configuration (used by Leave Types management) ──
+// Matches App\Models\LeaveType / the leave_types table exactly.
 
 export interface LeaveType {
-  id?: number | string
+  id?: number
   name: string
-  description?: string
-  defaultDays: number
-  requiresApproval: boolean
-  active: boolean
+  code: string
+  description: string | null
+  max_days_per_year: number
+  requires_attachment: boolean
+  is_active: boolean
+  created_at?: string
+  updated_at?: string
+  deleted_at?: string | null
+}
+
+// Payload shape for POST /leave-types and PUT /leave-types/:id
+export interface LeaveTypePayload {
+  name: string
+  code: string
+  description?: string | null
+  max_days_per_year: number
+  requires_attachment?: boolean
+  is_active?: boolean
+}
+
+export interface LeaveTypeResponse {
+  success: boolean
+  message: string
+  data: LeaveType
 }

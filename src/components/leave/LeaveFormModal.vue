@@ -244,7 +244,7 @@ const originalStatus = ref('')
 
 const leaveTypes = ref<LeaveType[]>([])
 const typesLoading = ref(false)
-const activeLeaveTypes = computed(() => leaveTypes.value.filter((t) => t.active))
+const activeLeaveTypes = computed(() => leaveTypes.value.filter((t) => t.is_active))
 
 const todayStr = new Date().toISOString().slice(0, 10)
 

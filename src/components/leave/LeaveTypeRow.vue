@@ -4,16 +4,18 @@
       <div class="flex items-center gap-2 font-medium text-gray-900">
         <FileText :size="15" :stroke-width="1.8" />
         {{ leaveType.name }}
+        <span class="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-normal uppercase tracking-wide text-gray-500">{{ leaveType.code }}</span>
       </div>
+      <div v-if="leaveType.description" class="mt-0.5 pl-[23px] text-xs text-gray-400">{{ leaveType.description }}</div>
     </td>
-    <td class="px-4 py-3.5 text-left text-sm text-gray-700">{{ leaveType.defaultDays }} days</td>
-    <td class="px-4 py-3.5 text-left text-sm text-gray-700">{{ leaveType.requiresApproval ? 'Yes' : 'No' }}</td>
+    <td class="px-4 py-3.5 text-left text-sm text-gray-700">{{ leaveType.max_days_per_year }} days</td>
+    <td class="px-4 py-3.5 text-left text-sm text-gray-700">{{ leaveType.requires_attachment ? 'Yes' : 'No' }}</td>
     <td class="px-4 py-3.5 text-left text-sm">
       <span
         class="rounded-full px-2.5 py-1 text-xs font-medium"
-        :class="leaveType.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
+        :class="leaveType.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
       >
-        {{ leaveType.active ? 'Active' : 'Inactive' }}
+        {{ leaveType.is_active ? 'Active' : 'Inactive' }}
       </span>
     </td>
     <td class="px-4 py-3.5 text-left text-sm">

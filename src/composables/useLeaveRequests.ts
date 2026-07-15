@@ -2,7 +2,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notification'
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
-import { leaveService } from '@/services/leaveService'
+import { leaveService, LEAVE_REQUESTS_API_AVAILABLE } from '@/services/leaveService'
 import type { AxiosError } from 'axios'
 import type { LeaveRequestListItem, LeaveType } from '@/types/leave'
 import {
@@ -114,6 +114,13 @@ export function useLeaveRequests() {
   }
 
   async function fetchRequests(p: number = 1) {
+    if (!LEAVE_REQUESTS_API_AVAILABLE) {
+      errMsg.value = 'Leave requests are not available yet — the backend for this feature hasn\'t shipped.'
+      items.value = []
+      loading.value = false
+      return
+    }
+
     loading.value = true
     errMsg.value = ''
     page.value = p
@@ -172,6 +179,11 @@ export function useLeaveRequests() {
   }
 
   onMounted(async () => {
+    if (!LEAVE_REQUESTS_API_AVAILABLE) {
+      loading.value = false
+      errMsg.value = 'Leave requests are not available yet — the backend for this feature hasn\'t shipped.'
+      return
+    }
     try {
       leaveTypes.value = await leaveService.getLeaveTypes()
     } catch {}
@@ -191,6 +203,7 @@ export function useLeaveRequests() {
     leaveTypes,
     loading,
     errMsg,
+    requestsAvailable: LEAVE_REQUESTS_API_AVAILABLE,
     page,
     total,
     perPage,
