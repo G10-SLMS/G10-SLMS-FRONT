@@ -44,6 +44,7 @@
                 v-model="form.name"
                 type="text"
                 required
+                placeholder="Enter your full name"
                 class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
               />
             </ProfileFormField>
@@ -63,6 +64,7 @@
                 id="phone"
                 v-model="form.phone"
                 type="text"
+                placeholder="e.g. 012 345 678"
                 class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
               />
             </ProfileFormField>
@@ -91,17 +93,28 @@
                     id="id_card"
                     v-model="form.id_card"
                     type="text"
+                    placeholder="e.g. 012345678"
                     class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
                   />
                 </ProfileFormField>
 
                 <ProfileFormField id="class" label="Class">
-                  <input
-                    id="class"
-                    v-model="form.class"
-                    type="text"
-                    class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
-                  />
+                  <div class="flex gap-2">
+                    <select
+                      id="class"
+                      v-model="classPrefix"
+                      class="w-24 shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+                    >
+                      <option value="WEB">WEB</option>
+                      <option value="SNA">SNA</option>
+                    </select>
+                    <input
+                      v-model="classSuffix"
+                      type="text"
+                      placeholder="e.g. 1"
+                      class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+                    />
+                  </div>
                 </ProfileFormField>
 
                 <ProfileFormField id="generation" label="Generation">
@@ -109,17 +122,20 @@
                     id="generation"
                     v-model="form.generation"
                     type="text"
+                    placeholder="e.g. 2026"
                     class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
                   />
                 </ProfileFormField>
 
                 <ProfileFormField id="province" label="Province">
-                  <input
+                  <select
                     id="province"
                     v-model="form.province"
-                    type="text"
                     class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
-                  />
+                  >
+                    <option value="">Select province</option>
+                    <option v-for="p in CAMBODIA_PROVINCES" :key="p" :value="p">{{ p }}</option>
+                  </select>
                 </ProfileFormField>
               </div>
             </div>
@@ -181,7 +197,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, watch, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { ArrowLeft, Lock } from 'lucide-vue-next';
 import { useDefaultAvatars } from '../composables/useDefaultAvatars';
@@ -192,7 +209,37 @@ import ProfileSectionCard from '../components/user/ProfileSectionCard.vue';
 import AvatarPicker from '../components/user/AvatarPicker.vue';
 import ProfileFormField from '../components/user/ProfileFormField.vue';
 import ChangePasswordModal from '../components/user/ChangePasswordModal.vue';
+
+const CAMBODIA_PROVINCES = [
+  'Banteay Meanchey',
+  'Battambang',
+  'Kampong Cham',
+  'Kampong Chhnang',
+  'Kampong Speu',
+  'Kampong Thom',
+  'Kampot',
+  'Kandal',
+  'Kep',
+  'Koh Kong',
+  'Kratié',
+  'Mondulkiri',
+  'Oddar Meanchey',
+  'Pailin',
+  'Phnom Penh',
+  'Preah Sihanouk',
+  'Preah Vihear',
+  'Prey Veng',
+  'Pursat',
+  'Ratanakiri',
+  'Siem Reap',
+  'Stung Treng',
+  'Svay Rieng',
+  'Takéo',
+  'Tboung Khmum',
+];
+
 const auth = useAuthStore();
+const router = useRouter();
 const user = computed(() => auth.user);
 const isStudent = computed(() => user.value?.role === 'student');
 
@@ -225,6 +272,24 @@ const savingProfile = ref(false);
 const profileError = ref('');
 const profileSuccess = ref(false);
 
+const CLASS_PREFIXES = ['WEB', 'SNA'];
+
+function splitClass(value: string) {
+  const match = CLASS_PREFIXES.find((prefix) => value.toUpperCase().startsWith(prefix));
+  if (match) {
+    return { prefix: match, suffix: value.slice(match.length) };
+  }
+  return { prefix: CLASS_PREFIXES[0], suffix: value };
+}
+
+const initialClassParts = splitClass(form.class);
+const classPrefix = ref(initialClassParts.prefix);
+const classSuffix = ref(initialClassParts.suffix);
+
+watch([classPrefix, classSuffix], ([prefix, suffix]) => {
+  form.class = `${prefix}${suffix}`;
+});
+
 async function submitProfile() {
   savingProfile.value = true;
   profileError.value = '';
@@ -246,6 +311,9 @@ async function submitProfile() {
         : {}),
     });
     profileSuccess.value = true;
+    setTimeout(() => {
+      router.push('/profile');
+    }, 900);
   } catch (err) {
     profileError.value = extractErrorMessage(err, 'Could not update profile.');
   } finally {
