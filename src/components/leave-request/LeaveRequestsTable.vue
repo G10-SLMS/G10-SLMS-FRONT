@@ -18,8 +18,7 @@
         <tr
           v-for="(r, index) in items"
           :key="r.id"
-          class="cursor-pointer border-b border-slate-100 transition last:border-none hover:bg-slate-50 active:bg-slate-100"
-          @click="viewRequest(r.id)"
+          class="border-b border-slate-100 transition last:border-none hover:bg-slate-50"
         >
           <td class="px-4 py-3.5 pl-5 text-[13px] font-bold text-blue-600">{{ props.startIndex + index }}</td>
           <td v-if="!auth.isStudent" class="px-4 py-3.5">
