@@ -1,50 +1,25 @@
 <template>
-  <div class="dashboard-layout">
+  <div class="flex min-h-screen bg-slate-50 text-slate-900">
     <Sidebar :is-open="sidebarOpen" @close="sidebarOpen = false" />
 
-    <div class="layout-main">
+    <div class="flex min-w-0 flex-1 flex-col">
       <Navbar @toggle-sidebar="sidebarOpen = !sidebarOpen" />
-      <main class="content">
+      <main class="min-w-0 flex-1 p-4 lg:p-6">
         <RouterView />
       </main>
       <Footer />
     </div>
+
+    <LeaveFormModal />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import Navbar from '@/components/Navbar.vue'
-import Sidebar from '@/components/Sidebar.vue'
-import Footer from '@/components/Footer.vue'
+import Navbar from '@/components/layout/Navbar.vue'
+import Sidebar from '@/components/layout/Sidebar.vue'
+import Footer from '@/components/layout/Footer.vue'
+import LeaveFormModal from '@/components/leave-request/LeaveFormModal.vue'
 
 const sidebarOpen = ref(false)
 </script>
-
-<style scoped>
-.dashboard-layout {
-  display: flex;
-  min-height: 100vh;
-  background: #f5f6fa;
-}
-
-.layout-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.content {
-  flex: 1;
-  padding: 24px;
-  background: #f5f6fa;
-  min-width: 0;
-}
-
-@media (max-width: 1023px) {
-  .content {
-    padding: 16px;
-  }
-}
-</style>

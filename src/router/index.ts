@@ -34,18 +34,18 @@ export const router = createRouter({
       path: '/auth/google/callback',
       name: 'GoogleCallback',
       component: () => import('../views/AuthCallbackView.vue'),
-      meta: { title: 'Signing in…', provider: 'google' },
+      meta: { title: 'Signing in...', provider: 'google' },
     },
     {
       path: '/auth/github/callback',
       name: 'GithubCallback',
       component: () => import('../views/AuthCallbackView.vue'),
-      meta: { title: 'Signing in…', provider: 'github' },
+      meta: { title: 'Signing in...', provider: 'github' },
     },
     {
       path: '/dashboard-panel',
       component: () => import('../layouts/DashboardLayout.vue'),
-      meta: { title: 'Dashboard', requiresAuth: true },
+      meta: { requiresAuth: true },
       children: [
         {
           path: '/dashboard',
@@ -58,18 +58,6 @@ export const router = createRouter({
           name: 'LeaveRequests',
           component: () => import('../views/LeaveRequestView.vue'),
           meta: { title: 'Leave Requests', requiresAuth: true },
-        },
-        {
-          path: '/leave/new',
-          name: 'NewLeave',
-          component: () => import('../views/LeaveFormView.vue'),
-          meta: { title: 'New Leave Request', requiresAuth: true },
-        },
-        {
-          path: '/leave/:id/edit',
-          name: 'EditLeave',
-          component: () => import('../views/LeaveFormView.vue'),
-          meta: { title: 'Edit Leave Request', requiresAuth: true },
         },
         {
           path: '/approvals',
@@ -90,12 +78,6 @@ export const router = createRouter({
           meta: { title: 'Reports', requiresAuth: true, roles: ['admin'] },
         },
         {
-          path: '/settings',
-          name: 'Settings',
-          component: () => import('../views/SettingsView.vue'),
-          meta: { title: 'Settings', requiresAuth: true, roles: ['admin'] },
-        },
-        {
           path: '/users',
           name: 'UserManagement',
           component: () => import('../views/UserManagementView.vue'),
@@ -106,6 +88,18 @@ export const router = createRouter({
           name: 'LeaveTypesManagement',
           component: () => import('../views/LeaveTypesView.vue'),
           meta: { title: 'Leave Types Management', requiresAuth: true, roles: ['admin'] },
+        },
+        {
+          path: '/profile',
+          name: 'Profile',
+          component: () => import('../views/ProfileView.vue'),
+          meta: { title: 'My Profile', requiresAuth: true },
+        },
+        {
+          path: '/profile/edit',
+          name: 'EditProfile',
+          component: () => import('../views/EditProfileView.vue'),
+          meta: { title: 'Edit Profile', requiresAuth: true },
         },
       ],
     },
@@ -129,23 +123,14 @@ router.beforeEach((to) => {
     return { name: 'Dashboard' }
   }
 
-  // Role-based access control: if the route restricts roles and the
-  // logged-in user's role isn't in the list, bounce them to the dashboard.
   if (to.meta.roles && auth.user && !to.meta.roles.includes(auth.user.role)) {
     return { name: 'Dashboard' }
   }
 
+  const title = to.meta.title || 'SLMS'
+  document.title = `${title} · SLMS`
+
   return true
-})
-
-router.beforeEach((to) => {
-  const title = to.meta.title || 'SLMS'
-  document.title = `${title} · SLMS`
-})
-
-router.beforeEach((to) => {
-  const title = to.meta.title || 'SLMS'
-  document.title = `${title} · SLMS`
 })
 
 export default router

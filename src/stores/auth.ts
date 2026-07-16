@@ -79,15 +79,13 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout(): Promise<void> {
-    loading.value = true
+    // Attempt server-side token revocation.
+    // clearSession() is called by the caller BEFORE this so the UI
+    // is already clean even if this request fails or hangs.
     try {
       await authService.logout()
     } catch {
-      // Even if the request fails (e.g. token already expired),
-      // clear local state so the user isn't stuck "logged in".
-    } finally {
-      clearSession()
-      loading.value = false
+      // Server unreachable or token already expired — safe to ignore.
     }
   }
   function socialLogin(provider: 'google' | 'office365' | 'github'): void {
@@ -95,12 +93,7 @@ export const useAuthStore = defineStore('auth', () => {
       error.value = `${provider} sign-in isn't connected yet.`
       return
     }
-
-    // Let the backend build the provider authorization URL. It attaches a
-    // signed, short-lived `state` value via Socialite and redirects the
-    // browser straight to Google/GitHub — the frontend must not construct
-    // this URL itself, or no `state` gets sent and the callback has nothing
-    // to verify against (this was the "Missing state parameter" bug).
+    
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
     window.location.href = `${apiBaseUrl}/auth/${provider}/redirect`
   }
@@ -133,21 +126,19 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('auth_user', JSON.stringify(data))
       return data
     } catch (err) {
-      // Token invalid/expired — the axios 401 interceptor will redirect,
-      // but clear local state here too in case that interceptor is skipped.
       clearSession()
       throw err
     }
   }
 
-  async function updateProfile(payload: UpdateProfilePayload | FormData) {
+  async function updateProfile(payload: UpdateProfilePayload) {
     loading.value = true
     error.value = null
     try {
       const { data } = await authService.updateProfile(payload)
-      user.value = data
-      localStorage.setItem('auth_user', JSON.stringify(data))
-      return data
+      user.value = data.user
+      localStorage.setItem('auth_user', JSON.stringify(data.user))
+      return data.user
     } catch (err) {
       error.value = extractErrorMessage(err, 'Update failed.')
       throw err

@@ -1,215 +1,222 @@
 <template>
-  <div class="calendar-view">
-    <div class="header-row">
-      <div class="header-title">
-        <span class="header-icon"><CalendarDays :size="20" :stroke-width="1.8" /></span>
-        <h1>Calendar</h1>
+  <div class="flex h-[calc(100vh-120px)] max-w-full flex-col">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button class="flex h-9 w-9 items-center justify-center rounded-lg border-none bg-cyan-400/20 text-cyan-600 cursor-default" aria-hidden="true">
+          <CalendarDays :size="20" :stroke-width="1.8" />
+        </button>
+        <h1 class="m-0">Calendar</h1>
+        <button
+          class="h-[34px] rounded-md border border-gray-200 bg-white px-3.5 text-[13px] font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
+          @click="goToday"
+        >Today</button>
+        <div class="flex gap-1">
+          <button
+            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 cursor-pointer hover:bg-gray-100"
+            aria-label="Previous week"
+            @click="prevWeek"
+          >
+            <ChevronLeft :size="18" :stroke-width="1.8" />
+          </button>
+          <button
+            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 cursor-pointer hover:bg-gray-100"
+            aria-label="Next week"
+            @click="nextWeek"
+          >
+            <ChevronRight :size="18" :stroke-width="1.8" />
+          </button>
+        </div>
+        <span class="text-base font-semibold text-gray-800">{{ rangeLabel }}</span>
       </div>
 
-      <div class="month-nav">
-        <button class="today-btn" @click="goToday">Today</button>
-        <button class="nav-btn" aria-label="Previous month" @click="prevMonth">
-          <ChevronLeft :size="18" :stroke-width="1.8" />
-        </button>
-        <span class="month-label">{{ monthLabel }}</span>
-        <button class="nav-btn" aria-label="Next month" @click="nextMonth">
-          <ChevronRight :size="18" :stroke-width="1.8" />
-        </button>
+      <div class="flex items-center">
+        <div class="flex gap-0.5 rounded-lg bg-slate-100 p-[3px]">
+          <button
+            v-for="v in views"
+            :key="v"
+            class="rounded-md border-none bg-transparent px-3.5 py-1.5 text-[13px] font-medium text-slate-400 cursor-pointer"
+            :class="view === v ? 'bg-white text-cyan-500 shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : ''"
+            @click="view = v"
+          >
+            {{ v }}
+          </button>
+        </div>
       </div>
     </div>
 
-    <div class="calendar-card">
-      <div class="weekdays">
-        <span v-for="day in weekdays" :key="day">{{ day }}</span>
+    <div class="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[10px] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
+      <!-- Day headers -->
+      <div class="grid shrink-0 grid-cols-[56px_repeat(7,1fr)] border-b border-gray-200">
+        <div class="border-r border-gray-100"></div>
+        <div
+          v-for="d in weekDays"
+          :key="d.dateStr"
+          class="flex flex-col items-center justify-center gap-0.5 px-1 py-2"
+        >
+          <span class="text-[11px] font-semibold tracking-wide text-gray-500" :class="d.isToday ? 'text-cyan-500' : ''">{{ d.dayName }}</span>
+          <span
+            class="flex h-[30px] w-[30px] items-center justify-center rounded-full text-base font-semibold text-gray-800"
+            :class="d.isToday ? 'bg-cyan-400 text-white' : ''"
+          >{{ d.dayNumber }}</span>
+        </div>
       </div>
 
-      <div class="days-grid">
-        <div
-          v-for="(day, index) in calendarDays"
-          :key="index"
-          class="day-cell"
-          :class="{ empty: !day, today: isToday(day) }"
-        >
-          <span v-if="day">{{ day }}</span>
+      <!-- Scrollable time grid -->
+      <div class="flex-1 overflow-y-auto">
+        <div class="relative grid grid-cols-[56px_repeat(7,1fr)]">
+          <!-- Hour labels -->
+          <div class="border-r border-gray-100">
+            <div v-for="h in hours" :key="h" class="relative h-[56px]">
+              <span class="absolute -top-[7px] right-2 bg-white px-0.5 text-[11px] text-gray-400">{{ formatHour(h) }}</span>
+            </div>
+          </div>
+
+          <!-- Day columns -->
+          <div v-for="d in weekDays" :key="d.dateStr" class="relative border-r border-gray-100 last:border-none">
+            <div v-for="h in hours" :key="h" class="h-[56px] border-b border-gray-100"></div>
+
+            <CalendarLeaveBlock
+              v-for="(leave, i) in leavesFor(d.dateStr)"
+              :key="leave.id"
+              :status="leave.status"
+              :title="leaveChipTitle(leave)"
+              :block-style="leaveBlockStyle(i, leavesFor(d.dateStr).length)"
+            >
+              <template #title>
+                <template v-if="auth.isAdmin">{{ leave.student }}</template>
+                <template v-else>{{ leave.type }}</template>
+              </template>
+              <template #subtitle>
+                <template v-if="auth.isAdmin">{{ leave.type }} · </template>{{ leave.status }}
+              </template>
+            </CalendarLeaveBlock>
+
+            <!-- Current time line -->
+            <div
+              v-if="d.isToday && nowLineVisible"
+              class="absolute left-0 right-0 z-[5] h-0 border-t-2 border-red-500"
+              :style="{ top: nowOffset + 'px' }"
+            >
+              <span class="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-red-500"></span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref, computed } from 'vue'
-import { CalendarDays, ChevronLeft, ChevronRight, Info } from 'lucide-vue-next'
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { useAuthStore } from '@/stores/auth'
+import CalendarLeaveBlock from '@/components/calendar/CalendarLeaveBlock.vue'
+import { formatWeekday } from '@/utils/date'
+
+const auth = useAuthStore()
+
+const views = ['Day', 'Week', 'Month']
+const view = ref('Week')
 
 const currentDate = ref(new Date())
+const now = ref(new Date())
+let clockTimer = null
 
-const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+onMounted(() => {
+  clockTimer = setInterval(() => { now.value = new Date() }, 60000)
+})
+onUnmounted(() => clearInterval(clockTimer))
 
-const monthLabel = computed(() =>
-  currentDate.value.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-)
+const HOUR_HEIGHT = 56
+const START_HOUR = 7
+const END_HOUR = 23
+const hours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => i + START_HOUR)
 
-const calendarDays = computed(() => {
-  const year = currentDate.value.getFullYear()
-  const month = currentDate.value.getMonth()
+const leaveRequests = ref([
+  { id: 101, studentId: 101, student: 'Sok Dara', type: 'Sick Leave', startDate: dateKey(addDays(startOfWeek(new Date()), 1)), endDate: dateKey(addDays(startOfWeek(new Date()), 2)), status: 'Pending' },
+  { id: 102, studentId: 102, student: 'Chan Sophea', type: 'Personal Leave', startDate: dateKey(addDays(startOfWeek(new Date()), 3)), endDate: dateKey(addDays(startOfWeek(new Date()), 3)), status: 'Approved' },
+  { id: 103, studentId: 103, student: 'Vann Vuthy', type: 'Emergency Leave', startDate: dateKey(addDays(startOfWeek(new Date()), 5)), endDate: dateKey(addDays(startOfWeek(new Date()), 6)), status: 'Rejected' },
+])
 
-  const firstDay = new Date(year, month, 1).getDay()
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-
-  const days = []
-  for (let i = 0; i < firstDay; i++) days.push(null)
-  for (let d = 1; d <= daysInMonth; d++) days.push(d)
-
-  return days
+const visibleLeaveRequests = computed(() => {
+  if (auth.isAdmin) return leaveRequests.value
+  if (auth.isStudent) return leaveRequests.value.filter((r) => r.studentId === auth.user?.id)
+  return []
 })
 
-function isToday(day) {
-  if (!day) return false
-  const today = new Date()
-  return (
-    day === today.getDate() &&
-    currentDate.value.getMonth() === today.getMonth() &&
-    currentDate.value.getFullYear() === today.getFullYear()
-  )
+function leavesFor(dateStr) {
+  return visibleLeaveRequests.value.filter((r) => dateStr >= r.startDate && dateStr <= r.endDate)
 }
 
-function prevMonth() {
-  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1, 1)
+function leaveChipTitle(leave) {
+  const range = leave.startDate === leave.endDate ? leave.startDate : `${leave.startDate} – ${leave.endDate}`
+  return auth.isAdmin
+    ? `${leave.student} · ${leave.type} · ${range} · ${leave.status}`
+    : `${leave.type} · ${range} · ${leave.status}`
 }
 
-function nextMonth() {
-  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 1)
+function startOfWeek(date) {
+  const d = new Date(date)
+  d.setDate(d.getDate() - d.getDay())
+  d.setHours(0, 0, 0, 0)
+  return d
 }
 
-function goToday() {
-  currentDate.value = new Date()
+function addDays(date, n) {
+  const d = new Date(date)
+  d.setDate(d.getDate() + n)
+  return d
 }
+
+function dateKey(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const weekDays = computed(() => {
+  const start = startOfWeek(currentDate.value)
+  const todayKey = dateKey(new Date())
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = addDays(start, i)
+    const key = dateKey(d)
+    return { dateStr: key, dayName: formatWeekday(d), dayNumber: d.getDate(), isToday: key === todayKey }
+  })
+})
+
+const rangeLabel = computed(() => {
+  const start = startOfWeek(currentDate.value)
+  const end = addDays(start, 6)
+  const sameMonth = start.getMonth() === end.getMonth()
+  const startLabel = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  if (sameMonth) return `${startLabel} – ${end.getDate()}, ${end.getFullYear()}`
+  return `${startLabel} – ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+})
+
+function formatHour(h) {
+  if (h === 0) return '12 AM'
+  if (h === 12) return '12 PM'
+  return h < 12 ? `${h} AM` : `${h - 12} PM`
+}
+
+function leaveBlockStyle(index, total) {
+  const widthPercent = 100 / total
+  const left = index * widthPercent
+  return { top: '0px', height: `${hours.length * HOUR_HEIGHT}px`, left: `calc(${left}% + 2px)`, width: `calc(${widthPercent}% - 4px)` }
+}
+
+const nowOffset = computed(() => {
+  const hoursDecimal = now.value.getHours() + now.value.getMinutes() / 60
+  return (hoursDecimal - START_HOUR) * HOUR_HEIGHT
+})
+
+const nowLineVisible = computed(() => {
+  const hoursDecimal = now.value.getHours() + now.value.getMinutes() / 60
+  return hoursDecimal >= START_HOUR && hoursDecimal <= END_HOUR + 1
+})
+
+function prevWeek() { currentDate.value = addDays(currentDate.value, -7) }
+function nextWeek() { currentDate.value = addDays(currentDate.value, 7) }
+function goToday() { currentDate.value = new Date() }
 </script>
-
-<style scoped>
-.calendar-view {
-  max-width: 100%;
-}
-
-.header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.header-title h1 {
-  margin: 0;
-}
-
-.header-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.month-nav {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.today-btn {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 0 12px;
-  height: 32px;
-  font-size: 13px;
-  cursor: pointer;
-  color: #374151;
-}
-
-.today-btn:hover {
-  background: #f3f4f6;
-}
-
-.nav-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  color: #374151;
-}
-
-.nav-btn:hover {
-  background: #f3f4f6;
-}
-
-.month-label {
-  font-weight: 500;
-  min-width: 140px;
-  text-align: center;
-}
-
-.calendar-card {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  padding: 16px;
-}
-
-.weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-  font-size: 13px;
-  font-weight: 500;
-  color: #6b7280;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.days-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.day-cell {
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  border-radius: 8px;
-  color: #374151;
-  transition: background-color 0.15s ease;
-}
-
-.day-cell:not(.empty):hover {
-  background: #eff6ff;
-  cursor: pointer;
-}
-
-.day-cell.today {
-  background: #2563eb;
-  color: white;
-  font-weight: 600;
-}
-
-</style>

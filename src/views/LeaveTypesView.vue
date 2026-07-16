@@ -1,145 +1,174 @@
 <template>
-  <div class="leave-types-view">
-    <div class="header-row">
+  <div class="max-w-full">
+    <div class="mb-6 flex items-start justify-between">
       <div>
-        <h1>Leave Types Management</h1>
-        <p class="sub-label">Define the leave categories available to students and trainers</p>
+        <h1 class="text-[22px] font-bold tracking-tight text-slate-900">Leave Types Management</h1>
+        <p class="mt-1 text-[13px] text-slate-500">Define the leave categories available to students and trainers</p>
       </div>
-      <button class="primary-btn" @click="openAddModal">
-        <Plus :size="16" :stroke-width="1.8" />
+      <button
+        class="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
+        @click="openAddModal"
+      >
+        <Plus :size="16" :stroke-width="2" />
         Add Leave Type
       </button>
     </div>
 
-    <div class="card">
-      <div class="card-header">
-        <h2>All Leave Types</h2>
+    <p v-if="errMsg" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{{ errMsg }}</p>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_4px_rgba(15,23,42,0.06)]">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="m-0 text-base font-bold text-slate-900">All Leave Types</h2>
       </div>
 
-      <div class="table-scroll">
-        <table>
+      <div class="w-full overflow-x-auto">
+        <table class="w-full min-w-[560px] border-collapse text-sm md:min-w-0">
           <thead>
             <tr>
-              <th>Leave Type</th>
-              <th>Default Days / Year</th>
-              <th>Requires Approval</th>
-              <th>Status</th>
-              <th>Action</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Leave Type</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Max Days / Year</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Requires Attachment</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Status</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Action</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="lt in leaveTypes" :key="lt.id">
-              <td>
-                <div class="type-cell">
-                  <FileText :size="15" :stroke-width="1.8" />
-                  {{ lt.name }}
-                </div>
-              </td>
-              <td>{{ lt.defaultDays }} days</td>
-              <td>{{ lt.requiresApproval ? 'Yes' : 'No' }}</td>
-              <td>
-                <span class="badge" :class="lt.active ? 'active' : 'inactive'">
-                  {{ lt.active ? 'Active' : 'Inactive' }}
-                </span>
-              </td>
-              <td>
-                <div class="row-actions">
-                  <button class="icon-btn" aria-label="Edit leave type" @click="openEditModal(lt)">
-                    <Pencil :size="15" :stroke-width="1.8" />
-                  </button>
-                  <button class="icon-btn" aria-label="Toggle status" @click="toggleActive(lt.id)">
-                    <Power :size="15" :stroke-width="1.8" />
-                  </button>
-                  <button class="icon-btn danger" aria-label="Remove leave type" @click="removeType(lt.id)">
-                    <Trash2 :size="15" :stroke-width="1.8" />
-                  </button>
-                </div>
-              </td>
+            <tr v-if="loading">
+              <td colspan="5" class="px-2 py-8 text-center text-sm text-slate-400">Loading leave types…</td>
             </tr>
-            <tr v-if="leaveTypes.length === 0">
-              <td colspan="5" class="empty-row">No leave types yet. Add one to get started.</td>
-            </tr>
+            <template v-else>
+              <LeaveTypeRow
+                v-for="lt in leaveTypes"
+                :key="lt.id"
+                :leave-type="lt"
+                @edit="openEditModal(lt)"
+                @toggle="confirmToggle(lt)"
+                @remove="confirmRemove(lt)"
+              />
+              <tr v-if="leaveTypes.length === 0">
+                <td colspan="5" class="px-2 py-8 text-center text-sm text-slate-400">No leave types yet. Add one to get started.</td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>
     </div>
 
-    <Teleport to="body">
-      <div v-if="modalOpen" class="modal-backdrop" @click.self="closeModal">
-        <div class="modal">
-          <h2>{{ editingType ? 'Edit Leave Type' : 'Add Leave Type' }}</h2>
+    <LeaveTypeModal
+      :open="modalOpen"
+      :is-editing="!!editingType"
+      :form="form"
+      :saving="saving"
+      :error="formError"
+      @cancel="closeModal"
+      @save="saveType"
+    />
 
-          <label class="field">
-            <span>Name</span>
-            <input v-model="form.name" type="text" placeholder="e.g. Sick Leave" />
-          </label>
-
-          <label class="field">
-            <span>Default Days / Year</span>
-            <input v-model.number="form.defaultDays" type="number" min="0" />
-          </label>
-
-          <label class="field checkbox-field">
-            <input v-model="form.requiresApproval" type="checkbox" />
-            <span>Requires approval</span>
-          </label>
-
-          <label class="field checkbox-field">
-            <input v-model="form.active" type="checkbox" />
-            <span>Active</span>
-          </label>
-
-          <div class="modal-actions">
-            <button class="secondary-btn" @click="closeModal">Cancel</button>
-            <button class="primary-btn" @click="saveType">
-              {{ editingType ? 'Save Changes' : 'Add Leave Type' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <ConfirmDialog
+      :open="confirmOpen"
+      :title="confirmTitle"
+      :message="confirmMessage"
+      :confirm-label="confirmLabel"
+      :loading="confirmLoading"
+      @confirm="handleConfirmed"
+      @cancel="cancelConfirm"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { Plus, FileText, Pencil, Power, Trash2 } from 'lucide-vue-next'
+import { ref, reactive, computed } from 'vue'
+import { Plus } from 'lucide-vue-next'
+import type { AxiosError } from 'axios'
+import LeaveTypeRow from '@/components/leave-type/LeaveTypeRow.vue'
+import LeaveTypeModal from '@/components/leave-type/LeaveTypeModal.vue'
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
+import { leaveService } from '@/services/leaveService'
+import type { LeaveType, LeaveTypePayload } from '@/types/leave'
 
-interface LeaveType {
-  id: number
-  name: string
-  defaultDays: number
-  requiresApproval: boolean
-  active: boolean
-}
-
-// Placeholder data — will come from GET /api/leave-types later
-const leaveTypes = ref<LeaveType[]>([
-  { id: 1, name: 'Sick Leave', defaultDays: 10, requiresApproval: true, active: true },
-  { id: 2, name: 'Personal Leave', defaultDays: 5, requiresApproval: true, active: true },
-  { id: 3, name: 'Emergency Leave', defaultDays: 3, requiresApproval: false, active: true },
-  { id: 4, name: 'Annual Leave', defaultDays: 15, requiresApproval: true, active: true },
-])
+const leaveTypes = ref<LeaveType[]>([])
+const loading = ref(true)
+const errMsg = ref('')
 
 const modalOpen = ref(false)
 const editingType = ref<LeaveType | null>(null)
-const form = reactive({ name: '', defaultDays: 0, requiresApproval: true, active: true })
+const saving = ref(false)
+const formError = ref('')
+
+type PendingAction = { type: 'delete' | 'deactivate'; leaveType: LeaveType }
+const pendingAction = ref<PendingAction | null>(null)
+const confirmOpen = ref(false)
+const confirmLoading = ref(false)
+
+const confirmTitle = computed(() =>
+  pendingAction.value?.type === 'delete' ? 'Delete leave type?' : 'Deactivate leave type?',
+)
+const confirmMessage = computed(() => {
+  const name = pendingAction.value?.leaveType.name ?? ''
+  return pendingAction.value?.type === 'delete'
+    ? `Are you sure you want to delete '${name}'? This cannot be undone.`
+    : `Are you sure you want to deactivate '${name}'? Students and trainers won't be able to select it until it's reactivated.`
+})
+const confirmLabel = computed(() =>
+  pendingAction.value?.type === 'delete' ? 'Delete' : 'Deactivate',
+)
+
+const form = reactive<LeaveTypePayload>({
+  name: '',
+  code: '',
+  description: '',
+  max_days_per_year: 0,
+  requires_attachment: false,
+  is_active: true,
+})
+
+function extractError(err: unknown, fallback: string): string {
+  const axiosErr = err as AxiosError<{ message?: string; errors?: Record<string, string[]> }>
+  const errors = axiosErr.response?.data?.errors
+  if (errors) {
+    const first = Object.values(errors)[0]?.[0]
+    if (first) return first
+  }
+  return axiosErr.response?.data?.message ?? fallback
+}
+
+async function fetchLeaveTypes() {
+  loading.value = true
+  errMsg.value = ''
+  try {
+    leaveTypes.value = await leaveService.getLeaveTypes()
+  } catch (err) {
+    errMsg.value = extractError(err, 'Failed to load leave types.')
+  } finally {
+    loading.value = false
+  }
+}
+
+function resetForm() {
+  form.name = ''
+  form.code = ''
+  form.description = ''
+  form.max_days_per_year = 0
+  form.requires_attachment = false
+  form.is_active = true
+}
 
 function openAddModal() {
   editingType.value = null
-  form.name = ''
-  form.defaultDays = 0
-  form.requiresApproval = true
-  form.active = true
+  formError.value = ''
+  resetForm()
   modalOpen.value = true
 }
 
 function openEditModal(lt: LeaveType) {
   editingType.value = lt
+  formError.value = ''
   form.name = lt.name
-  form.defaultDays = lt.defaultDays
-  form.requiresApproval = lt.requiresApproval
-  form.active = lt.active
+  form.code = lt.code
+  form.description = lt.description ?? ''
+  form.max_days_per_year = lt.max_days_per_year
+  form.requires_attachment = lt.requires_attachment
+  form.is_active = lt.is_active
   modalOpen.value = true
 }
 
@@ -147,263 +176,90 @@ function closeModal() {
   modalOpen.value = false
 }
 
-function saveType() {
-  if (!form.name.trim()) return
+async function saveType() {
+  if (!form.name.trim() || !form.code.trim()) {
+    formError.value = 'Name and code are required.'
+    return
+  }
+  if (!form.max_days_per_year || form.max_days_per_year <= 0) {
+    formError.value = 'Max days per year must be greater than 0.'
+    return
+  }
 
-  if (editingType.value) {
-    // Will call PUT /api/leave-types/:id later
-    const idx = leaveTypes.value.findIndex((lt) => lt.id === editingType.value!.id)
-    if (idx !== -1) {
-      leaveTypes.value[idx] = { ...leaveTypes.value[idx], ...form }
+  saving.value = true
+  formError.value = ''
+  try {
+    if (editingType.value?.id) {
+      const updated = await leaveService.updateLeaveType(editingType.value.id, form)
+      const idx = leaveTypes.value.findIndex((lt) => lt.id === editingType.value!.id)
+      if (idx !== -1) leaveTypes.value[idx] = updated
+    } else {
+      const created = await leaveService.createLeaveType(form)
+      leaveTypes.value.push(created)
     }
-  } else {
-    // Will call POST /api/leave-types later
-    leaveTypes.value.push({
-      id: Math.max(0, ...leaveTypes.value.map((lt) => lt.id)) + 1,
-      name: form.name,
-      defaultDays: form.defaultDays,
-      requiresApproval: form.requiresApproval,
-      active: form.active,
-    })
+    modalOpen.value = false
+  } catch (err) {
+    formError.value = extractError(err, 'Failed to save leave type.')
+  } finally {
+    saving.value = false
   }
-
-  modalOpen.value = false
 }
 
-function toggleActive(id: number) {
-  // Will call PATCH /api/leave-types/:id later
-  const lt = leaveTypes.value.find((item) => item.id === id)
-  if (lt) lt.active = !lt.active
+function confirmRemove(lt: LeaveType) {
+  pendingAction.value = { type: 'delete', leaveType: lt }
+  confirmOpen.value = true
 }
 
-function removeType(id: number) {
-  // Will call DELETE /api/leave-types/:id later
-  leaveTypes.value = leaveTypes.value.filter((lt) => lt.id !== id)
+function confirmToggle(lt: LeaveType) {
+  if (!lt.is_active) {
+    toggleActive(lt)
+    return
+  }
+  pendingAction.value = { type: 'deactivate', leaveType: lt }
+  confirmOpen.value = true
 }
+
+function cancelConfirm() {
+  confirmOpen.value = false
+  pendingAction.value = null
+}
+
+async function toggleActive(lt: LeaveType) {
+  if (!lt.id) return
+  const previous = lt.is_active
+  lt.is_active = !lt.is_active
+  try {
+    const updated = await leaveService.updateLeaveType(lt.id, { is_active: lt.is_active })
+    Object.assign(lt, updated)
+  } catch (err) {
+    lt.is_active = previous
+    errMsg.value = extractError(err, 'Failed to update leave type status.')
+  }
+}
+
+async function handleConfirmed() {
+  const action = pendingAction.value
+  if (!action?.leaveType.id) return
+
+  confirmLoading.value = true
+  try {
+    if (action.type === 'delete') {
+      await leaveService.deleteLeaveType(action.leaveType.id)
+      leaveTypes.value = leaveTypes.value.filter((item) => item.id !== action.leaveType.id)
+    } else {
+      const updated = await leaveService.updateLeaveType(action.leaveType.id, { is_active: false })
+      Object.assign(action.leaveType, updated)
+    }
+    confirmOpen.value = false
+    pendingAction.value = null
+  } catch (err) {
+    const fallback = action.type === 'delete' ? 'Failed to delete leave type.' : 'Failed to deactivate leave type.'
+    errMsg.value = extractError(err, fallback)
+    confirmOpen.value = false
+  } finally {
+    confirmLoading.value = false
+  }
+}
+
+fetchLeaveTypes()
 </script>
-
-<style scoped>
-.leave-types-view {
-  max-width: 100%;
-}
-
-.header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-
-.sub-label {
-  font-size: 13px;
-  color: #6b7280;
-  margin-top: 4px;
-}
-
-.primary-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.primary-btn:hover {
-  background: #1d4ed8;
-}
-
-.secondary-btn {
-  background: #f3f4f6;
-  color: #374151;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.secondary-btn:hover {
-  background: #e5e7eb;
-}
-
-.card {
-  background: white;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.card h2 {
-  font-size: 16px;
-  margin: 0;
-}
-
-.table-scroll {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.table-scroll table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-@media (max-width: 768px) {
-  .table-scroll table {
-    min-width: 560px;
-  }
-}
-
-.table-scroll th,
-.table-scroll td {
-  text-align: left;
-  padding: 12px 8px;
-}
-
-.table-scroll th {
-  color: #6b7280;
-  font-weight: 500;
-  font-size: 13px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.table-scroll tbody tr {
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.table-scroll tbody tr:last-child {
-  border-bottom: none;
-}
-
-.type-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-  color: #111827;
-}
-
-.badge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.badge.active {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.badge.inactive {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.row-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  border: none;
-  background: #f3f4f6;
-  color: #374151;
-  cursor: pointer;
-}
-
-.icon-btn:hover {
-  background: #e5e7eb;
-}
-
-.icon-btn.danger:hover {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.empty-row {
-  text-align: center;
-  color: #9ca3af;
-  padding: 24px 8px;
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 16px;
-}
-
-.modal {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-}
-
-.modal h2 {
-  font-size: 18px;
-  margin: 0 0 16px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 14px;
-  font-size: 13px;
-  color: #374151;
-}
-
-.field input[type='text'],
-.field input[type='number'] {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 9px 10px;
-  font-size: 14px;
-  color: #111827;
-}
-
-.checkbox-field {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
-
-.checkbox-field input {
-  width: 16px;
-  height: 16px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-</style>
