@@ -54,11 +54,14 @@ export const authService = {
   ): Promise<AxiosResponse<{ message: string; user: User }>> {
     return api.put('/profile', payload)
   },
-
+  
   changePassword(
     payload: ChangePasswordPayload,
-  ): Promise<AxiosResponse<{ message: string }>> {
-    return api.put('/profile/change-password', payload)
+  ): Promise<AxiosResponse<{ message: string; user: User }>> {
+    return api.put('/profile', {
+      password: payload.new_password,
+      password_confirmation: payload.new_password_confirmation,
+    })
   },
 
   getDefaultAvatars(

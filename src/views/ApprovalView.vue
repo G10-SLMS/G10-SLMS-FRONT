@@ -22,8 +22,13 @@
       </div>
     </div>
 
+    <div v-if="errorMsg" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {{ errorMsg }}
+    </div>
+
     <div class="overflow-x-auto rounded-xl bg-white shadow-sm border border-gray-100">
-      <table v-if="filteredRequests.length" class="w-full border-collapse text-sm">
+      <div v-if="loading" class="px-5 py-16 text-center text-sm text-gray-400">Loading requests…</div>
+      <table v-else-if="filteredRequests.length" class="w-full border-collapse text-sm">
         <thead>
           <tr class="border-b border-gray-100 bg-gray-50/50">
             <th class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">Student</th>
@@ -51,13 +56,27 @@
         <p class="text-sm">No {{ activeTab.toLowerCase() }} requests.</p>
       </div>
     </div>
+
+    <RejectReasonModal
+      :open="rejectTarget !== null"
+      :submitting="rejecting"
+      @close="rejectTarget = null"
+      @confirm="confirmReject"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { CheckCircle2 } from 'lucide-vue-next'
 import ApprovalRow from '@/components/approval/ApprovalRow.vue'
+import RejectReasonModal from '@/components/approval/RejectReasonModal.vue'
+import { leaveService } from '@/services/leaveService'
+import { extractErrorMessage } from '@/utils/errors'
+import { formatDate } from '@/utils/date'
+import type { RawApiEnvelope, RawLeaveRequest } from '@/types/leave'
+import api from '@/services/api'
+import type { AxiosError } from 'axios'
 
 const tabs = ['Pending', 'Approved', 'Rejected'] as const
 type TabType = (typeof tabs)[number]
@@ -75,13 +94,47 @@ interface LeaveRequest {
   processing?: boolean
 }
 
-// Placeholder data — will come from GET /api/leave-requests?scope=approvals later
-const requests = ref<LeaveRequest[]>([
-  { id: 1, student: 'Sok Dara', type: 'Sick Leave', startDate: 'Jul 8, 2026', endDate: 'Jul 9, 2026', reason: 'Fever and flu symptoms', status: 'Pending' },
-  { id: 2, student: 'Chan Sophea', type: 'Personal Leave', startDate: 'Jul 10, 2026', endDate: 'Jul 10, 2026', reason: 'Family event', status: 'Approved' },
-  { id: 3, student: 'Vann Vuthy', type: 'Emergency Leave', startDate: 'Jul 5, 2026', endDate: 'Jul 6, 2026', reason: 'Family emergency', status: 'Rejected' },
-  { id: 4, student: 'Ly Sreymom', type: 'Sick Leave', startDate: 'Jul 14, 2026', endDate: 'Jul 15, 2026', reason: 'Medical appointment', status: 'Pending' },
-])
+const requests = ref<LeaveRequest[]>([])
+const loading = ref(true)
+const errorMsg = ref('')
+
+const rejectTarget = ref<LeaveRequest | null>(null)
+const rejecting = ref(false)
+
+function statusToTab(status: string): TabType {
+  if (status === 'approved') return 'Approved'
+  if (status === 'rejected') return 'Rejected'
+  return 'Pending'
+}
+
+function toRow(raw: RawLeaveRequest): LeaveRequest {
+  return {
+    id: raw.id,
+    student: raw.user?.name ?? `User #${raw.user_id}`,
+    type: raw.leave_type?.name ?? 'Leave',
+    startDate: formatDate(raw.start_date),
+    endDate: formatDate(raw.end_date),
+    reason: raw.reason,
+    status: statusToTab(raw.status),
+  }
+}
+
+async function loadRequests() {
+  loading.value = true
+  errorMsg.value = ''
+  try {
+    const { data } = await api.get<RawApiEnvelope<RawLeaveRequest[]>>('/leave-requests', {
+      params: { per_page: 100 },
+    })
+    requests.value = data.data.map(toRow)
+  } catch (err) {
+    errorMsg.value = extractErrorMessage(err, 'Failed to load leave requests.')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadRequests)
 
 const pendingCount = computed(() => requests.value.filter((r) => r.status === 'Pending').length)
 
@@ -89,15 +142,45 @@ const filteredRequests = computed(() =>
   requests.value.filter((r) => r.status === activeTab.value)
 )
 
+function friendlyErrorMessage(err: unknown): string {
+  const status = (err as AxiosError)?.response?.status
+  if (status === 403) {
+    return 'Only accounts with the "trainer" role can approve or reject requests. ' +
+      'The backend currently blocks admins and students from this action (see routes/api.php).'
+  }
+  return extractErrorMessage(err, 'Failed to update this request.')
+}
+
 async function handleDecision(request: LeaveRequest, decision: 'Approved' | 'Rejected') {
+  if (decision === 'Rejected') {
+    rejectTarget.value = request
+    return
+  }
+
   request.processing = true
+  errorMsg.value = ''
   try {
-    // TODO: replace with real API call
-    // await api.patch(`/leave-requests/${request.id}`, { status: decision })
-    await new Promise((resolve) => setTimeout(resolve, 400))
-    request.status = decision
+    await leaveService.approveLeaveRequest(request.id)
+    request.status = 'Approved'
+  } catch (err) {
+    errorMsg.value = friendlyErrorMessage(err)
   } finally {
     request.processing = false
+  }
+}
+
+async function confirmReject(reason: string) {
+  if (!rejectTarget.value) return
+  rejecting.value = true
+  errorMsg.value = ''
+  try {
+    await leaveService.rejectLeaveRequest(rejectTarget.value.id, reason)
+    rejectTarget.value.status = 'Rejected'
+    rejectTarget.value = null
+  } catch (err) {
+    errorMsg.value = friendlyErrorMessage(err)
+  } finally {
+    rejecting.value = false
   }
 }
 </script>

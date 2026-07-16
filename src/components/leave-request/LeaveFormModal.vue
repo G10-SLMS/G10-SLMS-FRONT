@@ -57,6 +57,32 @@
                 {{ submitError }}
               </div>
 
+              <div v-if="isViewMode && requestUser" class="mb-5 flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+                <img
+                  v-if="requestUser.avatar?.url"
+                  :src="requestUser.avatar.url"
+                  :alt="requestUser.name"
+                  class="h-10 w-10 shrink-0 rounded-full object-cover"
+                />
+                <span
+                  v-else
+                  :class="['flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white', getAvatarColor(requestUser.name)]"
+                >
+                  {{ getInitials(requestUser.name) }}
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="m-0 truncate text-sm font-semibold text-gray-900">{{ requestUser.name }}</p>
+                  <p v-if="requestUser.email" class="m-0 truncate text-xs text-gray-500">{{ requestUser.email }}</p>
+                </div>
+                <button
+                  type="button"
+                  class="shrink-0 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                  @click="showProfile = true"
+                >
+                  View Profile
+                </button>
+              </div>
+
               <!-- Leave Type -->
               <div class="mb-4">
                 <label class="mb-1.5 block text-xs font-medium text-gray-700" for="m-type">
@@ -212,6 +238,8 @@
       </div>
     </Transition>
   </Teleport>
+
+  <StudentProfileModal :student="showProfile ? requestUser : null" @close="showProfile = false" />
 </template>
 
 <script setup lang="ts">
@@ -219,9 +247,11 @@ import { computed, reactive, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
 import { leaveService } from '@/services/leaveService'
-import type { LeaveType, LeaveRequestPayload } from '@/types/leave'
+import type { LeaveType, LeaveRequestPayload, LeaveRequestUser } from '@/types/leave'
 import type { AxiosError } from 'axios'
 import { FileText, Calendar, Paperclip, X, Lock } from 'lucide-vue-next'
+import { getInitials, getAvatarColor } from '@/utils/initials'
+import StudentProfileModal from '@/components/leave-request/StudentProfileModal.vue'
 
 const auth = useAuthStore()
 const modal = useLeaveFormModalStore()
@@ -241,6 +271,8 @@ const loadError = ref('')
 const editableLoaded = ref(false)
 const canEdit = ref(true)
 const originalStatus = ref('')
+const requestUser = ref<LeaveRequestUser | null>(null)
+const showProfile = ref(false)
 
 const leaveTypes = ref<LeaveType[]>([])
 const typesLoading = ref(false)
@@ -269,6 +301,8 @@ function resetForm() {
   editableLoaded.value = false
   canEdit.value = true
   originalStatus.value = ''
+  requestUser.value = null
+  showProfile.value = false
 }
 
 const dateRangeError = computed(() => {
@@ -358,6 +392,7 @@ watch(
 
       originalStatus.value = data.status
       canEdit.value = data.status === 'pending'
+      requestUser.value = data.user
       form.leaveTypeId = data.leave_type_id
       form.startDate = data.start_date
       form.endDate = data.end_date
