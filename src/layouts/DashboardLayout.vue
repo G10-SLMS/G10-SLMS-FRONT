@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen bg-slate-50 text-slate-900">
+  <div class="dashboard-layout">
     <Sidebar :is-open="sidebarOpen" @close="sidebarOpen = false" />
 
     <div class="flex min-w-0 flex-1 flex-col">
@@ -9,17 +9,15 @@
       </main>
       <Footer />
     </div>
-
-    <LeaveFormModal />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import Navbar from '@/components/layout/Navbar.vue'
-import Sidebar from '@/components/layout/Sidebar.vue'
-import Footer from '@/components/layout/Footer.vue'
-import LeaveFormModal from '@/components/leave/LeaveFormModal.vue'
+import Navbar from '@/components/Navbar.vue'
+import Sidebar from '@/components/Sidebar.vue'
+import Footer from '@/components/Footer.vue'
 
 const sidebarOpen = ref(false)
+const showApprovals = ref(false)
 </script>
