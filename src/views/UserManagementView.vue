@@ -21,6 +21,13 @@
       <StatCard :icon="ShieldCheck" label="Admins" :value="counts.admin" color="blue" />
     </div>
 
+    <div v-if="errorMsg" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {{ errorMsg }}
+    </div>
+    <div v-else-if="loading" class="mb-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
+      Loading users…
+    </div>
+
     <div class="rounded-[10px] bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
         <h2 class="m-0 text-base">All Users</h2>
@@ -162,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import {
   UserPlus,
   Users,
@@ -175,6 +182,8 @@ import {
 } from 'lucide-vue-next'
 import type { UserRole } from '@/types/user'
 import StatCard from '@/components/ui/StatCard.vue'
+import api from '@/services/api'
+import { extractErrorMessage } from '@/utils/errors'
 
 interface ManagedUser {
   id: number
@@ -184,14 +193,43 @@ interface ManagedUser {
   joined: string
 }
 
-// Placeholder data — will come from GET /api/users later
-const users = ref<ManagedUser[]>([
-  { id: 1, name: 'Chanthy Chet', email: 'chanthy.chet@example.com', role: 'student', joined: 'Jan 12, 2026' },
-  { id: 2, name: 'Yon Yen', email: 'yon.yen@example.com', role: 'trainer', joined: 'Feb 3, 2026' },
-  { id: 3, name: 'Kunthea Yon', email: 'kunthea.yon@example.com', role: 'student', joined: 'Mar 8, 2026' },
-  { id: 4, name: 'Sokha Chan', email: 'sokha.chan@example.com', role: 'admin', joined: 'Nov 20, 2025' },
-  { id: 5, name: 'Dara Pich', email: 'dara.pich@example.com', role: 'trainer', joined: 'Apr 15, 2026' },
-])
+interface RawUser {
+  id: number
+  name: string
+  email: string
+  role: UserRole
+  created_at: string
+}
+
+const users = ref<ManagedUser[]>([])
+const loading = ref(true)
+const errorMsg = ref('')
+
+function formatJoined(dateStr: string): string {
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+async function loadUsers() {
+  loading.value = true
+  errorMsg.value = ''
+  try {
+    const { data } = await api.get<{ users: RawUser[]; count: number }>('/users')
+    users.value = data.users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      joined: formatJoined(u.created_at),
+    }))
+  } catch (err) {
+    errorMsg.value = extractErrorMessage(err, 'Failed to load users.')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadUsers)
 
 const search = ref('')
 const roleFilter = ref<'all' | UserRole>('all')

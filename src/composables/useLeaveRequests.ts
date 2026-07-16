@@ -86,7 +86,9 @@ export function useLeaveRequests() {
 
   function formatDate(dateStr: string): string {
     if (!dateStr) return '—'
-    const d = new Date(dateStr + 'T00:00:00')
+
+    const datePart = dateStr.split('T')[0]
+    const d = new Date(datePart + 'T00:00:00')
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
@@ -189,9 +191,7 @@ export function useLeaveRequests() {
     } catch {}
     await fetchRequests()
   })
-
-  // Keeps the table in sync after the create/edit modal submits, without
-  // any manual event wiring in the layout that hosts the modal.
+  
   watch(
     () => leaveModal.refreshToken,
     () => fetchRequests(page.value),

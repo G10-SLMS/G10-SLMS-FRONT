@@ -6,10 +6,65 @@ import type {
   LeaveRequestPayload,
   LeaveRequestResponse,
   LeaveRequestListItem,
-  PaginatedResponse,
+  RawApiEnvelope,
+  RawLeaveRequest,
 } from '@/types/leave'
 
-export const LEAVE_REQUESTS_API_AVAILABLE = false
+export const LEAVE_REQUESTS_API_AVAILABLE = true
+
+function formatSubmissionDate(dateStr: string): string {
+  if (!dateStr) return '—'
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function toDateOnly(dateStr: string): Date {
+  const datePart = dateStr.split('T')[0]
+  return new Date(datePart + 'T00:00:00')
+}
+
+function totalDaysBetween(start: string, end: string): number {
+  const startDate = toDateOnly(start)
+  const endDate = toDateOnly(end)
+  const diff = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+  return Math.max(diff + 1, 0)
+}
+
+function toListItem(raw: RawLeaveRequest): LeaveRequestListItem {
+  return {
+    id: raw.id,
+    user_id: raw.user_id,
+    user: raw.user ?? null,
+    leave_type_id: raw.leave_type_id,
+    leave_type_name: raw.leave_type?.name ?? 'Leave',
+    start_date: raw.start_date.split('T')[0],
+    end_date: raw.end_date.split('T')[0],
+    total_days: totalDaysBetween(raw.start_date, raw.end_date),
+    reason: raw.reason,
+    status: raw.status,
+    submission_date: formatSubmissionDate(raw.created_at),
+    created_at: raw.created_at,
+    updated_at: raw.updated_at,
+  }
+}
+
+function toRequestResponse(raw: RawLeaveRequest): LeaveRequestResponse {
+  return {
+    id: raw.id,
+    user_id: raw.user_id,
+    user: raw.user ?? null,
+    leave_type_id: raw.leave_type_id,
+    leave_type_name: raw.leave_type?.name ?? 'Leave',
+    start_date: raw.start_date.split('T')[0],
+    end_date: raw.end_date.split('T')[0],
+    total_days: totalDaysBetween(raw.start_date, raw.end_date),
+    reason: raw.reason,
+    supporting_document: null,
+    status: raw.status,
+    created_at: raw.created_at,
+    updated_at: raw.updated_at,
+  }
+}
 
 export const leaveService = {
   async getLeaveTypes(): Promise<LeaveType[]> {
@@ -33,20 +88,27 @@ export const leaveService = {
 
   async getLeaveRequests(params?: {
     search?: string
-    leave_type_id?: number
+    leave_type_id?: number | string
     status?: string
     date_from?: string
     date_to?: string
     page?: number
     per_page?: number
-  }): Promise<PaginatedResponse<LeaveRequestListItem>> {
-    const { data } = await api.get<PaginatedResponse<LeaveRequestListItem>>('/leave-requests', { params })
-    return data
+  }) {
+    const { data } = await api.get<RawApiEnvelope<RawLeaveRequest[]>>('/leave-requests', { params })
+    const meta = data.meta
+    return {
+      data: data.data.map(toListItem),
+      current_page: meta?.current_page ?? 1,
+      last_page: meta?.last_page ?? 1,
+      per_page: meta?.per_page ?? 10,
+      total: meta?.total ?? data.data.length,
+    }
   },
 
   async getLeaveRequest(id: number): Promise<LeaveRequestResponse> {
-    const { data } = await api.get<LeaveRequestResponse>(`/leave-requests/${id}`)
-    return data
+    const { data } = await api.get<RawApiEnvelope<RawLeaveRequest>>(`/leave-requests/${id}`)
+    return toRequestResponse(data.data)
   },
 
   async createLeaveRequest(payload: LeaveRequestPayload): Promise<LeaveRequestResponse> {
@@ -66,10 +128,10 @@ export const leaveService = {
       formData.append('supporting_document', payload.supporting_document)
     }
 
-    const { data } = await api.post<LeaveRequestResponse>('/leave-requests', formData, {
+    const { data } = await api.post<RawLeaveRequest>('/leave-requests', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
-    return data
+    return toRequestResponse(data)
   },
 
   async updateLeaveRequest(id: number, payload: LeaveRequestPayload): Promise<LeaveRequestResponse> {
@@ -88,15 +150,29 @@ export const leaveService = {
     if (payload.supporting_document) {
       formData.append('supporting_document', payload.supporting_document)
     }
+    formData.append('_method', 'PUT')
 
-    const { data } = await api.post<LeaveRequestResponse>(`/leave-requests/${id}`, formData, {
+    const { data } = await api.post<RawApiEnvelope<RawLeaveRequest>>(`/leave-requests/${id}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-      params: { _method: 'PUT' },
     })
-    return data
+    return toRequestResponse(data.data)
   },
 
   async cancelLeaveRequest(id: number): Promise<void> {
-    await api.patch(`/leave-requests/${id}/cancel`)
+    await api.delete(`/leave-requests/${id}`)
+  },
+
+  async approveLeaveRequest(id: number, reviewNote?: string): Promise<LeaveRequestResponse> {
+    const { data } = await api.post<RawApiEnvelope<RawLeaveRequest>>(`/approve/${id}`, {
+      review_note: reviewNote,
+    })
+    return toRequestResponse(data.data)
+  },
+
+  async rejectLeaveRequest(id: number, reviewNote: string): Promise<LeaveRequestResponse> {
+    const { data } = await api.post<RawApiEnvelope<RawLeaveRequest>>(`/reject/${id}`, {
+      review_note: reviewNote,
+    })
+    return toRequestResponse(data.data)
   },
 }
