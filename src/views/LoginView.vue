@@ -26,7 +26,7 @@ function fillDemo(kind: 'student' | 'fellow' | 'trainer') {
   const demoEmails: Record<typeof kind, string> = {
     student: '@student.passerellesnumeriques.org',
     fellow: '@fellow.passerellesnumeriques.org',
-    trainer: '@trainer.passerellesnumeriques.org',
+    trainer: '@passerellesnumeriques.org',
   }
   form.email = demoEmails[kind]
   form.password = kind === 'trainer' ? 'password' : 'password123'

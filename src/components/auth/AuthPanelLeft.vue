@@ -18,43 +18,51 @@
       <p class="text-base leading-relaxed text-white/80">{{ description }}</p>
     </div>
 
-    <div class="z-10 flex items-center gap-3">
-      <div class="flex" aria-hidden="true">
+    <div class="z-10 flex flex-wrap items-center gap-x-6 gap-y-3">
+      <span
+        v-for="value in pncValues"
+        :key="value.title"
+        class="flex items-center gap-2 text-base font-semibold text-white/90 transition hover:text-cyan-400"
+      >
         <span
-          v-for="n in avatarCount"
-          :key="n"
-          class="-ml-2.5 flex h-[34px] w-[34px] items-center justify-center rounded-full border-2 border-white/30 bg-white/15 first:ml-0"
-        />
-      </div>
-      <p class="text-sm font-semibold text-white/90">{{ trustText }}</p>
+          class="flex h-8 w-8 items-center justify-center rounded-full bg-[#f5a623] ring-1 ring-[#f5a623]/40"
+        >
+          <component :is="value.icon" class="h-4 w-4 text-white" />
+        </span>
+        {{ value.title }}
+      </span>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import defaultHero from '@/assets/image/p2.jpg'
+import { computed } from 'vue';
+import { ShieldCheck, HeartHandshake, Users, HandHeart } from 'lucide-vue-next';
+import defaultHero from '@/assets/image/p2.jpg';
 
 const props = withDefaults(
   defineProps<{
-    logoUrl: string
-    logoAlt?: string
-    title: string
-    description: string
-    heroImage?: string
-    trustText?: string
-    avatarCount?: number
+    logoUrl: string;
+    logoAlt?: string;
+    title: string;
+    description: string;
+    heroImage?: string;
   }>(),
   {
     logoAlt: 'SLMS logo',
-    trustText: 'Trusted by 1,000+ students and faculty',
-    avatarCount: 3,
-  }
-)
+  },
+);
+
+const pncValues = [
+  { title: 'Trust', icon: ShieldCheck },
+  { title: 'Respect', icon: HeartHandshake },
+  { title: 'Responsibility', icon: Users },
+  { title: 'Solidarity', icon: HandHeart },
+];
 
 const bgStyle = computed(() => ({
   backgroundImage: `linear-gradient(180deg, rgba(0,0,0,.72) 0%, rgba(0,0,0,.55) 100%), url(${props.heroImage ?? defaultHero})`,
   backgroundSize: 'cover',
   backgroundPosition: 'center',
-}))
+}));
 </script>
