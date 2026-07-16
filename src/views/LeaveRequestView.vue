@@ -20,14 +20,14 @@
       <LeaveLoadingSkeleton v-if="loading" />
 
       <LeaveEmptyState
-        v-else-if="items.length === 0"
+        v-else-if="displayItems.length === 0"
         :hasActiveFilters="hasActiveFilters"
         @clear-filters="clearAllFilters"
       />
 
       <LeaveRequestsTable
         v-else
-        :items="items"
+        :items="displayItems"
         :formatDate="formatDate"
         :viewRequest="viewRequest"
         :editRequest="editRequest"
@@ -73,6 +73,7 @@ import CancelLeaveModal from '@/components/leave-request/CancelLeaveModal.vue'
 
 const {
   items,
+  displayItems,
   leaveTypes,
   loading,
   errMsg,

@@ -43,6 +43,30 @@ export function useLeaveRequests() {
 
   const totalPages = computed(() => lastPage.value)
 
+  const displayItems = computed(() => {
+    return items.value.filter((item) => {
+      if (filters.leave_type_id && String(item.leave_type_id) !== String(filters.leave_type_id)) {
+        return false
+      }
+      if (filters.status && item.status !== filters.status) {
+        return false
+      }
+      if (filters.date_from && item.start_date < filters.date_from) {
+        return false
+      }
+      if (filters.date_to && item.end_date > filters.date_to) {
+        return false
+      }
+      if (filters.search) {
+        const term = filters.search.trim().toLowerCase()
+        const matchesId = String(item.id).includes(term)
+        const matchesType = item.leave_type_name.toLowerCase().includes(term)
+        if (!matchesId && !matchesType) return false
+      }
+      return true
+    })
+  })
+
   const from = computed(() => (total.value === 0 ? 0 : (page.value - 1) * perPage.value + 1))
   const to = computed(() => Math.min(page.value * perPage.value, total.value))
 
@@ -55,19 +79,36 @@ export function useLeaveRequests() {
       !!filters.date_to,
   )
 
-  const stats = computed(() => {
-    const pending = items.value.filter((i) => i.status === 'pending').length
-    const approved = items.value.filter((i) => i.status === 'approved').length
-    const rejected = items.value.filter((i) => i.status === 'rejected').length
-    const cancelled = items.value.filter((i) => i.status === 'cancelled').length
+  const statusCounts = reactive({ pending: 0, approved: 0, rejected: 0, cancelled: 0 })
+  const statsLoading = ref(false)
 
-    return [
-      { icon: Clock, count: pending, label: 'Pending', bg: '#fef3c7', fg: '#d97706' },
-      { icon: CheckCircle, count: approved, label: 'Approved', bg: '#dcfce7', fg: '#16a34a' },
-      { icon: AlertOctagon, count: rejected, label: 'Rejected', bg: '#fee2e2', fg: '#dc2626' },
-      { icon: Ban, count: cancelled, label: 'Cancelled', bg: '#f1f5f9', fg: '#64748b' },
-    ]
-  })
+  async function loadStats() {
+    if (!LEAVE_REQUESTS_API_AVAILABLE) return
+    statsLoading.value = true
+    try {
+
+      const [pending, approved, rejected, cancelled] = await Promise.all(
+        (['pending', 'approved', 'rejected', 'cancelled'] as const).map((status) =>
+          leaveService.getLeaveRequests({ status, per_page: 1000 }),
+        ),
+      )
+      statusCounts.pending = pending.data.length
+      statusCounts.approved = approved.data.length
+      statusCounts.rejected = rejected.data.length
+      statusCounts.cancelled = cancelled.data.length
+    } catch {
+      // Leave previous counts in place rather than zeroing them on a blip.
+    } finally {
+      statsLoading.value = false
+    }
+  }
+
+  const stats = computed(() => [
+    { icon: Clock, count: statusCounts.pending, label: 'Pending', bg: '#fef3c7', fg: '#d97706' },
+    { icon: CheckCircle, count: statusCounts.approved, label: 'Approved', bg: '#dcfce7', fg: '#16a34a' },
+    { icon: AlertOctagon, count: statusCounts.rejected, label: 'Rejected', bg: '#fee2e2', fg: '#dc2626' },
+    { icon: Ban, count: statusCounts.cancelled, label: 'Cancelled', bg: '#f1f5f9', fg: '#64748b' },
+  ])
 
   const visiblePages = computed(() => {
     const current = page.value
@@ -123,7 +164,7 @@ export function useLeaveRequests() {
       loading.value = false
       return
     }
-    
+
     const seq = ++requestSeq
 
     loading.value = true
@@ -179,7 +220,7 @@ export function useLeaveRequests() {
         read: false,
       })
       cancelTarget.value = null
-      await fetchRequests(page.value)
+      await Promise.all([fetchRequests(page.value), loadStats()])
     } catch (err) {
       errMsg.value = (err as AxiosError<{ message?: string }>).response?.data?.message || 'Failed to cancel request.'
     } finally {
@@ -196,17 +237,21 @@ export function useLeaveRequests() {
     try {
       leaveTypes.value = await leaveService.getLeaveTypes()
     } catch {}
-    await fetchRequests()
+    await Promise.all([fetchRequests(), loadStats()])
   })
 
   watch(
     () => leaveModal.refreshToken,
-    () => fetchRequests(page.value),
+    () => {
+      fetchRequests(page.value)
+      loadStats()
+    },
   )
 
   return {
     authStore,
     items,
+    displayItems,
     leaveTypes,
     loading,
     errMsg,
@@ -223,6 +268,7 @@ export function useLeaveRequests() {
     to,
     hasActiveFilters,
     stats,
+    statsLoading,
     visiblePages,
 
     formatDate,

@@ -7,7 +7,6 @@ declare module 'vue-router' {
     title?: string
     requiresAuth?: boolean
     guestOnly?: boolean
-    /** If set, only these roles may access the route. Omit = any authenticated role. */
     roles?: UserRole[]
     provider?: 'google' | 'github'
   }
