@@ -73,6 +73,7 @@ import ApprovalRow from '@/components/approval/ApprovalRow.vue'
 import RejectReasonModal from '@/components/approval/RejectReasonModal.vue'
 import { leaveService } from '@/services/leaveService'
 import { extractErrorMessage } from '@/utils/errors'
+import { formatDate } from '@/utils/date'
 import type { RawApiEnvelope, RawLeaveRequest } from '@/types/leave'
 import api from '@/services/api'
 import type { AxiosError } from 'axios'
@@ -104,11 +105,6 @@ function statusToTab(status: string): TabType {
   if (status === 'approved') return 'Approved'
   if (status === 'rejected') return 'Rejected'
   return 'Pending'
-}
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function toRow(raw: RawLeaveRequest): LeaveRequest {

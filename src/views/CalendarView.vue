@@ -111,6 +111,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import CalendarLeaveBlock from '@/components/calendar/CalendarLeaveBlock.vue'
+import { formatWeekday } from '@/utils/date'
 
 const auth = useAuthStore()
 
@@ -180,7 +181,7 @@ const weekDays = computed(() => {
   return Array.from({ length: 7 }, (_, i) => {
     const d = addDays(start, i)
     const key = dateKey(d)
-    return { dateStr: key, dayName: d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(), dayNumber: d.getDate(), isToday: key === todayKey }
+    return { dateStr: key, dayName: formatWeekday(d), dayNumber: d.getDate(), isToday: key === todayKey }
   })
 })
 

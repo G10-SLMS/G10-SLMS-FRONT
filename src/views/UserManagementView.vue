@@ -184,6 +184,7 @@ import type { UserRole } from '@/types/user'
 import StatCard from '@/components/ui/StatCard.vue'
 import api from '@/services/api'
 import { extractErrorMessage } from '@/utils/errors'
+import { formatDate } from '@/utils/date'
 
 interface ManagedUser {
   id: number
@@ -207,7 +208,7 @@ const errorMsg = ref('')
 
 function formatJoined(dateStr: string): string {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return formatDate(dateStr)
 }
 
 async function loadUsers() {
@@ -295,7 +296,7 @@ function saveUser() {
       name: form.name,
       email: form.email,
       role: form.role,
-      joined: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      joined: formatDate(new Date()),
     })
   }
 
