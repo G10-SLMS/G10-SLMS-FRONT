@@ -31,6 +31,7 @@ export function useLeaveRequests() {
   const cancelling = ref(false)
 
   let searchTimeout: ReturnType<typeof setTimeout> | null = null
+  let requestSeq = 0
 
   const filters = reactive({
     search: '',
@@ -122,6 +123,8 @@ export function useLeaveRequests() {
       loading.value = false
       return
     }
+    
+    const seq = ++requestSeq
 
     loading.value = true
     errMsg.value = ''
@@ -136,15 +139,19 @@ export function useLeaveRequests() {
       if (filters.date_to) params.date_to = filters.date_to
 
       const result = await leaveService.getLeaveRequests(params)
+      if (seq !== requestSeq) return // a newer request has already superseded this one
+
       items.value = result.data
       total.value = result.total
       lastPage.value = result.last_page
     } catch (err) {
+      if (seq !== requestSeq) return
+
       errMsg.value =
         (err as AxiosError<{ message?: string }>).response?.data?.message || 'Failed to load leave requests.'
       items.value = []
     } finally {
-      loading.value = false
+      if (seq === requestSeq) loading.value = false
     }
   }
 
@@ -191,7 +198,7 @@ export function useLeaveRequests() {
     } catch {}
     await fetchRequests()
   })
-  
+
   watch(
     () => leaveModal.refreshToken,
     () => fetchRequests(page.value),
