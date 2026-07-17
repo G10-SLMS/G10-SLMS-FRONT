@@ -1,4 +1,3 @@
-// ── API-driven leave request types (used by leaveService + useLeaveRequests) ──
 
 export interface LeaveRequestUser {
   id: number
@@ -116,6 +115,7 @@ export type LeaveStatus = 'Pending' | 'Approved' | 'Rejected'
 export interface LeaveRequest {
   id: number
   student: string
+  studentAvatarUrl?: string | null
   type: string
   startDate: string
   endDate: string

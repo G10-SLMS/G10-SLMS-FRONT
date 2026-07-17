@@ -123,6 +123,7 @@ const typeFilter = ref('All')
 interface LeaveRequest {
   id: number
   student: string
+  studentAvatarUrl?: string | null
   type: string
   startDate: string
   endDate: string
@@ -148,6 +149,7 @@ function toRow(raw: RawLeaveRequest): LeaveRequest {
   return {
     id: raw.id,
     student: raw.user?.name ?? `User #${raw.user_id}`,
+    studentAvatarUrl: raw.user?.avatar?.url ?? null,
     type: raw.leave_type?.name ?? 'Leave',
     startDate: formatDate(raw.start_date),
     endDate: formatDate(raw.end_date),
