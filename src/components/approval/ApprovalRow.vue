@@ -21,25 +21,35 @@
       <LeaveStatusBadge :status="request.status" />
     </td>
 
-    <td v-if="showActions" class="px-4 py-3.5 align-middle text-left">
+    <td class="px-4 py-3.5 align-middle text-left">
       <div class="flex gap-2">
         <button
-          v-for="action in actions"
-          :key="action.decision"
-          :class="[actionButtonBaseClasses, action.classes]"
-          :disabled="request.processing"
-          @click="$emit('decide', action.decision)"
+          class="flex items-center gap-1 whitespace-nowrap rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50"
+          @click="$emit('view')"
         >
-          <component :is="action.icon" :size="15" />
-          {{ action.label }}
+          <Eye :size="15" />
+          View
         </button>
+
+        <template v-if="showActions">
+          <button
+            v-for="action in actions"
+            :key="action.decision"
+            :class="[actionButtonBaseClasses, action.classes]"
+            :disabled="request.processing"
+            @click="$emit('decide', action.decision)"
+          >
+            <component :is="action.icon" :size="15" />
+            {{ action.label }}
+          </button>
+        </template>
       </div>
     </td>
   </tr>
 </template>
 
 <script setup lang="ts">
-import { Check, X } from 'lucide-vue-next'
+import { Check, X, Eye } from 'lucide-vue-next'
 import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
 import { getInitials } from '@/utils/initials'
 import type { LeaveRequest, LeaveStatus } from '@/types/leave'
@@ -51,6 +61,7 @@ defineProps<{
 
 defineEmits<{
   decide: [decision: LeaveStatus]
+  view: []
 }>()
 
 const actionButtonBaseClasses =
