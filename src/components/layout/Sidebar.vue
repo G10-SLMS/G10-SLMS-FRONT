@@ -97,6 +97,7 @@
                 @hover="showTooltip"
                 @unhover="hideTooltip"
               />
+              <div v-if="collapsed" class="mx-4 my-1 h-px bg-slate-100" />
             </template>
             <SidebarNavLink
               v-else
