@@ -24,7 +24,7 @@
     >
       <!-- Brand Logo Container Header -->
       <div
-        class="mb-2 flex h-16 shrink-0 items-center justify-between gap-2.5 border-b border-slate-200 px-5"
+        class="flex h-16 shrink-0 items-center justify-between gap-2.5 border-b border-slate-200 px-5"
         :class="{ 'justify-center px-0 max-md:justify-between max-md:px-5': collapsed }"
       >
         <img
@@ -46,7 +46,7 @@
       </div>
 
       <!-- New Request Action -->
-      <div v-if="auth.isStudent" class="px-3 pb-1">
+      <div v-if="auth.isStudent" class="px-3 pb-1 pt-4 lg:pt-6">
         <button
           type="button"
           class="flex w-full items-center justify-center gap-1.5 rounded-md bg-[#f5a623] px-3.5 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#e09510]"
@@ -61,7 +61,7 @@
       </div>
 
       <!-- Main Navigation Menu Groups Links Loop -->
-      <nav class="flex flex-1 flex-col gap-1">
+      <nav class="flex flex-1 flex-col gap-1" :class="{ 'pt-4 lg:pt-6': !auth.isStudent }">
         <div
           v-for="(group, gi) in visibleNavGroups"
           :key="group.label"
