@@ -37,7 +37,7 @@
             <th class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">End Date</th>
             <th class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">Reason</th>
             <th class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">Status</th>
-            <th v-if="activeTab === 'Pending'" class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">Actions</th>
+            <th class="whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold text-gray-500">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -47,6 +47,7 @@
             :request="request"
             :show-actions="activeTab === 'Pending'"
             @decide="(decision) => handleDecision(request, decision)"
+            @view="leaveFormModal.openView(request.id)"
           />
         </tbody>
       </table>
@@ -77,6 +78,9 @@ import { formatDate } from '@/utils/date'
 import type { RawApiEnvelope, RawLeaveRequest } from '@/types/leave'
 import api from '@/services/api'
 import type { AxiosError } from 'axios'
+import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
+
+const leaveFormModal = useLeaveFormModalStore()
 
 const tabs = ['Pending', 'Approved', 'Rejected'] as const
 type TabType = (typeof tabs)[number]
