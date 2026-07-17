@@ -9,14 +9,14 @@
     >
       <div
         v-if="isOpen"
-        class="fixed inset-x-0 bottom-0 top-[60px] z-[49] bg-white/45 md:hidden"
+        class="fixed inset-x-0 bottom-0 top-16 z-[49] bg-white/45 md:hidden"
         aria-hidden="true"
         @click="close"
       />
     </Transition>
 
     <aside
-      class="sticky top-0 z-50 flex h-screen flex-col overflow-y-auto border-r border-slate-200 bg-white py-4 text-slate-700 shadow-sm transition-[width] duration-250 max-md:fixed max-md:left-0 max-md:top-[60px] max-md:h-[calc(100vh-60px)] max-md:-translate-x-full max-md:shadow-md max-md:transition-transform"
+      class="sticky top-0 z-50 flex h-screen flex-col overflow-y-auto border-r border-slate-200 bg-white pb-4 text-slate-700 shadow-sm transition-[width] duration-250 max-md:fixed max-md:left-0 max-md:top-16 max-md:h-[calc(100vh-64px)] max-md:-translate-x-full max-md:shadow-md max-md:transition-transform"
       :class="[
         collapsed ? 'w-[72px] max-md:w-[220px]' : 'w-[220px]',
         isOpen ? 'max-md:translate-x-0' : '',
@@ -24,7 +24,7 @@
     >
       <!-- Brand Logo Container Header -->
       <div
-        class="mb-2 flex items-center justify-between gap-2.5 border-b border-slate-200 px-5 pb-4"
+        class="mb-2 flex h-16 shrink-0 items-center justify-between gap-2.5 border-b border-slate-200 px-5"
         :class="{ 'justify-center px-0 max-md:justify-between max-md:px-5': collapsed }"
       >
         <img
