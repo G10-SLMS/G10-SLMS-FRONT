@@ -89,13 +89,13 @@ export function useLeaveRequests() {
 
       const [pending, approved, rejected, cancelled] = await Promise.all(
         (['pending', 'approved', 'rejected', 'cancelled'] as const).map((status) =>
-          leaveService.getLeaveRequests({ status, per_page: 1000 }),
+          leaveService.getLeaveRequests({ status, per_page: 1 }),
         ),
       )
-      statusCounts.pending = pending.data.length
-      statusCounts.approved = approved.data.length
-      statusCounts.rejected = rejected.data.length
-      statusCounts.cancelled = cancelled.data.length
+      statusCounts.pending = pending.total
+      statusCounts.approved = approved.total
+      statusCounts.rejected = rejected.total
+      statusCounts.cancelled = cancelled.total
     } catch {
       // Leave previous counts in place rather than zeroing them on a blip.
     } finally {
@@ -234,10 +234,14 @@ export function useLeaveRequests() {
       errMsg.value = 'Leave requests are not available yet — the backend for this feature hasn\'t shipped.'
       return
     }
-    try {
-      leaveTypes.value = await leaveService.getLeaveTypes()
-    } catch {}
-    await Promise.all([fetchRequests(), loadStats()])
+    await Promise.all([
+      leaveService
+        .getLeaveTypes()
+        .then((types) => (leaveTypes.value = types))
+        .catch(() => {}),
+      fetchRequests(),
+      loadStats(),
+    ])
   })
 
   watch(
