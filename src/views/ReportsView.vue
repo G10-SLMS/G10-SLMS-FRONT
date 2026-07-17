@@ -25,7 +25,7 @@
       <StatCard :icon="XCircle" label="Rejected" :value="summary.rejected" color="red" />
     </div>
 
-    <div class="mb-5 grid grid-cols-1 gap-4 md:grid-cols-[1.4fr_1fr]">
+    <div class="mb-5">
       <div class="rounded-[10px] bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
         <div class="mb-4 flex items-center justify-between">
           <h2 class="m-0 text-base">Requests by Leave Type</h2>
@@ -39,22 +39,6 @@
             :width-percent="barWidth(row.count)"
           />
         </div>
-      </div>
-
-      <div class="rounded-[10px] bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
-        <div class="mb-4 flex items-center justify-between">
-          <h2 class="m-0 text-base">Top Departments</h2>
-        </div>
-        <ul class="m-0 list-none p-0">
-          <li
-            v-for="d in byDepartment"
-            :key="d.name"
-            class="flex justify-between border-b border-gray-100 py-2.5 text-sm text-gray-700 last:border-none"
-          >
-            <span>{{ d.name }}</span>
-            <span class="text-[13px] text-gray-500">{{ d.count }} requests</span>
-          </li>
-        </ul>
       </div>
     </div>
 
@@ -109,13 +93,6 @@ const byType = ref([
   { name: 'Annual Leave', count: 41 },
   { name: 'Personal Leave', count: 28 },
   { name: 'Emergency Leave', count: 21 },
-])
-
-const byDepartment = ref([
-  { name: 'Backend Cohort', count: 38 },
-  { name: 'Frontend Cohort', count: 34 },
-  { name: 'Data Cohort', count: 29 },
-  { name: 'Design Cohort', count: 22 },
 ])
 
 const monthly = ref([
