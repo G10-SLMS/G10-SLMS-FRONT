@@ -40,7 +40,7 @@
           </div>
           <div class="flex items-center justify-between px-3.5 py-2.5">
             <dt class="text-xs font-medium text-slate-500">Student ID</dt>
-            <dd class="m-0 truncate text-[13px] font-medium text-slate-900">{{ student.student_id ?? '—' }}</dd>
+            <dd class="m-0 truncate text-[13px] font-medium text-slate-900">{{ formatStudentId(student.student_id) || '—' }}</dd>
           </div>
           <div class="flex items-center justify-between px-3.5 py-2.5">
             <dt class="text-xs font-medium text-slate-500">Class</dt>
@@ -71,6 +71,7 @@
 
 <script setup lang="ts">
 import { getInitials, getAvatarColor } from '@/utils/initials'
+import { formatStudentId } from '@/utils/formatters'
 import type { LeaveRequestUser } from '@/types/leave'
 
 defineProps<{
