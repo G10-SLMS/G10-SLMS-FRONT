@@ -3,14 +3,13 @@
     <div
       v-if="open"
       class="fixed inset-0 z-[100] flex items-center justify-center bg-white/45 p-4"
-      @click.self="emit('cancel')"
     >
       <div class="w-full max-w-[420px] rounded-xl bg-white p-6 shadow-xl">
         <h2 class="mb-4 text-lg font-semibold text-gray-900">
           {{ isEditing ? 'Edit Leave Type' : 'Add Leave Type' }}
         </h2>
 
-        <p v-if="error" class="mb-3.5 rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">{{ error }}</p>
+        <p v-if="error" class="mb-3.5 rounded-md px-3 py-2 text-xs" style="background-color: #fef8ec; color: #f5a623;">{{ error }}</p>
 
         <label class="mb-3.5 flex flex-col gap-1.5 text-xs text-gray-700">
           <span>Name <span class="text-red-500">*</span></span>
@@ -19,7 +18,7 @@
             type="text"
             placeholder="e.g. Sick Leave"
             required
-            class="rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
+            class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
           />
         </label>
 
@@ -30,7 +29,7 @@
             type="text"
             placeholder="e.g. SICK"
             required
-            class="rounded-md border border-gray-200 px-3 py-2.5 text-sm uppercase text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
+            class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm uppercase text-gray-900 placeholder:text-gray-400 transition-colors focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
           />
         </label>
 
@@ -39,7 +38,7 @@
           <textarea
             v-model="form.description"
             rows="2"
-            class="resize-none rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
+            class="resize-none rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
           />
         </label>
 
@@ -50,7 +49,7 @@
             type="number"
             min="0"
             required
-            class="rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10"
+            class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-cyan-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
           />
         </label>
 
