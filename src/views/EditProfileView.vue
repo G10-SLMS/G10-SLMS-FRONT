@@ -256,12 +256,17 @@ const initials = computed(() =>
 const { avatars: defaultAvatars, loading: loadingAvatars, urlFor } = useDefaultAvatars();
 const selectedAvatarUrl = computed(() => urlFor(form.avatar_id));
 
+function padStudentId(value) {
+  if (value === null || value === undefined || value === '') return '';
+  return String(value).padStart(3, '0');
+}
+
 const form = reactive({
   name: user.value?.name ?? '',
   email: user.value?.email ?? '',
   phone: user.value?.phone ?? '',
-  gender: (user.value?.gender ?? '') as Gender | '',
-  student_id: user.value?.student_id != null ? String(user.value.student_id) : '',
+  gender: (user.value?.gender ?? ''),
+  student_id: padStudentId(user.value?.student_id),
   class_name: user.value?.class_name ?? '',
   generation: user.value?.generation ?? '',
   province: user.value?.province ?? '',
@@ -272,7 +277,7 @@ const savingProfile = ref(false);
 const profileError = ref('');
 const profileSuccess = ref(false);
 const CLASS_PREFIXES = ['WEB', 'SNA'];
-function splitClass(value: string) {
+function splitClass(value) {
   const match = CLASS_PREFIXES.find((prefix) => value.toUpperCase().startsWith(prefix));
   if (match) {
 
