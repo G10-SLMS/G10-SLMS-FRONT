@@ -59,17 +59,41 @@
           >
             {{ group.label }}
           </span>
-          <SidebarNavLink
-            v-for="item in group.items"
-            :key="item.to"
-            :to="item.to"
-            :label="item.label"
-            :icon="item.icon"
-            :collapsed="collapsed"
-            @click="close"
-            @hover="showTooltip"
-            @unhover="hideTooltip"
-          />
+          <template v-for="item in group.items" :key="item.to ?? item.label">
+            <template v-if="item.type === 'dropdown'">
+              <SidebarNavGroup
+                v-if="!collapsed"
+                :label="item.label"
+                :icon="item.icon"
+                :children="item.children"
+                @click="close"
+                @hover="showTooltip"
+                @unhover="hideTooltip"
+              />
+              <SidebarNavLink
+                v-for="child in item.children"
+                v-else
+                :key="child.to"
+                :to="child.to"
+                :label="child.label"
+                :icon="child.icon"
+                :collapsed="collapsed"
+                @click="close"
+                @hover="showTooltip"
+                @unhover="hideTooltip"
+              />
+            </template>
+            <SidebarNavLink
+              v-else
+              :to="item.to"
+              :label="item.label"
+              :icon="item.icon"
+              :collapsed="collapsed"
+              @click="close"
+              @hover="showTooltip"
+              @unhover="hideTooltip"
+            />
+          </template>
         </div>
       </nav>
 
@@ -131,6 +155,7 @@ import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/authService'
 import logoUrl from '@/assets/image/logo.png'
 import SidebarNavLink from '@/components/layout/SidebarNavLink.vue'
+import SidebarNavGroup from '@/components/layout/SidebarNavGroup.vue'
 import {
   LayoutDashboard,
   FileText,
@@ -138,6 +163,7 @@ import {
   Calendar,
   Users,
   ClipboardList,
+  Settings,
   BarChart3,
   X,
   PanelLeftClose,
@@ -159,9 +185,6 @@ const tooltipStyle = ref({ top: '0px', left: '0px' })
 const canApprove = computed(() => auth.isTrainer || auth.isAdmin)
 const isAdmin = computed(() => auth.isAdmin)
 const userName = computed(() => auth.user?.name ?? 'Guest')
-
-// The backend stores only `avatar_id` on the user — resolve it against the
-// default-avatars list to get a displayable URL.
 const defaultAvatars = ref<{ id: number; url: string }[]>([])
 const userAvatar = computed(
   () => defaultAvatars.value.find((a) => a.id === auth.user?.avatar_id)?.url ?? null,
@@ -205,9 +228,17 @@ const navGroups = computed(() => [
   {
     label: 'Management',
     items: [
-      { to: '/leave-types', label: 'Leave Management', icon: ClipboardList, show: isAdmin.value },
+      {
+        type: 'dropdown',
+        label: 'Administration',
+        icon: Settings,
+        show: isAdmin.value,
+        children: [
+          { to: '/leave-types', label: 'Leave Management', icon: ClipboardList },
+          { to: '/users', label: 'User Management', icon: Users },
+        ],
+      },
       { to: '/reports', label: 'Reports', icon: BarChart3, show: isAdmin.value },
-      { to: '/users', label: 'User Management', icon: Users, show: isAdmin.value },
     ],
   },
 ])
