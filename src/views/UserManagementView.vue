@@ -15,17 +15,19 @@
     </div>
 
     <div class="mb-5 grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
-      <StatCard :icon="Users" label="Total Users" :value="users.length" color="blue" />
-      <StatCard :icon="GraduationCap" label="Students" :value="counts.student" color="green" />
-      <StatCard :icon="UserCheck" label="Trainers" :value="counts.trainer" color="amber" />
-      <StatCard :icon="ShieldCheck" label="Admins" :value="counts.admin" color="blue" />
+      <template v-if="loading">
+        <StatCardSkeleton v-for="n in 4" :key="n" />
+      </template>
+      <template v-else>
+        <StatCard :icon="Users" label="Total Users" :value="users.length" color="blue" />
+        <StatCard :icon="GraduationCap" label="Students" :value="counts.student" color="green" />
+        <StatCard :icon="UserCheck" label="Trainers" :value="counts.trainer" color="amber" />
+        <StatCard :icon="ShieldCheck" label="Admins" :value="counts.admin" color="blue" />
+      </template>
     </div>
 
     <div v-if="errorMsg" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       {{ errorMsg }}
-    </div>
-    <div v-else-if="loading" class="mb-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
-      Loading users…
     </div>
 
     <div class="rounded-[10px] bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
@@ -65,7 +67,9 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="u in filteredUsers" :key="u.id" class="border-b border-gray-100 last:border-none">
+            <TableRowSkeleton v-if="loading" :rows="5" :columns="5" />
+            <template v-else>
+              <tr v-for="u in filteredUsers" :key="u.id" class="border-b border-gray-100 last:border-none">
               <td class="px-2 py-3 text-left">
                 <div class="flex items-center gap-2.5">
                   <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-xs font-semibold text-white">
@@ -108,6 +112,7 @@
             <tr v-if="filteredUsers.length === 0">
               <td colspan="5" class="px-2 py-6 text-center text-gray-400">No users match your search.</td>
             </tr>
+            </template>
           </tbody>
         </table>
       </div>
@@ -182,6 +187,8 @@ import {
 } from 'lucide-vue-next'
 import type { UserRole } from '@/types/user'
 import StatCard from '@/components/ui/StatCard.vue'
+import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
+import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
 import api from '@/services/api'
 import { extractErrorMessage } from '@/utils/errors'
 import { formatDate } from '@/utils/date'

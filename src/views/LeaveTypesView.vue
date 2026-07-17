@@ -33,9 +33,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-if="loading">
-              <td colspan="5" class="px-2 py-8 text-center text-sm text-slate-400">Loading leave types…</td>
-            </tr>
+            <TableRowSkeleton v-if="loading" :rows="5" :columns="5" />
             <template v-else>
               <LeaveTypeRow
                 v-for="lt in leaveTypes"
@@ -83,6 +81,7 @@ import type { AxiosError } from 'axios'
 import LeaveTypeRow from '@/components/leave-type/LeaveTypeRow.vue'
 import LeaveTypeModal from '@/components/leave-type/LeaveTypeModal.vue'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
+import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
 import { leaveService } from '@/services/leaveService'
 import type { LeaveType, LeaveTypePayload } from '@/types/leave'
 

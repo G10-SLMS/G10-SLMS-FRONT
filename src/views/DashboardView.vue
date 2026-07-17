@@ -4,26 +4,41 @@
 
     <!-- Admin dashboard -->
     <div v-if="auth.isAdmin" class="mb-8 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
-      <StatCard :icon="Users" label="Total Requests" :value="statsLoading ? '—' : totalRequests" color="blue" />
-      <StatCard :icon="Clock" label="Pending Requests" :value="statsLoading ? '—' : pendingCount" color="amber" />
-      <StatCard :icon="CheckCircle" label="Approved Requests" :value="statsLoading ? '—' : approvedCount" color="green" />
-      <StatCard :icon="XCircle" label="Rejected Requests" :value="statsLoading ? '—' : rejectedCount" color="red" />
+      <template v-if="statsLoading">
+        <StatCardSkeleton v-for="n in 4" :key="n" />
+      </template>
+      <template v-else>
+        <StatCard :icon="Users" label="Total Requests" :value="totalRequests" color="blue" />
+        <StatCard :icon="Clock" label="Pending Requests" :value="pendingCount" color="amber" />
+        <StatCard :icon="CheckCircle" label="Approved Requests" :value="approvedCount" color="green" />
+        <StatCard :icon="XCircle" label="Rejected Requests" :value="rejectedCount" color="red" />
+      </template>
     </div>
 
     <!-- Staff / Trainer dashboard -->
     <div v-else-if="auth.isTrainer" class="mb-8 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
-      <StatCard :icon="ClipboardList" label="Pending Reviews" :value="statsLoading ? '—' : pendingCount" color="amber" />
-      <StatCard :icon="CheckCircle" label="Approved Requests" :value="statsLoading ? '—' : approvedCount" color="green" />
-      <StatCard :icon="Users" label="Assigned Students" :value="statsLoading ? '—' : assignedStudents" color="blue" />
-      <StatCard :icon="XCircle" label="Rejected Requests" :value="statsLoading ? '—' : rejectedCount" color="red" />
+      <template v-if="statsLoading">
+        <StatCardSkeleton v-for="n in 4" :key="n" />
+      </template>
+      <template v-else>
+        <StatCard :icon="ClipboardList" label="Pending Reviews" :value="pendingCount" color="amber" />
+        <StatCard :icon="CheckCircle" label="Approved Requests" :value="approvedCount" color="green" />
+        <StatCard :icon="Users" label="Assigned Students" :value="assignedStudents" color="blue" />
+        <StatCard :icon="XCircle" label="Rejected Requests" :value="rejectedCount" color="red" />
+      </template>
     </div>
 
     <!-- Student dashboard -->
     <div v-else-if="auth.isStudent" class="mb-8 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
-      <StatCard :icon="CalendarDays" label="Total Requests" :value="statsLoading ? '—' : totalRequests" color="blue" />
-      <StatCard :icon="Clock" label="Pending Requests" :value="statsLoading ? '—' : pendingCount" color="amber" />
-      <StatCard :icon="CheckCircle" label="Approved" :value="statsLoading ? '—' : approvedCount" color="green" />
-      <StatCard :icon="XCircle" label="Rejected" :value="statsLoading ? '—' : rejectedCount" color="red" />
+      <template v-if="statsLoading">
+        <StatCardSkeleton v-for="n in 4" :key="n" />
+      </template>
+      <template v-else>
+        <StatCard :icon="CalendarDays" label="Total Requests" :value="totalRequests" color="blue" />
+        <StatCard :icon="Clock" label="Pending Requests" :value="pendingCount" color="amber" />
+        <StatCard :icon="CheckCircle" label="Approved" :value="approvedCount" color="green" />
+        <StatCard :icon="XCircle" label="Rejected" :value="rejectedCount" color="red" />
+      </template>
     </div>
 
     <!-- Fallback if role is missing/unknown -->
@@ -37,7 +52,7 @@
         Recent Activity
       </h2>
 
-      <p v-if="activityLoading" class="text-gray-400">Loading recent activity…</p>
+      <ActivityListSkeleton v-if="activityLoading" :rows="4" />
       <p v-else-if="activityError" class="text-red-500">{{ activityError }}</p>
       <p v-else-if="recentActivity.length === 0" class="text-gray-400">No leave requests yet.</p>
 
@@ -72,6 +87,8 @@ import { useAuthStore } from '@/stores/auth'
 import { leaveService } from '@/services/leaveService'
 import api from '@/services/api'
 import StatCard from '@/components/ui/StatCard.vue'
+import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
+import ActivityListSkeleton from '@/components/shared/ActivityListSkeleton.vue'
 import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
 import { getInitials, getAvatarColor } from '@/utils/initials'
 import type { LeaveRequestListItem } from '@/types/leave'
