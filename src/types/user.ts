@@ -16,8 +16,8 @@ export interface User {
 
   // Student-only fields
   gender: Gender | null
-  id_card: string | null
-  class: string | null
+  student_id: string | null
+  class_name: string | null
   generation: string | null
   province: string | null
 
@@ -37,7 +37,7 @@ export interface RegisterPayload {
   password_confirmation: string
   role?: UserRole
   trainer_id?: number | null
-  id_card?: number | null
+  student_id?: string | null
 }
 
 export interface LoginPayload {
@@ -59,8 +59,8 @@ export interface UpdateProfilePayload {
   password_confirmation?: string
   avatar_id?: number | null
   phone?: string
-  id_card?: string
-  class?: string
+  student_id?: string
+  class_name?: string
   generation?: string
   province?: string
   gender?: Gender

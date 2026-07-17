@@ -88,20 +88,20 @@
                 Student Record
               </p>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <ProfileFormField id="id_card" label="ID Card Number">
+                <ProfileFormField id="student_id" label="ID Card Number">
                   <input
-                    id="id_card"
-                    v-model="form.id_card"
+                    id="student_id"
+                    v-model="form.student_id"
                     type="text"
                     placeholder="e.g. 012345678"
                     class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
                   />
                 </ProfileFormField>
 
-                <ProfileFormField id="class" label="Class">
+                <ProfileFormField id="class_name" label="Class">
                   <div class="flex gap-2">
                     <select
-                      id="class"
+                      id="class_name"
                       v-model="classPrefix"
                       class="w-24 shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
                     >
@@ -261,8 +261,8 @@ const form = reactive({
   email: user.value?.email ?? '',
   phone: user.value?.phone ?? '',
   gender: (user.value?.gender ?? '') as Gender | '',
-  id_card: user.value?.id_card != null ? String(user.value.id_card) : '',
-  class: user.value?.class ?? '',
+  student_id: user.value?.student_id != null ? String(user.value.student_id) : '',
+  class_name: user.value?.class_name ?? '',
   generation: user.value?.generation ?? '',
   province: user.value?.province ?? '',
   avatar_id: user.value?.avatar_id ?? null,
@@ -282,12 +282,12 @@ function splitClass(value: string) {
   return { prefix: CLASS_PREFIXES[0], suffix: value };
 }
 
-const initialClassParts = splitClass(form.class);
+const initialClassParts = splitClass(form.class_name);
 const classPrefix = ref(initialClassParts.prefix);
 const classSuffix = ref(initialClassParts.suffix);
 
 watch([classPrefix, classSuffix], ([prefix, suffix]) => {
-  form.class = `${prefix}${suffix}`;
+  form.class_name = `${prefix}${suffix}`;
 });
 
 async function submitProfile() {
@@ -303,8 +303,8 @@ async function submitProfile() {
       ...(isStudent.value
         ? {
             gender: form.gender || undefined,
-            id_card: form.id_card,
-            class: form.class,
+            student_id: form.student_id,
+            class_name: form.class_name,
             generation: form.generation,
             province: form.province,
           }

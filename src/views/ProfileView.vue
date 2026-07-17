@@ -141,7 +141,7 @@ const profileFields = computed(() =>
       key: 'class',
       label: 'Class',
       icon: GraduationCap,
-      value: user.value?.class,
+      value: user.value?.class_name,
     },
     {
       key: 'generation',
