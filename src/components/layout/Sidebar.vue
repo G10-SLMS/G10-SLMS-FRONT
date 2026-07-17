@@ -45,6 +45,21 @@
         </button>
       </div>
 
+      <!-- New Request Action -->
+      <div v-if="auth.isStudent" class="px-3 pb-1">
+        <button
+          type="button"
+          class="flex w-full items-center justify-center gap-1.5 rounded-md bg-[#f5a623] px-3.5 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#e09510]"
+          :class="{ 'px-0': collapsed }"
+          @click="leaveModal.openCreate()"
+          @mouseenter="showTooltip($event, 'New Request')"
+          @mouseleave="hideTooltip"
+        >
+          <Plus :size="16" />
+          <span :class="{ 'hidden': collapsed }">New Request</span>
+        </button>
+      </div>
+
       <!-- Main Navigation Menu Groups Links Loop -->
       <nav class="flex flex-1 flex-col gap-1">
         <div
@@ -99,24 +114,6 @@
 
       <!-- Account Bottom Actions Footer -->
       <div class="mt-auto border-t border-slate-200 pt-2 max-md:hidden">
-        <RouterLink
-          to="/profile"
-          class="mx-2 mb-1 flex items-center gap-2.5 rounded-md px-5 py-2.5 text-inherit transition-colors hover:bg-slate-100"
-          :class="{ 'justify-center px-2.5': collapsed }"
-          @click="close"
-          @mouseenter="showTooltip($event, userName)"
-          @mouseleave="hideTooltip"
-        >
-          <div class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white">
-            <img v-if="userAvatar" :src="userAvatar" :alt="userName" class="h-full w-full object-cover" />
-            <span v-else>{{ userInitials }}</span>
-          </div>
-          <div class="flex min-w-0 flex-col leading-tight" :class="{ 'hidden': collapsed }">
-            <span class="truncate text-[13.5px] font-semibold text-slate-900">{{ userName }}</span>
-            <span class="text-xs text-slate-400">{{ userRole }}</span>
-          </div>
-        </RouterLink>
-
         <button
           type="button"
           class="relative mx-2 flex w-[calc(100%-16px)] items-center gap-2.5 rounded-md px-5 py-2.5 text-left text-sm font-medium text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
@@ -152,7 +149,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { authService } from '@/services/authService'
+import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
 import logoUrl from '@/assets/image/logo.png'
 import SidebarNavLink from '@/components/layout/SidebarNavLink.vue'
 import SidebarNavGroup from '@/components/layout/SidebarNavGroup.vue'
@@ -167,6 +164,7 @@ import {
   BarChart3,
   X,
   PanelLeftClose,
+  Plus,
 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -178,42 +176,13 @@ const emit = defineEmits<{
 }>()
 
 const auth = useAuthStore()
+const leaveModal = useLeaveFormModalStore()
 const collapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true')
 const hoveredLabel = ref<string | null>(null)
 const tooltipStyle = ref({ top: '0px', left: '0px' })
 
 const canApprove = computed(() => auth.isTrainer || auth.isAdmin)
 const isAdmin = computed(() => auth.isAdmin)
-const userName = computed(() => auth.user?.name ?? 'Guest')
-const defaultAvatars = ref<{ id: number; url: string }[]>([])
-const userAvatar = computed(
-  () => defaultAvatars.value.find((a) => a.id === auth.user?.avatar_id)?.url ?? null,
-)
-
-onMounted(async () => {
-  try {
-    const { data } = await authService.getDefaultAvatars()
-    defaultAvatars.value = data.avatars
-  } catch {
-    defaultAvatars.value = []
-  }
-})
-
-const userRole = computed(() => {
-  if (isAdmin.value) return 'Admin'
-  if (auth.isTrainer) return 'Trainer'
-  return 'Student'
-})
-
-const userInitials = computed(() =>
-  userName.value
-    .split(' ')
-    .map((part) => part[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
-)
 
 const navGroups = computed(() => [
   {
