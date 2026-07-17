@@ -93,7 +93,7 @@
                     id="student_id"
                     v-model="form.student_id"
                     type="text"
-                    placeholder="e.g. 012345678"
+                    placeholder="e.g. 001"
                     class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
                   />
                 </ProfileFormField>
@@ -111,7 +111,7 @@
                     <input
                       v-model="classSuffix"
                       type="text"
-                      placeholder="e.g. 1"
+                      placeholder="e.g. B 2026"
                       class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
                     />
                   </div>
@@ -271,13 +271,13 @@ const form = reactive({
 const savingProfile = ref(false);
 const profileError = ref('');
 const profileSuccess = ref(false);
-
 const CLASS_PREFIXES = ['WEB', 'SNA'];
-
 function splitClass(value: string) {
   const match = CLASS_PREFIXES.find((prefix) => value.toUpperCase().startsWith(prefix));
   if (match) {
-    return { prefix: match, suffix: value.slice(match.length) };
+
+    const rest = value.slice(match.length).replace(/^\s*-?\s*/, '');
+    return { prefix: match, suffix: rest };
   }
   return { prefix: CLASS_PREFIXES[0], suffix: value };
 }
@@ -287,7 +287,7 @@ const classPrefix = ref(initialClassParts.prefix);
 const classSuffix = ref(initialClassParts.suffix);
 
 watch([classPrefix, classSuffix], ([prefix, suffix]) => {
-  form.class_name = `${prefix}${suffix}`;
+  form.class_name = `${prefix} - ${suffix.trim()}`;
 });
 
 async function submitProfile() {
