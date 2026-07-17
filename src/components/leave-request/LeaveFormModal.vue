@@ -226,7 +226,7 @@
 
           <!-- Footer -->
           <div
-            v-if="!loadError && editableLoaded && !(isEditMode && !canEdit)"
+            v-if="!loadError && editableLoaded && !(isEditMode && !canEdit) && !isViewMode"
             class="flex shrink-0 justify-end gap-2.5 border-t border-gray-100 px-6 py-4"
           >
             <button
@@ -235,10 +235,9 @@
               :disabled="submitting"
               @click="handleClose"
             >
-              {{ isViewMode ? 'Close' : 'Cancel' }}
+              Cancel
             </button>
             <button
-              v-if="!isViewMode"
               type="submit"
               form="leave-form"
               class="rounded-md bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
