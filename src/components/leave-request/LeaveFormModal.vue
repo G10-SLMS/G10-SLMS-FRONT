@@ -9,7 +9,6 @@
       <div
         v-if="modal.isOpen"
         class="fixed inset-0 z-[100] flex items-center justify-center bg-white/50 p-5"
-        @mousedown.self="handleOverlayClick"
       >
         <div
           class="flex max-h-[90vh] w-full max-w-[560px] flex-col rounded-xl bg-white shadow-xl"
@@ -177,6 +176,20 @@
                 <span v-if="!isViewMode" class="mt-1 block text-right text-[11px] text-gray-400">{{ form.reason.length }}/500</span>
               </div>
 
+              <!-- Attachment (view mode) -->
+              <div v-if="isViewMode && existingAttachmentUrl" class="mb-4">
+                <label class="mb-1.5 block text-xs font-medium text-gray-700">Supporting Document</label>
+                <a
+                  :href="existingAttachmentUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-3.5 py-2.5 text-xs text-cyan-700 transition-colors hover:bg-gray-100"
+                >
+                  <Paperclip :size="16" />
+                  <span class="truncate">View attached file</span>
+                </a>
+              </div>
+
               <!-- Attachment -->
               <div v-if="!isViewMode" class="mb-4">
                 <label class="mb-1.5 block text-xs font-medium text-gray-700" for="m-attachment">Supporting Document (optional)</label>
@@ -273,6 +286,7 @@ const canEdit = ref(true)
 const originalStatus = ref('')
 const requestUser = ref<LeaveRequestUser | null>(null)
 const showProfile = ref(false)
+const existingAttachmentUrl = ref<string | null>(null)
 
 const leaveTypes = ref<LeaveType[]>([])
 const typesLoading = ref(false)
@@ -303,6 +317,7 @@ function resetForm() {
   originalStatus.value = ''
   requestUser.value = null
   showProfile.value = false
+  existingAttachmentUrl.value = null
 }
 
 const dateRangeError = computed(() => {
@@ -345,10 +360,6 @@ function removeFile() {
 function handleClose() {
   if (submitting.value) return
   modal.close()
-}
-
-function handleOverlayClick() {
-  handleClose()
 }
 
 function handleEscape(e: KeyboardEvent) {
@@ -397,6 +408,7 @@ watch(
       form.startDate = data.start_date
       form.endDate = data.end_date
       form.reason = data.reason
+      existingAttachmentUrl.value = data.supporting_document
     } catch {
       loadError.value = 'Failed to load this leave request.'
     } finally {
