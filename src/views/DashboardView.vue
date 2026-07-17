@@ -4,7 +4,7 @@
 
     <!-- Admin dashboard -->
     <div v-if="auth.isAdmin" class="mb-8 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
-      <StatCard :icon="Users" label="Total Students" :value="statsLoading ? '—' : totalStudents" color="blue" />
+      <StatCard :icon="Users" label="Total Requests" :value="statsLoading ? '—' : totalRequests" color="blue" />
       <StatCard :icon="Clock" label="Pending Requests" :value="statsLoading ? '—' : pendingCount" color="amber" />
       <StatCard :icon="CheckCircle" label="Approved Requests" :value="statsLoading ? '—' : approvedCount" color="green" />
       <StatCard :icon="XCircle" label="Rejected Requests" :value="statsLoading ? '—' : rejectedCount" color="red" />
@@ -94,7 +94,6 @@ interface DirectoryUser {
 const auth = useAuthStore()
 
 const statsLoading = ref(true)
-const totalStudents = ref(0)
 const assignedStudents = ref(0)
 const totalRequests = ref(0)
 const pendingCount = ref(0)
@@ -119,11 +118,10 @@ async function loadStats() {
     rejectedCount.value = rejected.total
     totalRequests.value = pending.total + approved.total + rejected.total
 
-    if (auth.isAdmin || auth.isTrainer) {
+    if (auth.isTrainer) {
       const { data } = await api.get<{ users: DirectoryUser[]; count: number }>('/users')
       const students = data.users.filter((u) => u.role === 'student')
 
-      totalStudents.value = students.length
       assignedStudents.value = students.filter((u) => u.trainer_id === auth.user?.id).length
     }
   } catch {
