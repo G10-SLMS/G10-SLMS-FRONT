@@ -46,12 +46,7 @@
     </div>
 
     <div class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
-      <div v-if="loading" class="flex flex-col items-center gap-2.5 px-5 py-16 text-center text-sm text-slate-400">
-        <span class="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-500"></span>
-        Loading requests…
-      </div>
-
-      <div v-else-if="filteredRequests.length" class="overflow-x-auto">
+      <div v-if="loading || filteredRequests.length" class="overflow-x-auto">
         <table class="w-full border-collapse text-sm">
           <thead>
             <tr class="border-b border-slate-100 bg-slate-50/60">
@@ -65,15 +60,18 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            <ApprovalRow
-              v-for="request in filteredRequests"
-              :key="request.id"
-              :request="request"
-              :show-actions="true"
-              class="transition-colors hover:bg-slate-50/60"
-              @decide="(decision) => handleDecision(request, decision)"
-              @view="leaveFormModal.openView(request.id)"
-            />
+            <ApprovalLoadingSkeleton v-if="loading" :rows="4" />
+            <template v-else>
+              <ApprovalRow
+                v-for="request in filteredRequests"
+                :key="request.id"
+                :request="request"
+                :show-actions="true"
+                class="transition-colors hover:bg-slate-50/60"
+                @decide="(decision) => handleDecision(request, decision)"
+                @view="leaveFormModal.openView(request.id)"
+              />
+            </template>
           </tbody>
         </table>
       </div>
@@ -107,6 +105,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { CheckCircle2, Search, SearchX, ChevronDown, X } from 'lucide-vue-next'
 import ApprovalRow from '@/components/approval/ApprovalRow.vue'
+import ApprovalLoadingSkeleton from '@/components/approval/ApprovalLoadingSkeleton.vue'
 import RejectReasonModal from '@/components/approval/RejectReasonModal.vue'
 import { leaveService } from '@/services/leaveService'
 import { extractErrorMessage } from '@/utils/errors'
