@@ -2,8 +2,14 @@
   <tr class="border-b border-gray-100 last:border-none">
     <td class="px-4 py-3.5 align-middle text-left">
       <div class="flex items-center gap-2.5 font-medium">
-        <span class="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-cyan-400 text-xs font-semibold text-white">
-          {{ getInitials(request.student) }}
+        <span class="flex h-[30px] w-[30px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white">
+          <img
+            v-if="request.studentAvatarUrl"
+            :src="request.studentAvatarUrl"
+            :alt="request.student"
+            class="h-full w-full object-cover"
+          />
+          <template v-else>{{ getInitials(request.student) }}</template>
         </span>
         {{ request.student }}
       </div>

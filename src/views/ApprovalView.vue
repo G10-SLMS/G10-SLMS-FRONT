@@ -14,8 +14,17 @@
             v-model="searchQuery"
             type="text"
             placeholder="Search student or reason…"
-            class="w-56 rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+            class="w-56 rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-8 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
           />
+          <button
+            v-if="searchQuery"
+            type="button"
+            aria-label="Clear search"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            @click="searchQuery = ''"
+          >
+            <X :size="14" />
+          </button>
         </div>
 
         <!-- Leave type filter -->
@@ -29,19 +38,6 @@
           </select>
           <ChevronDown :size="14" class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
         </div>
-
-        <!-- Status dropdown -->
-        <div class="relative">
-          <select
-            v-model="activeTab"
-            class="appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm font-semibold text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
-          >
-            <option v-for="tab in tabs" :key="tab" :value="tab">
-              {{ tab }}{{ tab === 'Pending' && pendingCount > 0 ? ` (${pendingCount})` : '' }}
-            </option>
-          </select>
-          <ChevronDown :size="14" class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-        </div>
       </div>
     </div>
 
@@ -50,12 +46,7 @@
     </div>
 
     <div class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
-      <div v-if="loading" class="flex flex-col items-center gap-2.5 px-5 py-16 text-center text-sm text-slate-400">
-        <span class="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-500"></span>
-        Loading requests…
-      </div>
-
-      <div v-else-if="filteredRequests.length" class="overflow-x-auto">
+      <div v-if="loading || filteredRequests.length" class="overflow-x-auto">
         <table class="w-full border-collapse text-sm">
           <thead>
             <tr class="border-b border-slate-100 bg-slate-50/60">
@@ -69,15 +60,18 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            <ApprovalRow
-              v-for="request in filteredRequests"
-              :key="request.id"
-              :request="request"
-              :show-actions="activeTab === 'Pending'"
-              class="transition-colors hover:bg-slate-50/60"
-              @decide="(decision) => handleDecision(request, decision)"
-              @view="leaveFormModal.openView(request.id)"
-            />
+            <ApprovalLoadingSkeleton v-if="loading" :rows="4" />
+            <template v-else>
+              <ApprovalRow
+                v-for="request in filteredRequests"
+                :key="request.id"
+                :request="request"
+                :show-actions="true"
+                class="transition-colors hover:bg-slate-50/60"
+                @decide="(decision) => handleDecision(request, decision)"
+                @view="leaveFormModal.openView(request.id)"
+              />
+            </template>
           </tbody>
         </table>
       </div>
@@ -86,7 +80,7 @@
         <SearchX v-if="hasActiveFilters" :size="36" :stroke-width="1.5" />
         <CheckCircle2 v-else :size="36" :stroke-width="1.5" />
         <p class="text-sm">
-          {{ hasActiveFilters ? 'No requests match your search or filter.' : `No ${activeTab.toLowerCase()} requests.` }}
+          {{ hasActiveFilters ? 'No requests match your search or filter.' : 'No pending requests.' }}
         </p>
         <button
           v-if="hasActiveFilters"
@@ -109,8 +103,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { CheckCircle2, Search, SearchX, ChevronDown } from 'lucide-vue-next'
+import { CheckCircle2, Search, SearchX, ChevronDown, X } from 'lucide-vue-next'
 import ApprovalRow from '@/components/approval/ApprovalRow.vue'
+import ApprovalLoadingSkeleton from '@/components/approval/ApprovalLoadingSkeleton.vue'
 import RejectReasonModal from '@/components/approval/RejectReasonModal.vue'
 import { leaveService } from '@/services/leaveService'
 import { extractErrorMessage } from '@/utils/errors'
@@ -122,16 +117,13 @@ import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
 
 const leaveFormModal = useLeaveFormModalStore()
 
-const tabs = ['Pending', 'Approved', 'Rejected'] as const
-type TabType = (typeof tabs)[number]
-
-const activeTab = ref<TabType>('Pending')
 const searchQuery = ref('')
 const typeFilter = ref('All')
 
 interface LeaveRequest {
   id: number
   student: string
+  studentAvatarUrl?: string | null
   type: string
   startDate: string
   endDate: string
@@ -147,7 +139,7 @@ const errorMsg = ref('')
 const rejectTarget = ref<LeaveRequest | null>(null)
 const rejecting = ref(false)
 
-function statusToTab(status: string): TabType {
+function statusToTab(status: string): LeaveRequest['status'] {
   if (status === 'approved') return 'Approved'
   if (status === 'rejected') return 'Rejected'
   return 'Pending'
@@ -157,6 +149,7 @@ function toRow(raw: RawLeaveRequest): LeaveRequest {
   return {
     id: raw.id,
     student: raw.user?.name ?? `User #${raw.user_id}`,
+    studentAvatarUrl: raw.user?.avatar?.url ?? null,
     type: raw.leave_type?.name ?? 'Leave',
     startDate: formatDate(raw.start_date),
     endDate: formatDate(raw.end_date),
@@ -182,8 +175,6 @@ async function loadRequests() {
 
 onMounted(loadRequests)
 
-const pendingCount = computed(() => requests.value.filter((r) => r.status === 'Pending').length)
-
 const leaveTypes = computed(() => {
   const types = new Set<string>()
   for (const r of requests.value) types.add(r.type)
@@ -196,7 +187,9 @@ const filteredRequests = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
 
   return requests.value.filter((r) => {
-    if (r.status !== activeTab.value) return false
+    // Approvals only ever lists actionable requests — once a request is
+    // approved or rejected it drops off this page.
+    if (r.status !== 'Pending') return false
     if (typeFilter.value !== 'All' && r.type !== typeFilter.value) return false
     if (query && !r.student.toLowerCase().includes(query) && !r.reason.toLowerCase().includes(query)) {
       return false
