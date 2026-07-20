@@ -98,6 +98,15 @@
       @close="rejectTarget = null"
       @confirm="confirmReject"
     />
+    <ConfirmDialog
+      :open="approveTarget !== null"
+      title="Approve Leave Request"
+      message="Are you sure you want to approve this leave request?"
+      confirm-label="Approve"
+      :loading="approving"
+      @confirm="confirmApprove"
+      @cancel="approveTarget = null"
+    />
   </div>
 </template>
 
@@ -107,6 +116,7 @@ import { CheckCircle2, Search, SearchX, ChevronDown, X } from 'lucide-vue-next'
 import ApprovalRow from '@/components/approval/ApprovalRow.vue'
 import ApprovalLoadingSkeleton from '@/components/approval/ApprovalLoadingSkeleton.vue'
 import RejectReasonModal from '@/components/approval/RejectReasonModal.vue'
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import { leaveService } from '@/services/leaveService'
 import { extractErrorMessage } from '@/utils/errors'
 import { formatDate } from '@/utils/date'
@@ -114,8 +124,10 @@ import type { RawApiEnvelope, RawLeaveRequest } from '@/types/leave'
 import api from '@/services/api'
 import type { AxiosError } from 'axios'
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
+import { useNotificationStore } from '@/stores/notification'
 
 const leaveFormModal = useLeaveFormModalStore()
+const notificationStore = useNotificationStore()
 
 const searchQuery = ref('')
 const typeFilter = ref('All')
@@ -138,6 +150,9 @@ const errorMsg = ref('')
 
 const rejectTarget = ref<LeaveRequest | null>(null)
 const rejecting = ref(false)
+
+const approveTarget = ref<LeaveRequest | null>(null)
+const approving = ref(false)
 
 function statusToTab(status: string): LeaveRequest['status'] {
   if (status === 'approved') return 'Approved'
@@ -218,15 +233,30 @@ async function handleDecision(request: LeaveRequest, decision: 'Approved' | 'Rej
     return
   }
 
-  request.processing = true
+  if (decision === 'Approved') {
+    approveTarget.value = request
+    return
+  }
+}
+
+async function confirmApprove() {
+  if (!approveTarget.value) return
+  const request = approveTarget.value
+  approving.value = true
   errorMsg.value = ''
   try {
     await leaveService.approveLeaveRequest(request.id)
     request.status = 'Approved'
+    notificationStore.addNotification({
+      message: 'Leave request approved successfully.',
+      type: 'success',
+      read: false,
+    })
+    approveTarget.value = null
   } catch (err) {
     errorMsg.value = friendlyErrorMessage(err)
   } finally {
-    request.processing = false
+    approving.value = false
   }
 }
 
@@ -237,6 +267,11 @@ async function confirmReject(reason: string) {
   try {
     await leaveService.rejectLeaveRequest(rejectTarget.value.id, reason)
     rejectTarget.value.status = 'Rejected'
+    notificationStore.addNotification({
+      message: 'Leave request rejected successfully.',
+      type: 'success',
+      read: false,
+    })
     rejectTarget.value = null
   } catch (err) {
     errorMsg.value = friendlyErrorMessage(err)
