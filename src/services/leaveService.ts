@@ -29,7 +29,6 @@ export const leaveService = {
     const formData = new FormData()
 
     if (payload.custom_leave_type) {
-      formData.append('leave_type_id', '')
       formData.append('custom_leave_type', payload.custom_leave_type)
     } else {
       formData.append('leave_type_id', String(payload.leave_type_id))
@@ -52,7 +51,6 @@ export const leaveService = {
     const formData = new FormData()
 
     if (payload.custom_leave_type) {
-      formData.append('leave_type_id', '')
       formData.append('custom_leave_type', payload.custom_leave_type)
     } else {
       formData.append('leave_type_id', String(payload.leave_type_id))
