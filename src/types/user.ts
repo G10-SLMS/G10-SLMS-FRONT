@@ -101,3 +101,24 @@ export interface UserPayload {
   email: string
   role: UserRole
 }
+
+export interface UserListMeta {
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+}
+
+export interface UserRoleCounts {
+  total: number
+  student: number
+  trainer: number
+  admin: number
+}
+
+export interface UserListParams {
+  search?: string
+  role?: UserRole | ''
+  page?: number
+  per_page?: number
+}
