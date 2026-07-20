@@ -1,12 +1,12 @@
 <template>
   <div class="max-w-full">
-    <div class="mb-5 flex items-start justify-between">
+    <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
         <p class="mt-1 text-[13px] text-gray-500">Manage students, trainers, and admin accounts</p>
       </div>
       <button
-        class="inline-flex items-center gap-2 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-blue-700"
+        class="inline-flex items-center justify-center gap-2 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-blue-700 sm:self-start"
         @click="openAddModal"
       >
         <UserPlus :size="16" :stroke-width="1.8" />
@@ -61,8 +61,9 @@
         </div>
       </div>
 
-      <div class="w-full overflow-x-auto">
-        <table class="w-full min-w-[640px] border-collapse text-sm md:min-w-0">
+      <!-- Desktop / tablet: table -->
+      <div class="hidden md:block">
+        <table class="w-full border-collapse text-sm">
           <thead>
             <tr>
               <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">User</th>
@@ -128,6 +129,28 @@
             </template>
           </tbody>
         </table>
+      </div>
+
+      <!-- Mobile: stacked cards -->
+      <div class="divide-y divide-gray-100 md:hidden">
+        <template v-if="loading">
+          <div v-for="n in 3" :key="n" class="animate-pulse space-y-3 px-4 py-4" aria-hidden="true">
+            <div class="h-4 w-2/3 rounded bg-gray-200"></div>
+            <div class="h-3 w-1/3 rounded bg-gray-200"></div>
+          </div>
+        </template>
+        <template v-else>
+          <UserCard
+            v-for="u in users"
+            :key="u.id"
+            :user="u"
+            :avatar-src="avatarSrc(u)"
+            :deleting="deletingId === u.id"
+            @edit="openEditModal(u)"
+            @remove="requestRemoveUser(u)"
+          />
+          <p v-if="users.length === 0" class="px-4 py-6 text-center text-gray-400">No users match your search.</p>
+        </template>
       </div>
 
       <UsersPagination
@@ -234,6 +257,7 @@ import {
 } from 'lucide-vue-next'
 import type { UserRole, ManagedUser, UserRoleCounts } from '@/types/user'
 import StatCard from '@/components/ui/StatCard.vue'
+import UserCard from '@/components/user/UserCard.vue'
 import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
 import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'

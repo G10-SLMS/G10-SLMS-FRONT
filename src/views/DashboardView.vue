@@ -3,7 +3,7 @@
     <h1 class="mb-5 text-2xl font-bold text-gray-900">Welcome, {{ auth.user?.name || 'User' }}</h1>
 
     <!-- Admin dashboard -->
-    <div v-if="auth.isAdmin" class="mb-8 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
+    <div v-if="auth.isAdmin" class="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       <template v-if="statsLoading">
         <StatCardSkeleton v-for="n in 4" :key="n" />
       </template>
@@ -16,7 +16,7 @@
     </div>
 
     <!-- Staff / Trainer dashboard -->
-    <div v-else-if="auth.isTrainer" class="mb-8 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
+    <div v-else-if="auth.isTrainer" class="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       <template v-if="statsLoading">
         <StatCardSkeleton v-for="n in 4" :key="n" />
       </template>
@@ -29,7 +29,7 @@
     </div>
 
     <!-- Student dashboard -->
-    <div v-else-if="auth.isStudent" class="mb-8 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
+    <div v-else-if="auth.isStudent" class="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       <template v-if="statsLoading">
         <StatCardSkeleton v-for="n in 4" :key="n" />
       </template>

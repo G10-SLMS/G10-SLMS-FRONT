@@ -1,17 +1,17 @@
 <template>
   <div class="max-w-full">
-    <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+    <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
       <div>
         <h1>Reports</h1>
         <p class="mt-1 text-[13px] text-gray-500">Leave activity and trends across the organization</p>
       </div>
       <div class="flex items-center gap-2.5">
-        <select v-model="range" class="rounded-md border border-gray-200 bg-white px-2.5 py-[9px] text-[13px] text-gray-700">
+        <select v-model="range" class="w-full rounded-md border border-gray-200 bg-white px-2.5 py-[9px] text-[13px] text-gray-700 sm:w-auto">
           <option value="30d">Last 30 days</option>
           <option value="90d">Last 90 days</option>
           <option value="ytd">Year to date</option>
         </select>
-        <button class="inline-flex items-center gap-2 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-blue-700">
+        <button class="inline-flex shrink-0 items-center gap-2 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-blue-700">
           <Download :size="16" :stroke-width="1.8" />
           Export
         </button>
@@ -43,10 +43,37 @@
     </div>
 
     <div class="rounded-[10px] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
-      <div class="flex items-center justify-between p-5 pb-0">
-        <h2 class="m-0 mb-4 text-base">Monthly Summary</h2>
+      <div class="flex items-center justify-between p-5 pb-4">
+        <h2 class="m-0 text-base">Monthly Summary</h2>
       </div>
-      <div class="w-full overflow-x-auto px-5 pb-5">
+
+      <!-- Mobile card list -->
+      <ul class="divide-y divide-gray-100 px-5 pb-5 sm:hidden">
+        <li v-for="m in monthly" :key="m.month" class="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
+          <p class="m-0 text-sm font-semibold text-gray-900">{{ m.month }}</p>
+          <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px]">
+            <div>
+              <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400">Submitted</span>
+              <p class="m-0 text-gray-700">{{ m.submitted }}</p>
+            </div>
+            <div>
+              <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400">Approved</span>
+              <p class="m-0 text-gray-700">{{ m.approved }}</p>
+            </div>
+            <div>
+              <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400">Rejected</span>
+              <p class="m-0 text-gray-700">{{ m.rejected }}</p>
+            </div>
+            <div>
+              <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400">Approval Rate</span>
+              <p class="m-0 text-gray-700">{{ approvalRate(m) }}%</p>
+            </div>
+          </div>
+        </li>
+      </ul>
+
+      <!-- Desktop / tablet table -->
+      <div class="hidden w-full overflow-x-auto px-5 pb-5 sm:block">
         <table class="w-full min-w-[560px] border-collapse text-sm md:min-w-0">
           <thead>
             <tr>

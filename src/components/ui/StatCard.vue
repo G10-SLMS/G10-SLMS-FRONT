@@ -1,13 +1,13 @@
 <template>
-  <div class="rounded-xl bg-white p-5 shadow-sm">
+  <div class="rounded-xl bg-white p-4 shadow-sm sm:p-5">
     <span
-      class="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+      class="mb-2.5 inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors sm:mb-3 sm:h-9 sm:w-9"
       :class="colorClasses"
     >
       <component :is="icon" :size="18" :stroke-width="1.8" />
     </span>
-    <p class="mb-1 text-xs font-medium text-gray-500">{{ label }}</p>
-    <p class="text-3xl font-bold text-gray-900">{{ value }}</p>
+    <p class="mb-1 text-[11px] font-medium text-gray-500 sm:text-xs">{{ label }}</p>
+    <p class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ value }}</p>
   </div>
 </template>
 

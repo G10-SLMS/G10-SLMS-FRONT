@@ -146,6 +146,20 @@ export interface LeaveTypePayload {
   is_active?: boolean
 }
 
+export interface LeaveRequestDetail {
+  student: string
+  studentAvatarUrl?: string | null
+  leaveType: string
+  reason: string
+  startDate: string
+  endDate: string
+  attachment?: { name: string; url: string } | null
+  status: LeaveStatus
+  reviewer?: string | null
+  reviewDate?: string | null
+  comment?: string | null
+}
+
 export interface LeaveTypeResponse {
   success: boolean
   message: string
