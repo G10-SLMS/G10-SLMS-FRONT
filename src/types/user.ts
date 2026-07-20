@@ -86,6 +86,8 @@ export interface ManagedUser {
   email: string
   role: UserRole
   joined: string
+  avatar_id: number | null
+  avatar_url: string | null
 }
 
 export interface RawUser {
@@ -94,6 +96,8 @@ export interface RawUser {
   email: string
   role: UserRole
   created_at: string
+  avatar_id: number | null
+  avatar_url: string | null
 }
 
 export interface UserPayload {

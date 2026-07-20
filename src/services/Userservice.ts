@@ -13,6 +13,8 @@ function toManagedUser(raw: RawUser): ManagedUser {
     email: raw.email,
     role: raw.role,
     joined: formatJoined(raw.created_at),
+    avatar_id: raw.avatar_id,
+    avatar_url: raw.avatar_url,
   }
 }
 
@@ -28,7 +30,7 @@ export const userService = {
     })
 
     const mapped = data.users.map(toManagedUser)
-    
+
     const meta: UserListMeta = data.meta ?? {
       current_page: params.page ?? 1,
       last_page: 1,

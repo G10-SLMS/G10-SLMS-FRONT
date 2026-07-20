@@ -2,7 +2,7 @@
   <div class="max-w-full">
     <div class="mb-5 flex items-start justify-between">
       <div>
-        <h1>User Management</h1>
+        <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
         <p class="mt-1 text-[13px] text-gray-500">Manage students, trainers, and admin accounts</p>
       </div>
       <button
@@ -78,8 +78,14 @@
               <tr v-for="u in users" :key="u.id" class="border-b border-gray-100 last:border-none">
               <td class="px-2 py-3 text-left">
                 <div class="flex items-center gap-2.5">
-                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-xs font-semibold text-white">
-                    {{ initials(u.name) }}
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white">
+                    <img
+                      v-if="u.avatar_url"
+                      :src="u.avatar_url"
+                      alt=""
+                      class="h-full w-full object-cover"
+                    />
+                    <template v-else>{{ initials(u.name) }}</template>
                   </span>
                   <p class="m-0 font-medium">{{ u.name }}</p>
                 </div>
