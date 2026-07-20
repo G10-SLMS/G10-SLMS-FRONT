@@ -78,3 +78,26 @@ export interface ChangePasswordPayload {
   new_password: string
   new_password_confirmation: string
 }
+
+// Used by the User Management screen (admin CRUD)
+export interface ManagedUser {
+  id: number
+  name: string
+  email: string
+  role: UserRole
+  joined: string
+}
+
+export interface RawUser {
+  id: number
+  name: string
+  email: string
+  role: UserRole
+  created_at: string
+}
+
+export interface UserPayload {
+  name: string
+  email: string
+  role: UserRole
+}
