@@ -80,8 +80,8 @@
                 <div class="flex items-center gap-2.5">
                   <span class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white">
                     <img
-                      v-if="u.avatar_url"
-                      :src="u.avatar_url"
+                      v-if="avatarSrc(u)"
+                      :src="avatarSrc(u)!"
                       alt=""
                       class="h-full w-full object-cover"
                     />
@@ -115,7 +115,7 @@
                     class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 text-gray-700 cursor-pointer hover:bg-red-100 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Remove user"
                     :disabled="deletingId === u.id"
-                    @click="removeUser(u.id)"
+                    @click="requestRemoveUser(u)"
                   >
                     <Trash2 :size="15" :stroke-width="1.8" />
                   </button>
@@ -207,6 +207,16 @@
         </div>
       </div>
     </Teleport>
+
+    <ConfirmDialog
+      :open="confirmOpen"
+      title="Remove user"
+      :message="confirmMessage"
+      confirm-label="Remove"
+      :loading="!!deletingId"
+      @confirm="confirmRemoveUser"
+      @cancel="cancelRemoveUser"
+    />
   </div>
 </template>
 
@@ -226,9 +236,17 @@ import type { UserRole, ManagedUser, UserRoleCounts } from '@/types/user'
 import StatCard from '@/components/ui/StatCard.vue'
 import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
 import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import UsersPagination from '@/components/leave-request/LeaveRequestsPagination.vue'
 import { userService } from '@/services/userService'
 import { extractErrorMessage } from '@/utils/errors'
+import { useDefaultAvatars } from '@/composables/useDefaultAvatars'
+
+const { urlFor } = useDefaultAvatars()
+
+function avatarSrc(u: ManagedUser): string | null {
+  return u.avatar_url || urlFor(u.avatar_id)
+}
 
 const users = ref<ManagedUser[]>([])
 const loading = ref(true)
@@ -289,6 +307,9 @@ async function fetchUsers(p: number = 1) {
     total.value = result.meta.total
     lastPage.value = result.meta.last_page
     counts.value = result.counts
+    // TEMP DEBUG — remove once avatars are confirmed working.
+    // Check DevTools > Console for this after loading the page.
+    console.log('[UserManagement] first user from API:', users.value[0])
   } catch (err) {
     errorMsg.value = extractErrorMessage(err, 'Failed to load users.')
     users.value = []
@@ -371,9 +392,33 @@ async function saveUser() {
   }
 }
 
-async function removeUser(id: number) {
-  if (!confirm('Are you sure you want to remove this user? This cannot be undone.')) return
+const confirmOpen = ref(false)
+const pendingDeleteUser = ref<ManagedUser | null>(null)
+const confirmMessage = computed(() =>
+  pendingDeleteUser.value
+    ? `Are you sure you want to remove ${pendingDeleteUser.value.name}? This cannot be undone.`
+    : 'Are you sure you want to remove this user? This cannot be undone.'
+)
 
+function requestRemoveUser(u: ManagedUser) {
+  pendingDeleteUser.value = u
+  confirmOpen.value = true
+}
+
+function cancelRemoveUser() {
+  if (deletingId.value) return
+  confirmOpen.value = false
+  pendingDeleteUser.value = null
+}
+
+async function confirmRemoveUser() {
+  if (!pendingDeleteUser.value) return
+  await removeUser(pendingDeleteUser.value.id)
+  confirmOpen.value = false
+  pendingDeleteUser.value = null
+}
+
+async function removeUser(id: number) {
   deletingId.value = id
   errorMsg.value = ''
   successMsg.value = ''
