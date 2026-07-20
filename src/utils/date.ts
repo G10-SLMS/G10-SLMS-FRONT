@@ -1,10 +1,3 @@
-/**
- * Centralized date formatting helpers.
- * Use these instead of calling `new Date(...).toLocaleDateString(...)`
- * inline in components — keeps date display consistent app-wide and
- * makes it a one-line change if the format needs to change later.
- */
-
 const LOCALE = 'en-US'
 
 /** e.g. "Jan 5, 2026" */
@@ -28,4 +21,24 @@ export function formatWeekday(dateStr: string | Date): string {
 /** e.g. "Jan 5 – Jan 10, 2026" */
 export function formatDateRange(start: string | Date, end: string | Date): string {
   return `${formatDateShort(start)} – ${formatDate(end)}`
+}
+
+/** e.g. "Just now", "5m ago", "3h ago", "Yesterday", "Jan 5" */
+export function formatRelativeTime(dateStr: string | Date): string {
+  const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr
+  const seconds = Math.round((Date.now() - date.getTime()) / 1000)
+
+  if (seconds < 45) return 'Just now'
+
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+
+  const days = Math.round(hours / 24)
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return `${days}d ago`
+
+  return formatDateShort(date)
 }

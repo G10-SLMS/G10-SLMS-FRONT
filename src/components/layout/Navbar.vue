@@ -12,13 +12,7 @@
     </div>
 
     <div class="flex items-center gap-2">
-      <button
-        type="button"
-        class="flex items-center justify-center rounded-md text-slate-500 p-2 transition-colors hover:bg-slate-100 hover:text-slate-900"
-        title="Notifications"
-      >
-        <Bell :size="20" />
-      </button>
+      <NotificationBell />
 
       <UserMenu />
     </div>
@@ -26,8 +20,9 @@
 </template>
 
 <script setup lang="ts">
-import { Menu, Bell } from 'lucide-vue-next'
+import { Menu } from 'lucide-vue-next'
 import UserMenu from '@/components/user/UserMenu.vue'
+import NotificationBell from '@/components/layout/NotificationBell.vue'
 
 const emit = defineEmits<{
   (e: 'toggle-sidebar'): void
