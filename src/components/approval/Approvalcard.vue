@@ -1,0 +1,96 @@
+<template>
+  <li class="flex flex-col gap-3 p-4">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex min-w-0 items-center gap-2.5">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white">
+          <img
+            v-if="request.studentAvatarUrl"
+            :src="request.studentAvatarUrl"
+            :alt="request.student"
+            class="h-full w-full object-cover"
+          />
+          <template v-else>{{ getInitials(request.student) }}</template>
+        </span>
+        <p class="m-0 truncate font-semibold text-slate-900">{{ request.student }}</p>
+      </div>
+
+      <LeaveStatusBadge :status="request.status" class="shrink-0" />
+    </div>
+
+    <p class="m-0 text-[13px] font-semibold text-slate-900">{{ request.type }}</p>
+
+    <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px]">
+      <div>
+        <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Start</span>
+        <p class="m-0 text-slate-600">{{ request.startDate }}</p>
+      </div>
+      <div>
+        <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">End</span>
+        <p class="m-0 text-slate-600">{{ request.endDate }}</p>
+      </div>
+    </div>
+
+    <div v-if="request.reason">
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Reason</span>
+      <p class="m-0 text-[13px] text-slate-600">{{ request.reason }}</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+      <button
+        class="flex items-center gap-1 whitespace-nowrap rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50"
+        @click="$emit('view')"
+      >
+        <Eye :size="15" />
+        View
+      </button>
+
+      <template v-if="showActions">
+        <button
+          v-for="action in actions"
+          :key="action.decision"
+          :class="[actionButtonBaseClasses, action.classes]"
+          :disabled="request.processing"
+          @click="$emit('decide', action.decision)"
+        >
+          <component :is="action.icon" :size="15" />
+          {{ action.label }}
+        </button>
+      </template>
+    </div>
+  </li>
+</template>
+
+<script setup lang="ts">
+import { Check, X, Eye } from 'lucide-vue-next'
+import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
+import { getInitials } from '@/utils/initials'
+import type { LeaveRequest, LeaveStatus } from '@/types/leave'
+
+defineProps<{
+  request: LeaveRequest
+  showActions?: boolean
+}>()
+
+defineEmits<{
+  decide: [decision: LeaveStatus]
+  view: []
+}>()
+
+const actionButtonBaseClasses =
+  'flex items-center gap-1 whitespace-nowrap rounded-md border border-transparent px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60'
+
+const actions = [
+  {
+    decision: 'Approved' as const,
+    label: 'Approve',
+    icon: Check,
+    classes: 'bg-green-100 text-green-700 enabled:hover:bg-green-200',
+  },
+  {
+    decision: 'Rejected' as const,
+    label: 'Reject',
+    icon: X,
+    classes: 'bg-red-100 text-red-700 enabled:hover:bg-red-200',
+  },
+]
+</script>
