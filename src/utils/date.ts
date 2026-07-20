@@ -26,6 +26,8 @@ export function formatDateRange(start: string | Date, end: string | Date): strin
 /** e.g. "Just now", "5m ago", "3h ago", "Yesterday", "Jan 5" */
 export function formatRelativeTime(dateStr: string | Date): string {
   const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr
+  if (Number.isNaN(date.getTime())) return '—'
+
   const seconds = Math.round((Date.now() - date.getTime()) / 1000)
 
   if (seconds < 45) return 'Just now'
