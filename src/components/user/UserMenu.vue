@@ -34,12 +34,22 @@
         type="button"
         class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-gray-50 disabled:opacity-50"
         :disabled="loggingOut"
-        @click="logout"
+        @click="requestLogout"
       >
         <LogOut :size="16" />
         <span>{{ loggingOut ? 'Logging out...' : 'Logout' }}</span>
       </button>
     </div>
+
+    <ConfirmDialog
+      :open="confirmOpen"
+      title="Log out"
+      message="Are you sure you want to log out?"
+      confirm-label="Log out"
+      :loading="loggingOut"
+      @confirm="logout"
+      @cancel="confirmOpen = false"
+    />
   </div>
 </template>
 
@@ -48,6 +58,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useDefaultAvatars } from '@/composables/useDefaultAvatars'
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import { User, ChevronDown, UserCircle, LogOut } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -56,6 +67,7 @@ const { urlFor } = useDefaultAvatars()
 
 const menuOpen = ref(false)
 const loggingOut = ref(false)
+const confirmOpen = ref(false)
 const menuRef = ref<HTMLElement | null>(null)
 
 const userName = computed(() => auth.user?.name || 'Guest User')
@@ -81,9 +93,13 @@ function handleClickOutside(e: MouseEvent) {
 onMounted(() => document.addEventListener('mousedown', handleClickOutside))
 onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
 
+function requestLogout() {
+  menuOpen.value = false
+  confirmOpen.value = true
+}
+
 async function logout() {
   loggingOut.value = true
-  menuOpen.value = false
 
   try {
     await auth.logout()
@@ -94,5 +110,6 @@ async function logout() {
   auth.clearSession()
   await router.push('/login')
   loggingOut.value = false
+  confirmOpen.value = false
 }
 </script>
