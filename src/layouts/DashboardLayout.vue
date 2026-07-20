@@ -14,9 +14,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import Navbar from '@/components/Navbar.vue'
-import Sidebar from '@/components/Sidebar.vue'
-import Footer from '@/components/Footer.vue'
+import Navbar from '@/components/layout/Navbar.vue'
+import Sidebar from '@/components/layout/Sidebar.vue'
+import Footer from '@/components/layout/Footer.vue'
 
 const sidebarOpen = ref(false)
 const showApprovals = ref(false)
