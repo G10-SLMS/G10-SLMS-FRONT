@@ -34,6 +34,33 @@ Vue 3 frontend for a web application that manages student leave requests — rep
 - [x] User login and registration fully working end-to-end
 - [x] Role-based UI (sidebar/nav) structure prepared (Filtering logic pending)
 
+## 📅 Sprint 2 — Leave Request System
+* **Duration:** Week 29 (July 14–20, 2026)
+* **Goal:** Implement the core leave request system — full CRUD for leave requests and leave types, connected to the real backend API, so students can submit and track requests, and admins can manage leave type configurations end-to-end.
+
+### 1. Completed Features
+* **Leave Request Form (`LeaveFormView.vue`):** Single reusable component handling both Create and Edit modes (detected via route param). Auto-calculates total leave days, validates required fields and date order, restricts editing to `Pending` requests only, and shows success/error notifications with redirect on save.
+* **Leave Request List (`LeaveRequestView.vue`):** Connected to the real `GET /leave-requests` API, with search, filters (Leave Type, Status, Date Range), pagination, and role-scoped data.
+* **Cancel Action:** Confirmation modal before cancelling; updates status to `Cancelled` via API instead of deleting the record.
+* **Approve / Reject Leave Requests:** Trainer/Admin workflow for reviewing requests.
+* **Leave History:** Search, filter, sort, and pagination across past requests.
+* **Reusable Components:**
+  * `StatusBadge.vue` — color-coded status pill (Pending/Approved/Rejected/Cancelled), reused across Leave Request List, Admin, and Approval views.
+  * `Combobox.vue` (Leave Type Dropdown) — searchable dropdown fetching from `GET /leave-types`, with an `editable` prop toggling strict-dropdown vs. custom-text entry, validation, and empty-state handling.
+* **Admin Leave Type Management:** Full CRUD (create/edit/delete) wired to the real API, with loading states, confirmation before delete, and immediate UI updates.
+* **Profile & Avatar:**
+  * Profile page fetches live user data on load, with loading/error states.
+  * Profile updates sync immediately across navbar/sidebar.
+  * Change Password flow with current-password validation.
+  * Avatar Picker — gender-aware default avatar selection (Male/Female tabs), connected to the real API.
+
+### 2. Sprint 2 Deliverable Checklist
+- [x] Students can create, edit, and cancel leave requests
+- [x] Students can view leave request status and history
+- [x] Admin can manage leave types through the UI
+- [x] Reusable Status Badge and Leave Type Dropdown used consistently
+- [x] Avatar Picker fully gender-aware end-to-end
+- [x] Profile page fetches live data on load
 
 ## 🗂️ Project Structure
 src/
@@ -100,6 +127,7 @@ VITE_API_BASE_URL=http://localhost:8000/api
 VITE_GOOGLE_CLIENT_ID=://googleusercontent.com
 VITE_GITHUB_CLIENT_ID=Ov23liQ90k5noocjxO60
 ```
+---
 *Requirement: Ensures that the SLMS backend (Laravel) is running locally with CORS configured to explicitly allow requests from `http://localhost:5173`.*
 
 ---
@@ -112,7 +140,7 @@ VITE_GITHUB_CLIENT_ID=Ov23liQ90k5noocjxO60
 | **Trainer** | Leave request review, approve/reject actions, comment section |
 | **Student** | Submit leave requests, view personal history/status, cancel pending requests |
 
-> ⚠️ *Note: Role-based UI filtering is not yet fully implemented. The sidebar currently displays the same links to all users. This feature is planned for Sprint 2 once `auth.ts` role state is integrated with global route guards.*
+> ⚠️ *Note: Role-based UI filtering is not yet fully implemented. The sidebar currently displays the same links to all users. This feature is planned for Sprint 3 once `auth.ts` role state is integrated with global route guards.*
 
 ---
 
@@ -143,3 +171,4 @@ VITE_GITHUB_CLIENT_ID=Ov23liQ90k5noocjxO60
 * **Backend API (Laravel):**  [https://github.com/G10-SLMS/G10-SLMS-BACK.git]
 ---
 *Last updated: Sprint 1, Week 28 (July 10, 2026)*
+*Last updated: Sprint 2, Week 29 (July 20, 2026)*
