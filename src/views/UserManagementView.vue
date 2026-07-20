@@ -19,7 +19,7 @@
         <StatCardSkeleton v-for="n in 4" :key="n" />
       </template>
       <template v-else>
-        <StatCard :icon="Users" label="Total Users" :value="users.length" color="blue" />
+        <StatCard :icon="Users" label="Total Users" :value="counts.total" color="blue" />
         <StatCard :icon="GraduationCap" label="Students" :value="counts.student" color="green" />
         <StatCard :icon="UserCheck" label="Trainers" :value="counts.trainer" color="amber" />
         <StatCard :icon="ShieldCheck" label="Admins" :value="counts.admin" color="blue" />
@@ -28,6 +28,10 @@
 
     <div v-if="errorMsg" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       {{ errorMsg }}
+    </div>
+
+    <div v-if="successMsg" class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+      {{ successMsg }}
     </div>
 
     <div class="rounded-[10px] bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
@@ -41,11 +45,13 @@
               type="text"
               placeholder="Search by name or email"
               class="w-[200px] border-none bg-transparent text-[13px] text-gray-900 outline-none max-sm:w-[140px]"
+              @input="onSearchDebounced"
             />
           </div>
           <select
             v-model="roleFilter"
             class="rounded-md border border-gray-200 bg-white px-2.5 py-2 text-[13px] text-gray-700"
+            @change="fetchUsers(1)"
           >
             <option value="all">All roles</option>
             <option value="admin">Admin</option>
@@ -69,7 +75,7 @@
           <tbody>
             <TableRowSkeleton v-if="loading" :rows="5" :columns="5" />
             <template v-else>
-              <tr v-for="u in filteredUsers" :key="u.id" class="border-b border-gray-100 last:border-none">
+              <tr v-for="u in users" :key="u.id" class="border-b border-gray-100 last:border-none">
               <td class="px-2 py-3 text-left">
                 <div class="flex items-center gap-2.5">
                   <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-xs font-semibold text-white">
@@ -100,8 +106,9 @@
                     <Pencil :size="15" :stroke-width="1.8" />
                   </button>
                   <button
-                    class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 text-gray-700 cursor-pointer hover:bg-red-100 hover:text-red-700"
+                    class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 text-gray-700 cursor-pointer hover:bg-red-100 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Remove user"
+                    :disabled="deletingId === u.id"
                     @click="removeUser(u.id)"
                   >
                     <Trash2 :size="15" :stroke-width="1.8" />
@@ -109,19 +116,36 @@
                 </div>
               </td>
             </tr>
-            <tr v-if="filteredUsers.length === 0">
+            <tr v-if="users.length === 0">
               <td colspan="5" class="px-2 py-6 text-center text-gray-400">No users match your search.</td>
             </tr>
             </template>
           </tbody>
         </table>
       </div>
+
+      <UsersPagination
+        v-if="!loading && total > 0"
+        :page="page"
+        :totalPages="totalPages"
+        :total="total"
+        :from="from"
+        :to="to"
+        :perPage="perPage"
+        :visiblePages="visiblePages"
+        :fetchRequests="fetchUsers"
+        @update:per-page="perPage = $event"
+      />
     </div>
 
     <Teleport to="body">
       <div v-if="modalOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-white/45 p-4" @click.self="closeModal">
         <div class="w-full max-w-[420px] rounded-xl bg-white p-6 shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
           <h2 class="mb-4 text-lg">{{ editingUser ? 'Edit User' : 'Add User' }}</h2>
+
+          <div v-if="formError" class="mb-3.5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">
+            {{ formError }}
+          </div>
 
           <label class="mb-3.5 flex flex-col gap-1.5 text-[13px] text-gray-700">
             <span>Full Name</span>
@@ -155,16 +179,23 @@
             </select>
           </label>
 
+          <p v-if="!editingUser" class="mb-3.5 rounded-md bg-blue-50 px-3 py-2 text-[12.5px] text-blue-700">
+            New users are created with the default password
+            <strong>{{ defaultPasswordHint }}</strong>. Share it with them so they can log in and change it.
+          </p>
+
           <div class="mt-5 flex justify-end gap-2.5">
             <button
               class="rounded-md border-none bg-gray-100 px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-gray-200"
+              :disabled="saving"
               @click="closeModal"
             >Cancel</button>
             <button
-              class="rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white cursor-pointer hover:bg-blue-700"
+              class="rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white cursor-pointer hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              :disabled="saving"
               @click="saveUser"
             >
-              {{ editingUser ? 'Save Changes' : 'Add User' }}
+              {{ saving ? 'Saving…' : editingUser ? 'Save Changes' : 'Add User' }}
             </button>
           </div>
         </div>
@@ -174,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue'
+import { ref, computed, reactive, onMounted, watch } from 'vue'
 import {
   UserPlus,
   Users,
@@ -185,77 +216,84 @@ import {
   Pencil,
   Trash2,
 } from 'lucide-vue-next'
-import type { UserRole } from '@/types/user'
+import type { UserRole, ManagedUser, UserRoleCounts } from '@/types/user'
 import StatCard from '@/components/ui/StatCard.vue'
 import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
 import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
-import api from '@/services/api'
+import UsersPagination from '@/components/leave-request/LeaveRequestsPagination.vue'
+import { userService } from '@/services/userService'
 import { extractErrorMessage } from '@/utils/errors'
-import { formatDate } from '@/utils/date'
-
-interface ManagedUser {
-  id: number
-  name: string
-  email: string
-  role: UserRole
-  joined: string
-}
-
-interface RawUser {
-  id: number
-  name: string
-  email: string
-  role: UserRole
-  created_at: string
-}
 
 const users = ref<ManagedUser[]>([])
 const loading = ref(true)
 const errorMsg = ref('')
+const successMsg = ref('')
+const defaultPasswordHint = '12345678'
 
-function formatJoined(dateStr: string): string {
-  if (!dateStr) return '—'
-  return formatDate(dateStr)
+const search = ref('')
+const roleFilter = ref<'all' | UserRole>('all')
+
+const page = ref(1)
+const perPage = ref(10)
+const total = ref(0)
+const lastPage = ref(1)
+
+const counts = ref<UserRoleCounts>({ total: 0, student: 0, trainer: 0, admin: 0 })
+
+const totalPages = computed(() => lastPage.value)
+const from = computed(() => (total.value === 0 ? 0 : (page.value - 1) * perPage.value + 1))
+const to = computed(() => Math.min(page.value * perPage.value, total.value))
+
+const visiblePages = computed(() => {
+  const current = page.value
+  const last = lastPage.value
+  const delta = 2
+
+  const range: number[] = []
+  for (let i = Math.max(2, current - delta); i <= Math.min(last - 1, current + delta); i++) range.push(i)
+
+  const pages: number[] = [1]
+  if (range[0] > 2) pages.push(-1)
+  pages.push(...range)
+  if (range[range.length - 1] < last - 1) pages.push(-1)
+  if (last > 1) pages.push(last)
+  return pages
+})
+
+let searchTimeout: ReturnType<typeof setTimeout> | undefined
+
+function onSearchDebounced() {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => fetchUsers(1), 400)
 }
 
-async function loadUsers() {
+async function fetchUsers(p: number = 1) {
   loading.value = true
   errorMsg.value = ''
+  page.value = p
+
   try {
-    const { data } = await api.get<{ users: RawUser[]; count: number }>('/users')
-    users.value = data.users.map((u) => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      role: u.role,
-      joined: formatJoined(u.created_at),
-    }))
+    const result = await userService.getUsers({
+      search: search.value.trim() || undefined,
+      role: roleFilter.value === 'all' ? undefined : roleFilter.value,
+      page: p,
+      per_page: perPage.value,
+    })
+    users.value = result.data
+    total.value = result.meta.total
+    lastPage.value = result.meta.last_page
+    counts.value = result.counts
   } catch (err) {
     errorMsg.value = extractErrorMessage(err, 'Failed to load users.')
+    users.value = []
   } finally {
     loading.value = false
   }
 }
 
-onMounted(loadUsers)
+onMounted(() => fetchUsers(1))
 
-const search = ref('')
-const roleFilter = ref<'all' | UserRole>('all')
-
-const counts = computed(() => ({
-  student: users.value.filter((u) => u.role === 'student').length,
-  trainer: users.value.filter((u) => u.role === 'trainer').length,
-  admin: users.value.filter((u) => u.role === 'admin').length,
-}))
-
-const filteredUsers = computed(() =>
-  users.value.filter((u) => {
-    const matchesRole = roleFilter.value === 'all' || u.role === roleFilter.value
-    const q = search.value.trim().toLowerCase()
-    const matchesSearch = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
-    return matchesRole && matchesSearch
-  }),
-)
+watch(perPage, () => fetchUsers(1))
 
 function initials(name: string) {
   return name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
@@ -268,12 +306,16 @@ function roleLabel(role: UserRole) {
 const modalOpen = ref(false)
 const editingUser = ref<ManagedUser | null>(null)
 const form = reactive({ name: '', email: '', role: 'student' as UserRole })
+const saving = ref(false)
+const formError = ref('')
+const deletingId = ref<number | null>(null)
 
 function openAddModal() {
   editingUser.value = null
   form.name = ''
   form.email = ''
   form.role = 'student'
+  formError.value = ''
   modalOpen.value = true
 }
 
@@ -282,35 +324,64 @@ function openEditModal(u: ManagedUser) {
   form.name = u.name
   form.email = u.email
   form.role = u.role
+  formError.value = ''
   modalOpen.value = true
 }
 
 function closeModal() {
+  if (saving.value) return
   modalOpen.value = false
 }
 
-function saveUser() {
-  if (!form.name.trim() || !form.email.trim()) return
-
-  if (editingUser.value) {
-    const idx = users.value.findIndex((u) => u.id === editingUser.value!.id)
-    if (idx !== -1) {
-      users.value[idx] = { ...users.value[idx], name: form.name, email: form.email, role: form.role }
-    }
-  } else {
-    users.value.push({
-      id: Math.max(0, ...users.value.map((u) => u.id)) + 1,
-      name: form.name,
-      email: form.email,
-      role: form.role,
-      joined: formatDate(new Date()),
-    })
+async function saveUser() {
+  const name = form.name.trim()
+  const email = form.email.trim()
+  if (!name || !email) {
+    formError.value = 'Name and email are required.'
+    return
   }
 
-  modalOpen.value = false
+  saving.value = true
+  formError.value = ''
+  errorMsg.value = ''
+  successMsg.value = ''
+
+  try {
+    if (editingUser.value) {
+      await userService.updateUser(editingUser.value.id, { name, email, role: form.role })
+      successMsg.value = 'User updated successfully.'
+      await fetchUsers(page.value)
+    } else {
+      const { defaultPassword } = await userService.createUser({ name, email, role: form.role })
+      successMsg.value = `User created. They can log in with the default password: ${defaultPassword}`
+      await fetchUsers(1)
+    }
+
+    modalOpen.value = false
+  } catch (err) {
+    formError.value = extractErrorMessage(err, 'Failed to save user.')
+  } finally {
+    saving.value = false
+  }
 }
 
-function removeUser(id: number) {
-  users.value = users.value.filter((u) => u.id !== id)
+async function removeUser(id: number) {
+  if (!confirm('Are you sure you want to remove this user? This cannot be undone.')) return
+
+  deletingId.value = id
+  errorMsg.value = ''
+  successMsg.value = ''
+
+  try {
+    await userService.deleteUser(id)
+    successMsg.value = 'User removed successfully.'
+    const nextPage = users.value.length === 1 && page.value > 1 ? page.value - 1 : page.value
+    await fetchUsers(nextPage)
+  } catch (err) {
+    errorMsg.value = extractErrorMessage(err, 'Failed to remove user.')
+  } finally {
+    deletingId.value = null
+  }
 }
+
 </script>

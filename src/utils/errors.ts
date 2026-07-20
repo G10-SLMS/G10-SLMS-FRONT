@@ -1,3 +1,5 @@
+import { isAxiosError } from 'axios'
+
 export function extractErrorMessage(
   error: unknown,
   fallback = 'Something went wrong. Please try again.',
