@@ -1,12 +1,12 @@
 <template>
   <div class="max-w-full">
-    <div class="mb-6 flex items-start justify-between">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h1 class="text-[22px] font-bold tracking-tight text-slate-900">Leave Types Management</h1>
         <p class="mt-1 text-[13px] text-slate-500">Define the leave categories available to students and trainers</p>
       </div>
       <button
-        class="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
+        class="inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 sm:self-start"
         @click="openAddModal"
       >
         <Plus :size="16" :stroke-width="2" />
@@ -16,13 +16,14 @@
 
     <p v-if="errMsg" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{{ errMsg }}</p>
 
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_4px_rgba(15,23,42,0.06)]">
-      <div class="mb-4 flex items-center justify-between">
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-[0_1px_4px_rgba(15,23,42,0.06)] sm:p-6">
+      <div class="mb-4 flex items-center justify-between px-4 pt-4 sm:px-0 sm:pt-0">
         <h2 class="m-0 text-base font-bold text-slate-900">All Leave Types</h2>
       </div>
 
-      <div class="w-full overflow-x-auto">
-        <table class="w-full min-w-[560px] border-collapse text-sm md:min-w-0">
+      <!-- Desktop / tablet: table -->
+      <div class="hidden md:block md:px-0">
+        <table class="w-full border-collapse text-sm">
           <thead>
             <tr>
               <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Leave Type</th>
@@ -49,6 +50,27 @@
             </template>
           </tbody>
         </table>
+      </div>
+
+      <!-- Mobile: stacked cards -->
+      <div class="divide-y divide-slate-100 md:hidden">
+        <template v-if="loading">
+          <div v-for="n in 3" :key="n" class="animate-pulse space-y-3 px-4 py-4" aria-hidden="true">
+            <div class="h-4 w-2/3 rounded bg-slate-200"></div>
+            <div class="h-3 w-1/3 rounded bg-slate-200"></div>
+          </div>
+        </template>
+        <template v-else>
+          <LeaveTypeCard
+            v-for="lt in leaveTypes"
+            :key="lt.id"
+            :leave-type="lt"
+            @edit="openEditModal(lt)"
+            @toggle="confirmToggle(lt)"
+            @remove="confirmRemove(lt)"
+          />
+          <p v-if="leaveTypes.length === 0" class="px-4 py-8 text-center text-sm text-slate-400">No leave types yet. Add one to get started.</p>
+        </template>
       </div>
     </div>
 
@@ -79,6 +101,7 @@ import { ref, reactive, computed } from 'vue'
 import { Plus } from 'lucide-vue-next'
 import type { AxiosError } from 'axios'
 import LeaveTypeRow from '@/components/leave-type/LeaveTypeRow.vue'
+import LeaveTypeCard from '@/components/leave-type/LeaveTypeCard.vue'
 import LeaveTypeModal from '@/components/leave-type/LeaveTypeModal.vue'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
