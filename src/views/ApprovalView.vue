@@ -37,6 +37,7 @@
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
+            <option value="cancelled">Cancelled</option>
             <option value="">All statuses</option>
           </select>
           <ChevronDown :size="14" class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -212,7 +213,7 @@ interface LeaveRequest {
   startDate: string
   endDate: string
   reason: string
-  status: 'Pending' | 'Approved' | 'Rejected'
+  status: 'Pending' | 'Approved' | 'Rejected' | 'Cancelled'
   processing?: boolean
 }
 

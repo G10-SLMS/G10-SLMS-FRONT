@@ -110,7 +110,7 @@ export interface RawApiEnvelope<T> {
   meta?: RawPaginationMeta
 }
 
-export type LeaveStatus = 'Pending' | 'Approved' | 'Rejected'
+export type LeaveStatus = 'Pending' | 'Approved' | 'Rejected' | 'Cancelled'
 
 export interface LeaveRequest {
   id: number
