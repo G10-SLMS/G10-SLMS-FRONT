@@ -96,7 +96,15 @@ export const leaveService = {
     page?: number
     per_page?: number
   }) {
-    const { data } = await api.get<RawApiEnvelope<RawLeaveRequest[]>>('/leave-requests', { params })
+ 
+    const { date_from, date_to, ...rest } = params ?? {}
+    const requestParams = {
+      ...rest,
+      ...(date_from ? { start_date: date_from } : {}),
+      ...(date_to ? { end_date: date_to } : {}),
+    }
+
+    const { data } = await api.get<RawApiEnvelope<RawLeaveRequest[]>>('/leave-requests', { params: requestParams })
     const meta = data.meta
     return {
       data: data.data.map(toListItem),

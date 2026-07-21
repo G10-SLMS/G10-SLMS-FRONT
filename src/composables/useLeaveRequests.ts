@@ -43,30 +43,6 @@ export function useLeaveRequests() {
 
   const totalPages = computed(() => lastPage.value)
 
-  const displayItems = computed(() => {
-    return items.value.filter((item) => {
-      if (filters.leave_type_id && String(item.leave_type_id) !== String(filters.leave_type_id)) {
-        return false
-      }
-      if (filters.status && item.status !== filters.status) {
-        return false
-      }
-      if (filters.date_from && item.start_date < filters.date_from) {
-        return false
-      }
-      if (filters.date_to && item.end_date > filters.date_to) {
-        return false
-      }
-      if (filters.search) {
-        const term = filters.search.trim().toLowerCase()
-        const matchesId = String(item.id).includes(term)
-        const matchesType = item.leave_type_name.toLowerCase().includes(term)
-        if (!matchesId && !matchesType) return false
-      }
-      return true
-    })
-  })
-
   const from = computed(() => (total.value === 0 ? 0 : (page.value - 1) * perPage.value + 1))
   const to = computed(() => Math.min(page.value * perPage.value, total.value))
 
@@ -255,7 +231,6 @@ export function useLeaveRequests() {
   return {
     authStore,
     items,
-    displayItems,
     leaveTypes,
     loading,
     errMsg,
