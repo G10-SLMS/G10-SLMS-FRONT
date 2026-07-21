@@ -35,55 +35,48 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { UserCheck } from 'lucide-vue-next';
-import { leaveService } from '@/services/leaveService';
-import { todayKey } from '@/utils/date';
-import { useAuthStore } from '@/stores/auth';
-import ActivityListSkeleton from '@/components/shared/ActivityListSkeleton.vue';
-import TodayLeaveListItem from '@/components/dashboard/TodayLeaveListItem.vue';
-import type { LeaveRequestListItem } from '@/types/leave';
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { UserCheck } from 'lucide-vue-next'
+import { leaveService } from '@/services/leaveService'
+import { todayKey } from '@/utils/date'
+import ActivityListSkeleton from '@/components/shared/ActivityListSkeleton.vue'
+import TodayLeaveListItem from '@/components/dashboard/TodayLeaveListItem.vue'
+import type { LeaveRequestListItem } from '@/types/leave'
 
-const MAX_VISIBLE = 3;
+const MAX_VISIBLE = 3
 
-const router = useRouter();
-const auth = useAuthStore();
+const router = useRouter()
 
-const canReview = computed(() => auth.isTrainer || auth.isAdmin);
+const items = ref<LeaveRequestListItem[]>([])
+const loading = ref(true)
+const error = ref('')
 
-const items = ref<LeaveRequestListItem[]>([]);
-const loading = ref(true);
-const error = ref('');
-
-const visibleItems = computed(() => items.value.slice(0, MAX_VISIBLE));
-const hasMore = computed(() => items.value.length > MAX_VISIBLE);
+const visibleItems = computed(() => items.value.slice(0, MAX_VISIBLE))
+const hasMore = computed(() => items.value.length > MAX_VISIBLE)
 
 function goToRequest(id: number) {
-  router.push({ name: 'LeaveRequests', query: { request: String(id) } });
+  router.push({ name: 'LeaveRequests', query: { request: String(id) } })
 }
 
 function seeMore() {
-  router.push({
-    name: canReview.value ? 'Approvals' : 'LeaveRequests',
-    query: { status: 'approved' },
-  });
+  router.push({ name: 'LeaveRequests', query: { status: 'approved' } })
 }
 
 async function load() {
-  loading.value = true;
-  error.value = '';
-  const today = todayKey();
+  loading.value = true
+  error.value = ''
+  const today = todayKey()
 
   try {
-    const result = await leaveService.getLeaveRequests({ status: 'approved', per_page: 100 });
-    items.value = result.data.filter((item) => (item.reviewed_at ?? '').slice(0, 10) === today);
+    const result = await leaveService.getLeaveRequests({ status: 'approved', per_page: 100 })
+    items.value = result.data.filter((item) => (item.reviewed_at ?? '').slice(0, 10) === today)
   } catch {
-    error.value = "Failed to load today's approvals.";
+    error.value = 'Failed to load today\'s approvals.'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-onMounted(load);
+onMounted(load)
 </script>
