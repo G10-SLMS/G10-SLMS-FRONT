@@ -1,4 +1,3 @@
-
 export interface LeaveRequestUser {
   id: number
   name: string
@@ -52,6 +51,7 @@ export interface LeaveRequestListItem {
   submission_date: string
   created_at: string
   updated_at: string
+  reviewed_at: string | null
 }
 
 export interface PaginatedResponse<T> {

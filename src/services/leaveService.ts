@@ -45,6 +45,7 @@ function toListItem(raw: RawLeaveRequest): LeaveRequestListItem {
     submission_date: formatSubmissionDate(raw.created_at),
     created_at: raw.created_at,
     updated_at: raw.updated_at,
+    reviewed_at: raw.reviewed_at ?? null,
   }
 }
 
