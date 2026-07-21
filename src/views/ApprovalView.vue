@@ -278,7 +278,7 @@ async function fetchRequests(p?: number) {
 }
 
 onMounted(async () => {
-  await loadRequests()
+  await fetchRequests()
 
   const idParam = route.query.request
   if (idParam) {
