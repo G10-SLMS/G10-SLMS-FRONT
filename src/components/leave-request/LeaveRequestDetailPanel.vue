@@ -116,36 +116,35 @@ function formatDate(value: string): string {
 </script>
 
 <script lang="ts">
-if (import.meta.env.DEV) {
-  import { defineComponent, h } from 'vue'
-  import LeaveRequestDetailPanel from './LeaveRequestDetailPanel.vue'
-  import type { LeaveRequestDetail } from '@/types/leave'
+import { defineComponent, h } from 'vue'
+import LeaveRequestDetailPanel from './LeaveRequestDetailPanel.vue'
+import type { LeaveRequestDetail } from '@/types/leave'
 
-  const mockRequest: LeaveRequestDetail = {
-    student: 'Alice Johnson',
-    studentAvatarUrl: null,
-    leaveType: 'Sick Leave',
-    reason: 'Medical appointment at Bangkok Hospital. Doctor advised 2 days rest.',
-    startDate: '2026-07-22',
-    endDate: '2026-07-23',
-    attachment: { name: 'medical_certificate.pdf', url: '#' },
-    status: 'Pending',
-    reviewer: null,
-    reviewDate: null,
-    comment: null,
-  }
-
-  const LeaveRequestDetailDemo = defineComponent({
-    name: 'LeaveRequestDetailDemo',
-    setup() {
-      return () =>
-        h('div', { class: 'mx-auto max-w-2xl p-6' }, [
-          h('h2', { class: 'mb-4 text-lg font-bold text-slate-900' }, 'Leave Request Detail Panel — Demo'),
-          h(LeaveRequestDetailPanel, { request: mockRequest }),
-        ])
-    },
-  })
-
-  export default LeaveRequestDetailDemo
+const mockRequest: LeaveRequestDetail = {
+  student: 'Alice Johnson',
+  studentAvatarUrl: null,
+  leaveType: 'Sick Leave',
+  reason: 'Medical appointment at Bangkok Hospital. Doctor advised 2 days rest.',
+  startDate: '2026-07-22',
+  endDate: '2026-07-23',
+  attachment: { name: 'medical_certificate.pdf', url: '#' },
+  status: 'Pending',
+  reviewer: null,
+  reviewDate: null,
+  comment: null,
 }
+
+const LeaveRequestDetailDemo = defineComponent({
+  name: 'LeaveRequestDetailDemo',
+  setup() {
+    if (!import.meta.env.DEV) return () => null
+    return () =>
+      h('div', { class: 'mx-auto max-w-2xl p-6' }, [
+        h('h2', { class: 'mb-4 text-lg font-bold text-slate-900' }, 'Leave Request Detail Panel — Demo'),
+        h(LeaveRequestDetailPanel, { request: mockRequest }),
+      ])
+  },
+})
+
+export default LeaveRequestDetailDemo
 </script>
