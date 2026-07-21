@@ -117,23 +117,42 @@ const editingType = ref<LeaveType | null>(null)
 const saving = ref(false)
 const formError = ref('')
 
-type PendingAction = { type: 'delete' | 'deactivate'; leaveType: LeaveType }
+type PendingAction = { type: 'delete' | 'deactivate' | 'activate'; leaveType: LeaveType }
 const pendingAction = ref<PendingAction | null>(null)
 const confirmOpen = ref(false)
 const confirmLoading = ref(false)
 
-const confirmTitle = computed(() =>
-  pendingAction.value?.type === 'delete' ? 'Delete leave type?' : 'Deactivate leave type?',
-)
+const confirmTitle = computed(() => {
+  switch (pendingAction.value?.type) {
+    case 'delete':
+      return 'Delete leave type?'
+    case 'activate':
+      return 'Activate leave type?'
+    default:
+      return 'Deactivate leave type?'
+  }
+})
 const confirmMessage = computed(() => {
   const name = pendingAction.value?.leaveType.name ?? ''
-  return pendingAction.value?.type === 'delete'
-    ? `Are you sure you want to delete '${name}'? This cannot be undone.`
-    : `Are you sure you want to deactivate '${name}'? Students and trainers won't be able to select it until it's reactivated.`
+  switch (pendingAction.value?.type) {
+    case 'delete':
+      return `Are you sure you want to delete '${name}'? This cannot be undone.`
+    case 'activate':
+      return `Are you sure you want to activate '${name}'? Students and trainers will be able to select it again.`
+    default:
+      return `Are you sure you want to deactivate '${name}'? Students and trainers won't be able to select it until it's reactivated.`
+  }
 })
-const confirmLabel = computed(() =>
-  pendingAction.value?.type === 'delete' ? 'Delete' : 'Deactivate',
-)
+const confirmLabel = computed(() => {
+  switch (pendingAction.value?.type) {
+    case 'delete':
+      return 'Delete'
+    case 'activate':
+      return 'Activate'
+    default:
+      return 'Deactivate'
+  }
+})
 
 const form = reactive<LeaveTypePayload>({
   name: '',
@@ -233,30 +252,13 @@ function confirmRemove(lt: LeaveType) {
 }
 
 function confirmToggle(lt: LeaveType) {
-  if (!lt.is_active) {
-    toggleActive(lt)
-    return
-  }
-  pendingAction.value = { type: 'deactivate', leaveType: lt }
+  pendingAction.value = { type: lt.is_active ? 'deactivate' : 'activate', leaveType: lt }
   confirmOpen.value = true
 }
 
 function cancelConfirm() {
   confirmOpen.value = false
   pendingAction.value = null
-}
-
-async function toggleActive(lt: LeaveType) {
-  if (!lt.id) return
-  const previous = lt.is_active
-  lt.is_active = !lt.is_active
-  try {
-    const updated = await leaveService.updateLeaveType(lt.id, { is_active: lt.is_active })
-    Object.assign(lt, updated)
-  } catch (err) {
-    lt.is_active = previous
-    errMsg.value = extractError(err, 'Failed to update leave type status.')
-  }
 }
 
 async function handleConfirmed() {
@@ -269,13 +271,20 @@ async function handleConfirmed() {
       await leaveService.deleteLeaveType(action.leaveType.id)
       leaveTypes.value = leaveTypes.value.filter((item) => item.id !== action.leaveType.id)
     } else {
-      const updated = await leaveService.updateLeaveType(action.leaveType.id, { is_active: false })
+      const updated = await leaveService.updateLeaveType(action.leaveType.id, {
+        is_active: action.type === 'activate',
+      })
       Object.assign(action.leaveType, updated)
     }
     confirmOpen.value = false
     pendingAction.value = null
   } catch (err) {
-    const fallback = action.type === 'delete' ? 'Failed to delete leave type.' : 'Failed to deactivate leave type.'
+    const fallback =
+      action.type === 'delete'
+        ? 'Failed to delete leave type.'
+        : action.type === 'activate'
+          ? 'Failed to activate leave type.'
+          : 'Failed to deactivate leave type.'
     errMsg.value = extractError(err, fallback)
     confirmOpen.value = false
   } finally {
