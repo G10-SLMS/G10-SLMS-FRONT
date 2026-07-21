@@ -59,6 +59,8 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useLeaveRequests } from '@/composables/useLeaveRequests'
 
 import LeaveRequestsHero from '@/components/leave-request/LeaveRequestsHero.vue'
@@ -70,6 +72,9 @@ import LeaveEmptyState from '@/components/leave-request/LeaveEmptyState.vue'
 import LeaveRequestsTable from '@/components/leave-request/LeaveRequestsTable.vue'
 import LeaveRequestsPagination from '@/components/leave-request/LeaveRequestsPagination.vue'
 import CancelLeaveModal from '@/components/leave-request/CancelLeaveModal.vue'
+
+const route = useRoute()
+const router = useRouter()
 
 const {
   items,
@@ -99,4 +104,13 @@ const {
   confirmCancel,
   doCancel,
 } = useLeaveRequests()
+
+onMounted(() => {
+  const idParam = route.query.request
+  if (!idParam) return
+
+  const numericId = Number(idParam)
+  if (Number.isFinite(numericId)) viewRequest(numericId)
+  router.replace({ query: { ...route.query, request: undefined } })
+})
 </script>

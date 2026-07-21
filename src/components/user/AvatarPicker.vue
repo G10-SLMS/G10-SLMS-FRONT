@@ -5,8 +5,8 @@
         class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-slate-100 bg-slate-700 text-[22px] font-bold text-white shadow-md"
       >
         <img
-          v-if="selectedAvatarUrl"
-          :src="selectedAvatarUrl"
+          v-if="previewUrl"
+          :src="previewUrl"
           alt="Avatar preview"
           class="h-full w-full object-cover"
         />
@@ -46,7 +46,7 @@
           type="button"
           class="h-12 w-12 overflow-hidden rounded-full border-2 transition"
           :class="
-            avatar.id === selectedId
+            isSelected(avatar.id)
               ? 'border-cyan-500 ring-2 ring-cyan-100'
               : 'border-transparent hover:border-slate-200'
           "
@@ -109,8 +109,21 @@ const genderTabs = computed(() => {
 const activeTab = ref<TabValue>((props.preferredGender as TabValue) || 'all');
 const expanded = ref(false);
 
-// Keep the tab in sync if the parent's gender field changes after mount
-// (e.g. the user picks their gender for the first time).
+function idsMatch(a: number | string | null | undefined, b: number | string | null | undefined) {
+  if (a === null || a === undefined || b === null || b === undefined) return false;
+  return Number(a) === Number(b);
+}
+
+function isSelected(id: number) {
+  return idsMatch(id, props.selectedId);
+}
+
+const selectedAvatar = computed(() =>
+  props.avatars.find((a) => idsMatch(a.id, props.selectedId)) ?? null,
+);
+
+const previewUrl = computed(() => selectedAvatar.value?.url ?? props.selectedAvatarUrl ?? null);
+
 watch(
   () => props.preferredGender,
   (gender) => {
@@ -118,8 +131,16 @@ watch(
   },
 );
 
-// Collapse back to the preview count whenever the tab changes, so switching
-// from "Male" to "All" doesn't leave a huge grid expanded by surprise.
+watch(
+  selectedAvatar,
+  (avatar) => {
+    if (avatar?.gender && activeTab.value !== 'all' && activeTab.value !== avatar.gender) {
+      activeTab.value = avatar.gender;
+    }
+  },
+  { immediate: true },
+);
+
 watch(activeTab, () => {
   expanded.value = false;
 });
