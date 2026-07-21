@@ -361,7 +361,7 @@ async function handleReviewConfirm(note: string) {
   errorMsg.value = ''
   try {
     if (mode === 'approve') {
-      await leaveService.approveLeaveRequest(request.id)
+      await leaveService.approveLeaveRequest(request.id, note)
       request.status = 'Approved'
       notificationStore.addNotification({
         message: 'Leave request approved successfully.',

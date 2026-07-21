@@ -37,7 +37,7 @@
           View
         </button>
 
-        <template v-if="showActions">
+        <template v-if="canDecide">
           <button
             v-for="action in actions"
             :key="action.decision"
@@ -56,11 +56,12 @@
 
 <script setup lang="ts">
 import { Check, X, Eye } from 'lucide-vue-next'
+import { computed } from 'vue'
 import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
 import { getInitials } from '@/utils/initials'
 import type { LeaveRequest } from '@/types/leave'
 
-defineProps<{
+const props = defineProps<{
   request: LeaveRequest
   showActions?: boolean
 }>()
@@ -69,6 +70,8 @@ defineEmits<{
   decide: [decision: 'Approved' | 'Rejected']
   view: []
 }>()
+
+const canDecide = computed(() => !!props.showActions && props.request.status === 'Pending')
 
 const actionButtonBaseClasses =
   'flex items-center gap-1 whitespace-nowrap rounded-md border border-transparent px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60'
