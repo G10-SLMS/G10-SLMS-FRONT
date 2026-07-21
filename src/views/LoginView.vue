@@ -33,7 +33,7 @@ function fillDemo(kind: 'student' | 'fellow' | 'trainer') {
 }
 
 function socialLogin(provider: 'google' | 'github') {
-  window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/${provider}/redirect`
+  auth.socialLogin(provider)
 }
 
 function handleForgotPassword() {
@@ -41,8 +41,6 @@ function handleForgotPassword() {
 }
 
 async function handleSubmit() {
-  // Note: the backend's /login endpoint only accepts email + password —
-  // there's no "remember me" or role parameter on AuthController::login.
   const success = await auth.login({
     email: form.email,
     password: form.password,
