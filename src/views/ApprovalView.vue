@@ -119,20 +119,13 @@
       </div>
     </div>
 
-    <RejectReasonModal
-      :open="rejectTarget !== null"
-      :submitting="rejecting"
-      @close="rejectTarget = null"
-      @confirm="confirmReject"
-    />
-    <ConfirmDialog
-      :open="approveTarget !== null"
-      title="Approve Leave Request"
-      message="Are you sure you want to approve this leave request?"
-      confirm-label="Approve"
-      :loading="approving"
-      @confirm="confirmApprove"
-      @cancel="approveTarget = null"
+    <ReviewCommentModal
+      :open="reviewTarget !== null"
+      :mode="reviewTarget?.mode ?? 'approve'"
+      :student-name="reviewTarget?.request.student"
+      :submitting="reviewSubmitting"
+      @close="reviewTarget = null"
+      @confirm="handleReviewConfirm"
     />
   </div>
 </template>
@@ -143,8 +136,7 @@ import { CheckCircle2, Search, SearchX, ChevronDown, X } from 'lucide-vue-next'
 import ApprovalRow from '@/components/approval/ApprovalRow.vue'
 import ApprovalCard from '@/components/approval/ApprovalCard.vue'
 import ApprovalLoadingSkeleton from '@/components/approval/ApprovalLoadingSkeleton.vue'
-import RejectReasonModal from '@/components/approval/RejectReasonModal.vue'
-import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
+import ReviewCommentModal from '@/components/approval/ReviewCommentModal.vue'
 import { leaveService } from '@/services/leaveService'
 import { extractErrorMessage } from '@/utils/errors'
 import { formatDate } from '@/utils/date'
@@ -176,11 +168,8 @@ const requests = ref<LeaveRequest[]>([])
 const loading = ref(true)
 const errorMsg = ref('')
 
-const rejectTarget = ref<LeaveRequest | null>(null)
-const rejecting = ref(false)
-
-const approveTarget = ref<LeaveRequest | null>(null)
-const approving = ref(false)
+const reviewTarget = ref<{ request: LeaveRequest; mode: 'approve' | 'reject' } | null>(null)
+const reviewSubmitting = ref(false)
 
 function statusToTab(status: string): LeaveRequest['status'] {
   if (status === 'approved') return 'Approved'
@@ -256,55 +245,40 @@ function friendlyErrorMessage(err: unknown): string {
 }
 
 async function handleDecision(request: LeaveRequest, decision: 'Approved' | 'Rejected') {
-  if (decision === 'Rejected') {
-    rejectTarget.value = request
-    return
-  }
-
-  if (decision === 'Approved') {
-    approveTarget.value = request
-    return
+  reviewTarget.value = {
+    request,
+    mode: decision === 'Approved' ? 'approve' : 'reject',
   }
 }
 
-async function confirmApprove() {
-  if (!approveTarget.value) return
-  const request = approveTarget.value
-  approving.value = true
+async function handleReviewConfirm(note: string) {
+  if (!reviewTarget.value) return
+  const { request, mode } = reviewTarget.value
+  reviewSubmitting.value = true
   errorMsg.value = ''
   try {
-    await leaveService.approveLeaveRequest(request.id)
-    request.status = 'Approved'
-    notificationStore.addNotification({
-      message: 'Leave request approved successfully.',
-      type: 'success',
-      read: false,
-    })
-    approveTarget.value = null
+    if (mode === 'approve') {
+      await leaveService.approveLeaveRequest(request.id)
+      request.status = 'Approved'
+      notificationStore.addNotification({
+        message: 'Leave request approved successfully.',
+        type: 'success',
+        read: false,
+      })
+    } else {
+      await leaveService.rejectLeaveRequest(request.id, note)
+      request.status = 'Rejected'
+      notificationStore.addNotification({
+        message: 'Leave request rejected successfully.',
+        type: 'success',
+        read: false,
+      })
+    }
+    reviewTarget.value = null
   } catch (err) {
     errorMsg.value = friendlyErrorMessage(err)
   } finally {
-    approving.value = false
-  }
-}
-
-async function confirmReject(reason: string) {
-  if (!rejectTarget.value) return
-  rejecting.value = true
-  errorMsg.value = ''
-  try {
-    await leaveService.rejectLeaveRequest(rejectTarget.value.id, reason)
-    rejectTarget.value.status = 'Rejected'
-    notificationStore.addNotification({
-      message: 'Leave request rejected successfully.',
-      type: 'success',
-      read: false,
-    })
-    rejectTarget.value = null
-  } catch (err) {
-    errorMsg.value = friendlyErrorMessage(err)
-  } finally {
-    rejecting.value = false
+    reviewSubmitting.value = false
   }
 }
 </script>
