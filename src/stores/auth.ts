@@ -79,9 +79,6 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout(): Promise<void> {
-    // Attempt server-side token revocation.
-    // clearSession() is called by the caller BEFORE this so the UI
-    // is already clean even if this request fails or hangs.
     try {
       await authService.logout()
     } catch {
@@ -93,9 +90,12 @@ export const useAuthStore = defineStore('auth', () => {
       error.value = `${provider} sign-in isn't connected yet.`
       return
     }
-    
+
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
-    window.location.href = `${apiBaseUrl}/auth/${provider}/redirect`
+    const redirectUri = `${window.location.origin}/auth/${provider}/callback`
+    const url = new URL(`${apiBaseUrl}/auth/${provider}/redirect`)
+    url.searchParams.set('redirect_uri', redirectUri)
+    window.location.href = url.toString()
   }
 
   async function exchangeSocialCode(provider: 'google' | 'github', code: string, state: string): Promise<boolean> {

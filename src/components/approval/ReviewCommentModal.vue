@@ -60,8 +60,8 @@
               </p>
 
               <label class="mb-1.5 block text-[13px] font-semibold text-slate-700" for="review-note">
-                {{ mode === 'approve' ? 'Note (optional)' : 'Reason for rejection' }}
-                <span v-if="mode === 'reject'" class="text-red-500">*</span>
+                {{ mode === 'approve' ? 'Note' : 'Reason for rejection' }}
+                <span class="text-red-500">*</span>
               </label>
 
               <textarea
@@ -87,7 +87,7 @@
                     {{ errorMessage }}
                   </p>
                   <p v-else class="m-0 text-xs text-slate-400">
-                    {{ mode === 'approve' ? 'Optional — visible to the student.' : 'Required — visible to the student.' }}
+                    Required — visible to the student.
                     <span class="hidden sm:inline">Press <kbd class="rounded border border-slate-200 bg-slate-50 px-1 py-0.5 font-mono text-[10px] text-slate-500">⌘Enter</kbd> to submit.</span>
                   </p>
                 </div>
@@ -172,24 +172,19 @@ const submitLabel = computed(() =>
 
 const placeholder = computed(() =>
   props.mode === 'approve'
-    ? 'Add a note for the student (optional)...'
+    ? 'Add a note for the student...'
     : 'Explain why this request is being rejected...'
 )
 
-const isValid = computed(() => {
-  if (props.mode === 'approve') return true
-  return note.value.trim().length >= props.minLength
-})
+const isValid = computed(() => note.value.trim().length >= props.minLength)
 
 const showError = computed(() => touched.value && !isValid.value)
 
 const errorMessage = computed(() => {
-  if (props.mode !== 'reject') return ''
-  if (note.value.trim().length === 0) return 'Please provide a reason for rejecting this request.'
-  if (note.value.trim().length < props.minLength) {
-    return `Reason must be at least ${props.minLength} characters (${note.value.trim().length}/${props.minLength}).`
-  }
-  return ''
+  if (isValid.value) return ''
+  const label = props.mode === 'approve' ? 'note' : 'reason for rejecting this request'
+  if (note.value.trim().length === 0) return `Please provide a ${label}.`
+  return `Note must be at least ${props.minLength} characters (${note.value.trim().length}/${props.minLength}).`
 })
 
 const canSubmit = computed(() => isValid.value)
@@ -232,6 +227,3 @@ function handleSubmit() {
 }
 </script>
 
-<style scoped>
-/* All styling is handled via Tailwind utility classes above */
-</style>

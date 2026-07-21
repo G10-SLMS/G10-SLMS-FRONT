@@ -162,15 +162,17 @@ export const leaveService = {
     await api.delete(`/leave-requests/${id}`)
   },
 
-  async approveLeaveRequest(id: number, reviewNote?: string): Promise<LeaveRequestResponse> {
-    const { data } = await api.post<RawApiEnvelope<RawLeaveRequest>>(`/approve/${id}`, {
+  async approveLeaveRequest(id: number, reviewNote: string): Promise<LeaveRequestResponse> {
+    const { data } = await api.put<RawApiEnvelope<RawLeaveRequest>>(`/leave-requests/${id}`, {
+      status: 'approved',
       review_note: reviewNote,
     })
     return toRequestResponse(data.data)
   },
 
   async rejectLeaveRequest(id: number, reviewNote: string): Promise<LeaveRequestResponse> {
-    const { data } = await api.post<RawApiEnvelope<RawLeaveRequest>>(`/reject/${id}`, {
+    const { data } = await api.put<RawApiEnvelope<RawLeaveRequest>>(`/leave-requests/${id}`, {
+      status: 'rejected',
       review_note: reviewNote,
     })
     return toRequestResponse(data.data)
