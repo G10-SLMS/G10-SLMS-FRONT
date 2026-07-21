@@ -46,49 +46,10 @@
       <p class="text-gray-400">Unable to determine your role. Please log in again.</p>
     </div>
 
-    <div class="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <SubmittedTodayCard />
-      <OnLeaveTodayCard />
-    </div>
-
-    <div class="rounded-[10px] bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
-      <h2 class="mb-4 flex items-center gap-2">
-        <Activity :size="18" :stroke-width="1.8" />
-        Recent Activity
-      </h2>
-
-      <ActivityListSkeleton v-if="activityLoading" :rows="4" />
-      <p v-else-if="activityError" class="text-red-500">{{ activityError }}</p>
-      <p v-else-if="recentActivity.length === 0" class="text-gray-400">No leave requests yet.</p>
-
-      <ul v-else class="flex flex-col divide-y divide-gray-100">
-        <li
-          v-for="item in recentActivity"
-          :key="item.id"
-          class="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
-        >
-          <img
-            v-if="item.user?.avatar?.url"
-            :src="item.user.avatar.url"
-            :alt="item.user?.name || 'User'"
-            class="h-9 w-9 shrink-0 rounded-full object-cover"
-          />
-          <span
-            v-else
-            :class="['flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white', getAvatarColor(item.user?.name || 'Leave')]"
-          >
-            {{ getInitials(item.user?.name || 'Leave') }}
-          </span>
-          <div class="min-w-0 flex-1">
-            <p class="m-0 truncate text-sm text-gray-800">
-              <span class="font-medium">{{ item.user?.name || 'Unknown user' }}</span>
-              requested <span class="font-medium">{{ item.leave_type_name }}</span>
-            </p>
-            <p class="m-0 text-xs text-gray-400">{{ item.submission_date }}</p>
-          </div>
-          <LeaveStatusBadge :status="item.status" />
-        </li>
-      </ul>
+    <div class="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <PendingTodayCard />
+      <ApprovedTodayCard />
+      <RejectedTodayCard />
     </div>
   </div>
 </template>
@@ -100,12 +61,9 @@ import { leaveService } from '@/services/leaveService'
 import api from '@/services/api'
 import StatCard from '@/components/ui/StatCard.vue'
 import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
-import ActivityListSkeleton from '@/components/shared/ActivityListSkeleton.vue'
-import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
-import { getInitials, getAvatarColor } from '@/utils/initials'
-import type { LeaveRequestListItem } from '@/types/leave'
-import SubmittedTodayCard from '@/components/dashboard/SubmittedTodayCard.vue'
-import OnLeaveTodayCard from '@/components/dashboard/OnLeaveTodayCard.vue'
+import PendingTodayCard from '@/components/dashboard/PendingTodayCard.vue'
+import ApprovedTodayCard from '@/components/dashboard/ApprovedTodayCard.vue'
+import RejectedTodayCard from '@/components/dashboard/RejectedTodayCard.vue'
 import {
   Users,
   Clock,
@@ -113,7 +71,6 @@ import {
   XCircle,
   ClipboardList,
   CalendarDays,
-  Activity,
 } from 'lucide-vue-next'
 
 interface DirectoryUser {
@@ -130,10 +87,6 @@ const totalRequests = ref(0)
 const pendingCount = ref(0)
 const approvedCount = ref(0)
 const rejectedCount = ref(0)
-
-const recentActivity = ref<LeaveRequestListItem[]>([])
-const activityLoading = ref(true)
-const activityError = ref('')
 
 async function loadStats() {
   statsLoading.value = true
@@ -162,21 +115,7 @@ async function loadStats() {
   }
 }
 
-async function loadRecentActivity() {
-  activityLoading.value = true
-  activityError.value = ''
-  try {
-    const { data } = await leaveService.getLeaveRequests({ per_page: 5 })
-    recentActivity.value = data
-  } catch {
-    activityError.value = 'Failed to load recent activity.'
-  } finally {
-    activityLoading.value = false
-  }
-}
-
 onMounted(() => {
   loadStats()
-  loadRecentActivity()
 })
 </script>
