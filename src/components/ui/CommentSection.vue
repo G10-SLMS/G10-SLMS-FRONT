@@ -141,7 +141,7 @@ const props = withDefaults(defineProps<{
   currentUserId: number
   placeholder?: string
 }>(), {
-  comments: [],
+  comments: () => [] as Comment[],
   loading: false,
   placeholder: 'Write a comment…',
 })
