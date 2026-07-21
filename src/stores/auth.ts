@@ -1,22 +1,176 @@
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { authService } from '@/services/authService'
+import type {
+  LoginPayload,
+  RegisterPayload,
+  UpdateProfilePayload,
+  User,
+} from '@/types/user'
+import type { AxiosError } from 'axios'
+
+function getStoredUser(): User | null {
+  const raw = localStorage.getItem('auth_user')
+  return raw ? (JSON.parse(raw) as User) : null
+}
+
+function extractErrorMessage(err: unknown, fallback: string): string {
+  const axiosErr = err as AxiosError<{ message?: string }>
+  return axiosErr.response?.data?.message ?? fallback
+}
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<{ id: number; email: string; name: string } | null>(null)
-  const token = ref<string | null>(null)
+  // --- state ---
+  const user = ref<User | null>(getStoredUser())
+  const token = ref<string | null>(localStorage.getItem('auth_token'))
+  const loading = ref(false)
+  const error = ref<string | null>(null)
 
-  function setUser(userData: { id: number; email: string; name: string } | null) {
+  // --- getters ---
+  const isAuthenticated = computed(() => !!token.value)
+  const isAdmin = computed(() => user.value?.role === 'admin')
+  const isTrainer = computed(() => user.value?.role === 'trainer')
+  const isStudent = computed(() => user.value?.role === 'student')
+
+  // --- internal helper ---
+  function setSession(userData: User, authToken: string): void {
     user.value = userData
+    token.value = authToken
+    localStorage.setItem('auth_user', JSON.stringify(userData))
+    localStorage.setItem('auth_token', authToken)
   }
 
-  function setToken(newToken: string | null) {
-    token.value = newToken
-  }
-
-  function logout() {
+  function clearSession(): void {
     user.value = null
     token.value = null
+    localStorage.removeItem('auth_user')
+    localStorage.removeItem('auth_token')
   }
 
-  return { user, token, setUser, setToken, logout }
+  // --- actions ---
+  async function register(payload: RegisterPayload) {
+    loading.value = true
+    error.value = null
+    try {
+      const { data } = await authService.register(payload)
+      setSession(data.user, data.token)
+      return data
+    } catch (err) {
+      error.value = extractErrorMessage(err, 'Registration failed.')
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function login(payload: LoginPayload) {
+    loading.value = true
+    error.value = null
+    try {
+      const { data } = await authService.login(payload)
+      setSession(data.user, data.token)
+      return data
+    } catch (err) {
+      error.value = extractErrorMessage(err, 'Invalid credentials.')
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function logout(): Promise<void> {
+    // Attempt server-side token revocation.
+    // clearSession() is called by the caller BEFORE this so the UI
+    // is already clean even if this request fails or hangs.
+    try {
+      await authService.logout()
+    } catch {
+      // Server unreachable or token already expired — safe to ignore.
+    }
+  }
+  function socialLogin(provider: 'google' | 'office365' | 'github'): void {
+    if (provider === 'office365') {
+      error.value = `${provider} sign-in isn't connected yet.`
+      return
+    }
+
+    // Let the backend build the provider authorization URL. It attaches a
+    // signed, short-lived `state` value via Socialite and redirects the
+    // browser straight to Google/GitHub — the frontend must not construct
+    // this URL itself, or no `state` gets sent and the callback has nothing
+    // to verify against (this was the "Missing state parameter" bug).
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+    window.location.href = `${apiBaseUrl}/auth/${provider}/redirect`
+  }
+
+  async function exchangeSocialCode(provider: 'google' | 'github', code: string, state: string): Promise<boolean> {
+    loading.value = true
+    error.value = null
+    try {
+      const redirectUri = `${window.location.origin}/auth/${provider}/callback`
+      const { data } =
+        provider === 'google'
+          ? await authService.googleLogin(code, redirectUri, state)
+          : await authService.githubLogin(code, redirectUri, state)
+      setSession(data.user, data.token)
+      return true
+    } catch (err) {
+      error.value = extractErrorMessage(err, `${provider} sign-in failed.`)
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchCurrentUser(): Promise<User | null> {
+    if (!token.value) return null
+
+    try {
+      const { data } = await authService.getCurrentUser()
+      user.value = data
+      localStorage.setItem('auth_user', JSON.stringify(data))
+      return data
+    } catch (err) {
+      // Token invalid/expired — the axios 401 interceptor will redirect,
+      // but clear local state here too in case that interceptor is skipped.
+      clearSession()
+      throw err
+    }
+  }
+
+  async function updateProfile(payload: UpdateProfilePayload | FormData) {
+    loading.value = true
+    error.value = null
+    try {
+      const { data } = await authService.updateProfile(payload)
+      user.value = data
+      localStorage.setItem('auth_user', JSON.stringify(data))
+      return data
+    } catch (err) {
+      error.value = extractErrorMessage(err, 'Update failed.')
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return {
+    user,
+    token,
+    loading,
+    error,
+    isAuthenticated,
+    isAdmin,
+    isTrainer,
+    isStudent,
+    register,
+    login,
+    logout,
+    socialLogin,
+    exchangeSocialCode,
+    fetchCurrentUser,
+    updateProfile,
+    clearSession,
+
+  }
 })

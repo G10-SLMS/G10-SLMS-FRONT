@@ -1,0 +1,47 @@
+export type UserRole = 'admin' | 'trainer' | 'student'
+
+export interface User {
+  id: number
+  name: string
+  email: string
+  role: UserRole
+  trainer_id: number | null
+  avatar: string | null
+  email_verified_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface AuthResponse {
+  user: User
+  token: string
+}
+
+export interface RegisterPayload {
+  name: string
+  email: string
+  password: string
+  password_confirmation: string
+  role?: UserRole
+  trainer_id?: number | null
+}
+
+export interface LoginPayload {
+  email: string
+  password: string
+  remember?: boolean
+  role?: 'student' | 'trainer' 
+}
+
+export interface ResetPasswordPayload {
+  token: string
+  email: string
+  password: string
+  password_confirmation: string
+}
+
+export interface UpdateProfilePayload {
+  name?: string
+  password?: string
+  password_confirmation?: string
+}
