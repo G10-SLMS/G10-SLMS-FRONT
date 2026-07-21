@@ -135,15 +135,13 @@ import { getInitials, getAvatarColor } from '@/utils/initials'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import type { Comment } from '@/types/comment'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   comments: Comment[]
   loading?: boolean
   currentUserId: number
   placeholder?: string
-}>()
-
-withDefaults(props, {
-  comments: [],
+}>(), {
+  comments: () => [] as Comment[],
   loading: false,
   placeholder: 'Write a comment…',
 })
@@ -201,56 +199,54 @@ function handleDeleteConfirm() {
 </script>
 
 <script lang="ts">
-if (import.meta.env.DEV) {
-  import { defineComponent, h } from 'vue'
-  import CommentSection from './CommentSection.vue'
-  import type { Comment } from '@/types/comment'
+import { defineComponent, h } from 'vue'
+import CommentSection from './CommentSection.vue'
 
-  const mockComments: Comment[] = [
-    {
-      id: 1,
-      authorId: 1,
-      authorName: 'Alice Johnson',
-      authorAvatarUrl: null,
-      text: 'This looks great! Let me review it.',
-      createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-    },
-    {
-      id: 2,
-      authorId: 2,
-      authorName: 'Bob Smith',
-      authorAvatarUrl: null,
-      text: 'Can we schedule a meeting to discuss this further? I have a few concerns about the timeline.',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    },
-    {
-      id: 3,
-      authorId: 3,
-      authorName: 'Carol Williams',
-      authorAvatarUrl: 'https://i.pravatar.cc/96?img=5',
-      text: 'Approved. Moving forward with the next phase.',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    },
-  ]
+const mockComments: Comment[] = [
+  {
+    id: 1,
+    authorId: 1,
+    authorName: 'Alice Johnson',
+    authorAvatarUrl: null,
+    text: 'This looks great! Let me review it.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+  },
+  {
+    id: 2,
+    authorId: 2,
+    authorName: 'Bob Smith',
+    authorAvatarUrl: null,
+    text: 'Can we schedule a meeting to discuss this further? I have a few concerns about the timeline.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+  },
+  {
+    id: 3,
+    authorId: 3,
+    authorName: 'Carol Williams',
+    authorAvatarUrl: 'https://i.pravatar.cc/96?img=5',
+    text: 'Approved. Moving forward with the next phase.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+  },
+]
 
-  const CommentSectionDemo = defineComponent({
-    name: 'CommentSectionDemo',
-    setup() {
-      return () =>
-        h('div', { class: 'mx-auto max-w-2xl p-4 sm:p-6' }, [
-          h('h2', { class: 'mb-4 text-lg font-bold text-slate-900' }, 'Comment Section — Demo'),
-          h('p', { class: 'mb-4 text-xs text-slate-400' }, 'Current user: Alice Johnson (id: 1) — edit/delete shown on own comments'),
-          h(
-            CommentSection,
-            {
-              comments: mockComments,
-              currentUserId: 1,
-            },
-          ),
-        ])
-    },
-  })
+const CommentSectionDemo = defineComponent({
+  name: 'CommentSectionDemo',
+  setup() {
+    if (!import.meta.env.DEV) return () => null
+    return () =>
+      h('div', { class: 'mx-auto max-w-2xl p-4 sm:p-6' }, [
+        h('h2', { class: 'mb-4 text-lg font-bold text-slate-900' }, 'Comment Section — Demo'),
+        h('p', { class: 'mb-4 text-xs text-slate-400' }, 'Current user: Alice Johnson (id: 1) — edit/delete shown on own comments'),
+        h(
+          CommentSection,
+          {
+            comments: mockComments,
+            currentUserId: 1,
+          },
+        ),
+      ])
+  },
+})
 
-  export default CommentSectionDemo
-}
+export default CommentSectionDemo
 </script>

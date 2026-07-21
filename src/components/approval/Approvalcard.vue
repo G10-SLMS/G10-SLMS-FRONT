@@ -64,7 +64,7 @@
 import { Check, X, Eye } from 'lucide-vue-next'
 import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
 import { getInitials } from '@/utils/initials'
-import type { LeaveRequest, LeaveStatus } from '@/types/leave'
+import type { LeaveRequest } from '@/types/leave'
 
 defineProps<{
   request: LeaveRequest
@@ -72,7 +72,7 @@ defineProps<{
 }>()
 
 defineEmits<{
-  decide: [decision: LeaveStatus]
+  decide: [decision: 'Approved' | 'Rejected']
   view: []
 }>()
 

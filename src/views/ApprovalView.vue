@@ -27,6 +27,22 @@
           </button>
         </div>
 
+        <!-- Status filter -->
+        <div class="relative">
+          <select
+            v-model="statusFilter"
+            class="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm font-medium text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 sm:w-auto"
+            @change="fetchRequests(1)"
+          >
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="">All statuses</option>
+          </select>
+          <ChevronDown :size="14" class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+        </div>
+
         <!-- Leave type filter -->
         <div class="relative">
           <select
@@ -123,6 +139,19 @@
           Clear search & filter
         </button>
       </div>
+
+      <LeaveRequestsPagination
+        v-if="!loading && filteredRequests.length > 0"
+        :page="page"
+        :totalPages="lastPage"
+        :total="total"
+        :from="from"
+        :to="to"
+        :perPage="perPage"
+        :visiblePages="visiblePages"
+        :fetchRequests="fetchRequests"
+        @update:per-page="perPage = $event; fetchRequests(1)"
+      />
     </div>
 
     <ReviewCommentModal
@@ -144,6 +173,7 @@ import ApprovalRow from '@/components/approval/ApprovalRow.vue'
 import ApprovalCard from '@/components/approval/ApprovalCard.vue'
 import ApprovalLoadingSkeleton from '@/components/approval/ApprovalLoadingSkeleton.vue'
 import ReviewCommentModal from '@/components/approval/ReviewCommentModal.vue'
+import LeaveRequestsPagination from '@/components/leave-request/LeaveRequestsPagination.vue'
 import { leaveService } from '@/services/leaveService'
 import { extractErrorMessage } from '@/utils/errors'
 import { formatDate } from '@/utils/date'
@@ -160,6 +190,29 @@ const router = useRouter()
 
 const searchQuery = ref('')
 const typeFilter = ref('All')
+const statusFilter = ref('pending')
+
+const page = ref(1)
+const lastPage = ref(1)
+const total = ref(0)
+const perPage = ref(10)
+
+const from = computed(() => (total.value === 0 ? 0 : (page.value - 1) * perPage.value + 1))
+const to = computed(() => Math.min(page.value * perPage.value, total.value))
+
+const visiblePages = computed(() => {
+  const current = page.value
+  const last = lastPage.value
+  const delta = 2
+  const range: number[] = []
+  for (let i = Math.max(2, current - delta); i <= Math.min(last - 1, current + delta); i++) range.push(i)
+  const pages: number[] = [1]
+  if (range[0] > 2) pages.push(-1)
+  pages.push(...range)
+  if (range[range.length - 1] < last - 1) pages.push(-1)
+  if (last > 1) pages.push(last)
+  return pages
+})
 
 interface LeaveRequest {
   id: number
@@ -169,7 +222,7 @@ interface LeaveRequest {
   startDate: string
   endDate: string
   reason: string
-  status: 'Pending' | 'Approved' | 'Rejected'
+  status: 'Pending' | 'Approved' | 'Rejected' | 'Cancelled'
   processing?: boolean
 }
 
@@ -199,14 +252,24 @@ function toRow(raw: RawLeaveRequest): LeaveRequest {
   }
 }
 
-async function loadRequests() {
+async function fetchRequests(p?: number) {
   loading.value = true
   errorMsg.value = ''
+  if (p !== undefined) page.value = p
   try {
     const { data } = await api.get<RawApiEnvelope<RawLeaveRequest[]>>('/leave-requests', {
-      params: { per_page: 100 },
+      params: {
+        page: page.value,
+        per_page: perPage.value,
+        ...(statusFilter.value ? { status: statusFilter.value } : {}),
+      },
     })
     requests.value = data.data.map(toRow)
+    if (data.meta) {
+      page.value = data.meta.current_page
+      lastPage.value = data.meta.last_page
+      total.value = data.meta.total
+    }
   } catch (err) {
     errorMsg.value = extractErrorMessage(err, 'Failed to load leave requests.')
   } finally {
@@ -225,9 +288,6 @@ onMounted(async () => {
   }
 })
 
-// Deep link from other pages (e.g. the dashboard's "Submitted Today" list):
-// /approvals?request=123 scrolls to and highlights that row in the full
-// list, rather than isolating it behind a modal.
 const highlightedId = ref<number | null>(null)
 const rowRefs = new Map<number, { $el?: HTMLElement } | HTMLElement>()
 
@@ -255,15 +315,14 @@ const leaveTypes = computed(() => {
   return Array.from(types).sort()
 })
 
-const hasActiveFilters = computed(() => searchQuery.value.trim().length > 0 || typeFilter.value !== 'All')
+const hasActiveFilters = computed(
+  () => searchQuery.value.trim().length > 0 || typeFilter.value !== 'All' || statusFilter.value !== 'pending',
+)
 
 const filteredRequests = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
 
   return requests.value.filter((r) => {
-    // Approvals only ever lists actionable requests — once a request is
-    // approved or rejected it drops off this page.
-    if (r.status !== 'Pending') return false
     if (typeFilter.value !== 'All' && r.type !== typeFilter.value) return false
     if (query && !r.student.toLowerCase().includes(query) && !r.reason.toLowerCase().includes(query)) {
       return false
@@ -275,6 +334,8 @@ const filteredRequests = computed(() => {
 function clearFilters() {
   searchQuery.value = ''
   typeFilter.value = 'All'
+  statusFilter.value = 'pending'
+  fetchRequests(1)
 }
 
 function friendlyErrorMessage(err: unknown): string {

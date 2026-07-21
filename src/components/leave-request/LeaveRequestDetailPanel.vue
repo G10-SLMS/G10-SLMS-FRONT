@@ -8,9 +8,10 @@
               v-if="request.studentAvatarUrl"
               class="h-10 w-10 shrink-0 rounded-full object-cover"
               :style="{ backgroundImage: `url(${request.studentAvatarUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }"
+              :aria-label="`${request.student}'s avatar`"
             />
-            <div v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-600">
-              {{ initials(request.student) }}
+            <div v-else :class="['flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white', getAvatarColor(request.student)]" :aria-label="`${request.student}'s avatar`">
+              {{ getInitials(request.student) }}
             </div>
             <div class="min-w-0">
               <h3 class="truncate text-base font-bold text-slate-900">{{ request.student }}</h3>
@@ -18,7 +19,7 @@
             </div>
           </template>
           <template v-else>
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-400">—</div>
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-400" aria-label="Student avatar">—</div>
             <div class="min-w-0">
               <h3 class="truncate text-base font-bold text-slate-400">—</h3>
               <p class="text-xs text-slate-400">{{ request.leaveType }}</p>
@@ -54,6 +55,7 @@
               :href="request.attachment.url"
               target="_blank"
               rel="noopener noreferrer"
+              :aria-label="`Download attachment: ${request.attachment.name}`"
               class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 underline-offset-2 hover:underline"
             >
               <Paperclip :size="14" />
@@ -87,65 +89,13 @@
 <script setup lang="ts">
 import { Paperclip } from 'lucide-vue-next'
 import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
+import { getInitials, getAvatarColor } from '@/utils/initials'
+import { formatDate } from '@/utils/date'
 import type { LeaveRequestDetail } from '@/types/leave'
 
 const props = defineProps<{
   request: LeaveRequestDetail
 }>()
-
-function initials(name: string): string {
-  if (!name) return ''
-  return name
-    .split(' ')
-    .map((part) => part.charAt(0))
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-}
-
-function formatDate(value: string): string {
-  if (!value) return '—'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '—'
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
 </script>
 
-<script lang="ts">
-if (import.meta.env.DEV) {
-  import { defineComponent, h } from 'vue'
-  import LeaveRequestDetailPanel from './LeaveRequestDetailPanel.vue'
-  import type { LeaveRequestDetail } from '@/types/leave'
 
-  const mockRequest: LeaveRequestDetail = {
-    student: 'Alice Johnson',
-    studentAvatarUrl: null,
-    leaveType: 'Sick Leave',
-    reason: 'Medical appointment at Bangkok Hospital. Doctor advised 2 days rest.',
-    startDate: '2026-07-22',
-    endDate: '2026-07-23',
-    attachment: { name: 'medical_certificate.pdf', url: '#' },
-    status: 'Pending',
-    reviewer: null,
-    reviewDate: null,
-    comment: null,
-  }
-
-  const LeaveRequestDetailDemo = defineComponent({
-    name: 'LeaveRequestDetailDemo',
-    setup() {
-      return () =>
-        h('div', { class: 'mx-auto max-w-2xl p-6' }, [
-          h('h2', { class: 'mb-4 text-lg font-bold text-slate-900' }, 'Leave Request Detail Panel — Demo'),
-          h(LeaveRequestDetailPanel, { request: mockRequest }),
-        ])
-    },
-  })
-
-  export default LeaveRequestDetailDemo
-}
-</script>
