@@ -135,7 +135,7 @@
       </div>
 
       <LeaveRequestsPagination
-        v-if="!loading && requests.length > 0"
+        v-if="!loading && filteredRequests.length > 0"
         :page="page"
         :totalPages="lastPage"
         :total="total"
