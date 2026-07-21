@@ -46,6 +46,11 @@
       <p class="text-gray-400">Unable to determine your role. Please log in again.</p>
     </div>
 
+    <div class="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <SubmittedTodayCard />
+      <OnLeaveTodayCard />
+    </div>
+
     <div class="rounded-[10px] bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
       <h2 class="mb-4 flex items-center gap-2">
         <Activity :size="18" :stroke-width="1.8" />
@@ -62,7 +67,14 @@
           :key="item.id"
           class="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
         >
+          <img
+            v-if="item.user?.avatar?.url"
+            :src="item.user.avatar.url"
+            :alt="item.user?.name || 'User'"
+            class="h-9 w-9 shrink-0 rounded-full object-cover"
+          />
           <span
+            v-else
             :class="['flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white', getAvatarColor(item.user?.name || 'Leave')]"
           >
             {{ getInitials(item.user?.name || 'Leave') }}
@@ -92,6 +104,8 @@ import ActivityListSkeleton from '@/components/shared/ActivityListSkeleton.vue'
 import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
 import { getInitials, getAvatarColor } from '@/utils/initials'
 import type { LeaveRequestListItem } from '@/types/leave'
+import SubmittedTodayCard from '@/components/dashboard/SubmittedTodayCard.vue'
+import OnLeaveTodayCard from '@/components/dashboard/OnLeaveTodayCard.vue'
 import {
   Users,
   Clock,

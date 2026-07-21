@@ -79,8 +79,10 @@
             <ApprovalCard
               v-for="request in filteredRequests"
               :key="request.id"
+              :ref="(el) => setRowRef(request.id, el)"
               :request="request"
               :show-actions="true"
+              :class="request.id === highlightedId ? 'bg-cyan-50 ring-2 ring-inset ring-cyan-400 transition-colors duration-700' : 'transition-colors duration-700'"
               @decide="(decision) => handleDecision(request, decision)"
               @view="leaveFormModal.openView(request.id)"
             />
@@ -107,9 +109,13 @@
                 <ApprovalRow
                   v-for="request in filteredRequests"
                   :key="request.id"
+                  :ref="(el) => setRowRef(request.id, el)"
                   :request="request"
                   :show-actions="true"
-                  class="transition-colors hover:bg-slate-50/60"
+                  :class="[
+                    'transition-colors duration-700 hover:bg-slate-50/60',
+                    request.id === highlightedId ? 'bg-cyan-50' : '',
+                  ]"
                   @decide="(decision) => handleDecision(request, decision)"
                   @view="leaveFormModal.openView(request.id)"
                 />
@@ -160,7 +166,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { CheckCircle2, Search, SearchX, ChevronDown, X } from 'lucide-vue-next'
 import ApprovalRow from '@/components/approval/ApprovalRow.vue'
 import ApprovalCard from '@/components/approval/ApprovalCard.vue'
@@ -178,6 +185,8 @@ import { useNotificationStore } from '@/stores/notification'
 
 const leaveFormModal = useLeaveFormModalStore()
 const notificationStore = useNotificationStore()
+const route = useRoute()
+const router = useRouter()
 
 const searchQuery = ref('')
 const typeFilter = ref('All')
@@ -268,7 +277,37 @@ async function fetchRequests(p?: number) {
   }
 }
 
-onMounted(fetchRequests)
+onMounted(async () => {
+  await loadRequests()
+
+  const idParam = route.query.request
+  if (idParam) {
+    const numericId = Number(idParam)
+    if (Number.isFinite(numericId)) focusRequest(numericId)
+    router.replace({ query: { ...route.query, request: undefined } })
+  }
+})
+
+const highlightedId = ref<number | null>(null)
+const rowRefs = new Map<number, { $el?: HTMLElement } | HTMLElement>()
+
+function setRowRef(id: number, el: { $el?: HTMLElement } | HTMLElement | null) {
+  if (el) rowRefs.set(id, el)
+  else rowRefs.delete(id)
+}
+
+async function focusRequest(id: number) {
+  highlightedId.value = id
+  await nextTick()
+
+  const el = rowRefs.get(id)
+  const domEl = el && '$el' in el ? el.$el : el
+  domEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+
+  setTimeout(() => {
+    if (highlightedId.value === id) highlightedId.value = null
+  }, 3000)
+}
 
 const leaveTypes = computed(() => {
   const types = new Set<string>()
