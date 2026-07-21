@@ -20,14 +20,14 @@
       <LeaveLoadingSkeleton v-if="loading" />
 
       <LeaveEmptyState
-        v-else-if="displayItems.length === 0"
+        v-else-if="items.length === 0"
         :hasActiveFilters="hasActiveFilters"
         @clear-filters="clearAllFilters"
       />
 
       <LeaveRequestsTable
         v-else
-        :items="displayItems"
+        :items="items"
         :formatDate="formatDate"
         :viewRequest="viewRequest"
         :editRequest="editRequest"
@@ -78,7 +78,6 @@ const router = useRouter()
 
 const {
   items,
-  displayItems,
   leaveTypes,
   loading,
   errMsg,
