@@ -73,10 +73,9 @@ import {
   CalendarDays,
 } from 'lucide-vue-next'
 
-interface DirectoryUser {
+interface AssignedStudent {
   id: number
   role: string
-  trainer_id: number | null
 }
 
 const auth = useAuthStore()
@@ -103,10 +102,8 @@ async function loadStats() {
     totalRequests.value = pending.total + approved.total + rejected.total
 
     if (auth.isTrainer) {
-      const { data } = await api.get<{ users: DirectoryUser[]; count: number }>('/users')
-      const students = data.users.filter((u) => u.role === 'student')
-
-      assignedStudents.value = students.filter((u) => u.trainer_id === auth.user?.id).length
+      const { data } = await api.get<{ students: AssignedStudent[]; count: number }>('/trainer/students')
+      assignedStudents.value = data.count
     }
   } catch {
     // Leave stats at their defaults (0) if the request fails.

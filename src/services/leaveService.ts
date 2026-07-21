@@ -160,7 +160,7 @@ export const leaveService = {
   },
 
   async cancelLeaveRequest(id: number): Promise<void> {
-    await api.delete(`/leave-requests/${id}`)
+    await api.put(`/leave-requests/${id}`, { status: 'cancelled' })
   },
 
   async approveLeaveRequest(id: number, reviewNote: string): Promise<LeaveRequestResponse> {
