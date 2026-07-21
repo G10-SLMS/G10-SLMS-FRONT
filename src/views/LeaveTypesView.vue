@@ -1,49 +1,76 @@
 <template>
   <div class="max-w-full">
-    <div class="mb-5 flex items-start justify-between">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h1>Leave Types Management</h1>
-        <p class="mt-1 text-[13px] text-gray-500">Define the leave categories available to students and trainers</p>
+        <h1 class="text-[22px] font-bold tracking-tight text-slate-900">Leave Types Management</h1>
+        <p class="mt-1 text-[13px] text-slate-500">Define the leave categories available to students and trainers</p>
       </div>
       <button
-        class="inline-flex items-center gap-2 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-blue-700"
+        class="inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 sm:self-start"
         @click="openAddModal"
       >
-        <Plus :size="16" :stroke-width="1.8" />
+        <Plus :size="16" :stroke-width="2" />
         Add Leave Type
       </button>
     </div>
 
-    <div class="rounded-[10px] bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="m-0 text-base">All Leave Types</h2>
+    <p v-if="errMsg" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{{ errMsg }}</p>
+
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-[0_1px_4px_rgba(15,23,42,0.06)] sm:p-6">
+      <div class="mb-4 flex items-center justify-between px-4 pt-4 sm:px-0 sm:pt-0">
+        <h2 class="m-0 text-base font-bold text-slate-900">All Leave Types</h2>
       </div>
 
-      <div class="w-full overflow-x-auto">
-        <table class="w-full min-w-[560px] border-collapse text-sm md:min-w-0">
+      <!-- Desktop / tablet: table -->
+      <div class="hidden md:block md:px-0">
+        <table class="w-full border-collapse text-sm">
           <thead>
             <tr>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Leave Type</th>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Default Days / Year</th>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Requires Approval</th>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Status</th>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Action</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Leave Type</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Max Days / Year</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Requires Attachment</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Status</th>
+              <th class="border-b border-slate-200 px-2 py-3 text-left font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-slate-400">Action</th>
             </tr>
           </thead>
           <tbody>
-            <LeaveTypeRow
-              v-for="lt in leaveTypes"
-              :key="lt.id"
-              :leave-type="lt"
-              @edit="openEditModal(lt)"
-              @toggle="toggleActive(lt.id)"
-              @remove="removeType(lt.id)"
-            />
-            <tr v-if="leaveTypes.length === 0">
-              <td colspan="5" class="px-2 py-6 text-center text-gray-400">No leave types yet. Add one to get started.</td>
-            </tr>
+            <TableRowSkeleton v-if="loading" :rows="5" :columns="5" />
+            <template v-else>
+              <LeaveTypeRow
+                v-for="lt in leaveTypes"
+                :key="lt.id"
+                :leave-type="lt"
+                @edit="openEditModal(lt)"
+                @toggle="confirmToggle(lt)"
+                @remove="confirmRemove(lt)"
+              />
+              <tr v-if="leaveTypes.length === 0">
+                <td colspan="5" class="px-2 py-8 text-center text-sm text-slate-400">No leave types yet. Add one to get started.</td>
+              </tr>
+            </template>
           </tbody>
         </table>
+      </div>
+
+      <!-- Mobile: stacked cards -->
+      <div class="divide-y divide-slate-100 md:hidden">
+        <template v-if="loading">
+          <div v-for="n in 3" :key="n" class="animate-pulse space-y-3 px-4 py-4" aria-hidden="true">
+            <div class="h-4 w-2/3 rounded bg-slate-200"></div>
+            <div class="h-3 w-1/3 rounded bg-slate-200"></div>
+          </div>
+        </template>
+        <template v-else>
+          <LeaveTypeCard
+            v-for="lt in leaveTypes"
+            :key="lt.id"
+            :leave-type="lt"
+            @edit="openEditModal(lt)"
+            @toggle="confirmToggle(lt)"
+            @remove="confirmRemove(lt)"
+          />
+          <p v-if="leaveTypes.length === 0" class="px-4 py-8 text-center text-sm text-slate-400">No leave types yet. Add one to get started.</p>
+        </template>
       </div>
     </div>
 
@@ -51,53 +78,138 @@
       :open="modalOpen"
       :is-editing="!!editingType"
       :form="form"
+      :saving="saving"
+      :error="formError"
       @cancel="closeModal"
       @save="saveType"
+    />
+
+    <ConfirmDialog
+      :open="confirmOpen"
+      :title="confirmTitle"
+      :message="confirmMessage"
+      :confirm-label="confirmLabel"
+      :loading="confirmLoading"
+      @confirm="handleConfirmed"
+      @cancel="cancelConfirm"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { Plus } from 'lucide-vue-next'
-import LeaveTypeRow from '@/components/leave/LeaveTypeRow.vue'
-import LeaveTypeModal from '@/components/leave/LeaveTypeModal.vue'
+import type { AxiosError } from 'axios'
+import LeaveTypeRow from '@/components/leave-type/LeaveTypeRow.vue'
+import LeaveTypeCard from '@/components/leave-type/LeaveTypeCard.vue'
+import LeaveTypeModal from '@/components/leave-type/LeaveTypeModal.vue'
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
+import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
+import { leaveService } from '@/services/leaveService'
+import type { LeaveType, LeaveTypePayload } from '@/types/leave'
 
-interface LeaveType {
-  id: number
-  name: string
-  defaultDays: number
-  requiresApproval: boolean
-  active: boolean
-}
-
-// Placeholder data — will come from GET /api/leave-types later
-const leaveTypes = ref<LeaveType[]>([
-  { id: 1, name: 'Sick Leave', defaultDays: 10, requiresApproval: true, active: true },
-  { id: 2, name: 'Personal Leave', defaultDays: 5, requiresApproval: true, active: true },
-  { id: 3, name: 'Emergency Leave', defaultDays: 3, requiresApproval: false, active: true },
-  { id: 4, name: 'Annual Leave', defaultDays: 15, requiresApproval: true, active: true },
-])
+const leaveTypes = ref<LeaveType[]>([])
+const loading = ref(true)
+const errMsg = ref('')
 
 const modalOpen = ref(false)
 const editingType = ref<LeaveType | null>(null)
-const form = reactive({ name: '', defaultDays: 0, requiresApproval: true, active: true })
+const saving = ref(false)
+const formError = ref('')
+
+type PendingAction = { type: 'delete' | 'deactivate' | 'activate'; leaveType: LeaveType }
+const pendingAction = ref<PendingAction | null>(null)
+const confirmOpen = ref(false)
+const confirmLoading = ref(false)
+
+const confirmTitle = computed(() => {
+  switch (pendingAction.value?.type) {
+    case 'delete':
+      return 'Delete leave type?'
+    case 'activate':
+      return 'Activate leave type?'
+    default:
+      return 'Deactivate leave type?'
+  }
+})
+const confirmMessage = computed(() => {
+  const name = pendingAction.value?.leaveType.name ?? ''
+  switch (pendingAction.value?.type) {
+    case 'delete':
+      return `Are you sure you want to delete '${name}'? This cannot be undone.`
+    case 'activate':
+      return `Are you sure you want to activate '${name}'? Students and trainers will be able to select it again.`
+    default:
+      return `Are you sure you want to deactivate '${name}'? Students and trainers won't be able to select it until it's reactivated.`
+  }
+})
+const confirmLabel = computed(() => {
+  switch (pendingAction.value?.type) {
+    case 'delete':
+      return 'Delete'
+    case 'activate':
+      return 'Activate'
+    default:
+      return 'Deactivate'
+  }
+})
+
+const form = reactive<LeaveTypePayload>({
+  name: '',
+  code: '',
+  description: '',
+  max_days_per_year: 0,
+  requires_attachment: false,
+  is_active: true,
+})
+
+function extractError(err: unknown, fallback: string): string {
+  const axiosErr = err as AxiosError<{ message?: string; errors?: Record<string, string[]> }>
+  const errors = axiosErr.response?.data?.errors
+  if (errors) {
+    const first = Object.values(errors)[0]?.[0]
+    if (first) return first
+  }
+  return axiosErr.response?.data?.message ?? fallback
+}
+
+async function fetchLeaveTypes() {
+  loading.value = true
+  errMsg.value = ''
+  try {
+    leaveTypes.value = await leaveService.getLeaveTypes()
+  } catch (err) {
+    errMsg.value = extractError(err, 'Failed to load leave types.')
+  } finally {
+    loading.value = false
+  }
+}
+
+function resetForm() {
+  form.name = ''
+  form.code = ''
+  form.description = ''
+  form.max_days_per_year = 0
+  form.requires_attachment = false
+  form.is_active = true
+}
 
 function openAddModal() {
   editingType.value = null
-  form.name = ''
-  form.defaultDays = 0
-  form.requiresApproval = true
-  form.active = true
+  formError.value = ''
+  resetForm()
   modalOpen.value = true
 }
 
 function openEditModal(lt: LeaveType) {
   editingType.value = lt
+  formError.value = ''
   form.name = lt.name
-  form.defaultDays = lt.defaultDays
-  form.requiresApproval = lt.requiresApproval
-  form.active = lt.active
+  form.code = lt.code
+  form.description = lt.description ?? ''
+  form.max_days_per_year = lt.max_days_per_year
+  form.requires_attachment = lt.requires_attachment
+  form.is_active = lt.is_active
   modalOpen.value = true
 }
 
@@ -105,37 +217,80 @@ function closeModal() {
   modalOpen.value = false
 }
 
-function saveType() {
-  if (!form.name.trim()) return
-
-  if (editingType.value) {
-    // Will call PUT /api/leave-types/:id later
-    const idx = leaveTypes.value.findIndex((lt) => lt.id === editingType.value!.id)
-    if (idx !== -1) {
-      leaveTypes.value[idx] = { ...leaveTypes.value[idx], ...form }
-    }
-  } else {
-    // Will call POST /api/leave-types later
-    leaveTypes.value.push({
-      id: Math.max(0, ...leaveTypes.value.map((lt) => lt.id)) + 1,
-      name: form.name,
-      defaultDays: form.defaultDays,
-      requiresApproval: form.requiresApproval,
-      active: form.active,
-    })
+async function saveType() {
+  if (!form.name.trim() || !form.code.trim()) {
+    formError.value = 'Name and code are required.'
+    return
+  }
+  if (!form.max_days_per_year || form.max_days_per_year <= 0) {
+    formError.value = 'Max days per year must be greater than 0.'
+    return
   }
 
-  modalOpen.value = false
+  saving.value = true
+  formError.value = ''
+  try {
+    if (editingType.value?.id) {
+      const updated = await leaveService.updateLeaveType(editingType.value.id, form)
+      const idx = leaveTypes.value.findIndex((lt) => lt.id === editingType.value!.id)
+      if (idx !== -1) leaveTypes.value[idx] = updated
+    } else {
+      const created = await leaveService.createLeaveType(form)
+      leaveTypes.value.push(created)
+    }
+    modalOpen.value = false
+  } catch (err) {
+    formError.value = extractError(err, 'Failed to save leave type.')
+  } finally {
+    saving.value = false
+  }
 }
 
-function toggleActive(id: number) {
-  // Will call PATCH /api/leave-types/:id later
-  const lt = leaveTypes.value.find((item) => item.id === id)
-  if (lt) lt.active = !lt.active
+function confirmRemove(lt: LeaveType) {
+  pendingAction.value = { type: 'delete', leaveType: lt }
+  confirmOpen.value = true
 }
 
-function removeType(id: number) {
-  // Will call DELETE /api/leave-types/:id later
-  leaveTypes.value = leaveTypes.value.filter((lt) => lt.id !== id)
+function confirmToggle(lt: LeaveType) {
+  pendingAction.value = { type: lt.is_active ? 'deactivate' : 'activate', leaveType: lt }
+  confirmOpen.value = true
 }
+
+function cancelConfirm() {
+  confirmOpen.value = false
+  pendingAction.value = null
+}
+
+async function handleConfirmed() {
+  const action = pendingAction.value
+  if (!action?.leaveType.id) return
+
+  confirmLoading.value = true
+  try {
+    if (action.type === 'delete') {
+      await leaveService.deleteLeaveType(action.leaveType.id)
+      leaveTypes.value = leaveTypes.value.filter((item) => item.id !== action.leaveType.id)
+    } else {
+      const updated = await leaveService.updateLeaveType(action.leaveType.id, {
+        is_active: action.type === 'activate',
+      })
+      Object.assign(action.leaveType, updated)
+    }
+    confirmOpen.value = false
+    pendingAction.value = null
+  } catch (err) {
+    const fallback =
+      action.type === 'delete'
+        ? 'Failed to delete leave type.'
+        : action.type === 'activate'
+          ? 'Failed to activate leave type.'
+          : 'Failed to deactivate leave type.'
+    errMsg.value = extractError(err, fallback)
+    confirmOpen.value = false
+  } finally {
+    confirmLoading.value = false
+  }
+}
+
+fetchLeaveTypes()
 </script>

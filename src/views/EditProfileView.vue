@@ -1,169 +1,247 @@
 <template>
-  <div class="max-w-[900px] px-8 py-6">
-    <header class="mb-6">
-      <RouterLink to="/profile" class="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 no-underline hover:text-cyan-600">
+  <div class="w-full px-8 py-10">
+    <header class="mb-8">
+      <RouterLink
+        to="/profile"
+        class="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 no-underline hover:text-cyan-600"
+      >
         <ArrowLeft :size="16" />
         Back to Profile
       </RouterLink>
-      <h1 class="mt-2 text-[22px] font-bold text-slate-900">Edit Profile</h1>
+      <p class="mb-0.5 mt-3 font-mono text-[11px] uppercase tracking-[0.22em] text-slate-400">
+        Institutional Record
+      </p>
+      <h1 class="text-[26px] font-bold tracking-tight text-slate-900">Edit Profile</h1>
     </header>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <section class="rounded-xl border border-slate-200 bg-white p-5 px-6">
-        <h3 class="mb-0.5 text-[15px] font-bold text-slate-900">Basic Information</h3>
-        <p class="mb-4 text-[13px] text-slate-400">Update your name, email, and photo.</p>
+    <div class="flex flex-col gap-6">
+      <ProfileSectionCard>
+        <template #icon>
+          <span
+            class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-white"
+          >
+            <span class="text-[0.7rem]">I</span>
+          </span>
+        </template>
+        <template #title>Basic Information</template>
+        <template #description>Update your name, email, and avatar.</template>
 
-        <div class="mb-5 flex items-center gap-4 border-b border-slate-100 pb-5">
-          <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-[22px] font-bold text-white">
-            <img v-if="avatarPreview" :src="avatarPreview" alt="Avatar preview" class="h-full w-full object-cover" />
-            <span v-else>{{ initials }}</span>
+        <AvatarPicker
+          :avatars="defaultAvatars"
+          :selected-id="form.avatar_id"
+          :selected-avatar-url="selectedAvatarUrl"
+          :initials="initials"
+          :loading="loadingAvatars"
+          :preferred-gender="form.gender"
+          @update:selectedId="(value) => (form.avatar_id = value)"
+        />
+
+        <form class="flex flex-col gap-5" @submit.prevent="submitProfile">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <ProfileFormField id="name" label="Full Name">
+              <input
+                id="name"
+                v-model="form.name"
+                type="text"
+                required
+                placeholder="Enter your full name"
+                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+              />
+            </ProfileFormField>
+
+            <ProfileFormField id="email" label="Email Address">
+              <input
+                id="email"
+                v-model="form.email"
+                type="email"
+                required
+                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+              />
+            </ProfileFormField>
+
+            <ProfileFormField id="phone" label="Phone">
+              <input
+                id="phone"
+                v-model="form.phone"
+                type="text"
+                placeholder="e.g. 012 345 678"
+                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+              />
+            </ProfileFormField>
+
+            <ProfileFormField v-if="isStudent" id="gender" label="Gender">
+              <select
+                id="gender"
+                v-model="form.gender"
+                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </ProfileFormField>
           </div>
-          <div class="flex items-center gap-3">
-            <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border-none bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200">
-              <Upload :size="16" />
-              Change Photo
-              <input type="file" accept="image/*" class="sr-only" @change="onAvatarChange" />
-            </label>
-            <button
-              v-if="avatarPreview"
-              type="button"
-              class="inline-flex items-center gap-1.5 rounded-lg border-none bg-transparent px-1 py-2 text-sm font-semibold text-red-600 cursor-pointer hover:text-red-700"
-              @click="removeAvatar"
-            >
-              Remove
-            </button>
-          </div>
-        </div>
 
-        <form class="flex flex-col gap-4" @submit.prevent="submitProfile">
-          <div class="flex flex-col gap-1.5">
-            <label for="name" class="text-[13px] font-semibold text-slate-700">Full Name</label>
-            <input
-              id="name"
-              v-model="form.name"
-              type="text"
-              required
-              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.12)] focus:outline-none"
-            />
-          </div>
+          <template v-if="isStudent">
+            <div class="border-t border-dotted border-slate-200 pt-5">
+              <p class="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-slate-400">
+                Student Record
+              </p>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <ProfileFormField id="student_id" label="ID Card Number">
+                  <input
+                    id="student_id"
+                    v-model="form.student_id"
+                    type="text"
+                    placeholder="e.g. 001"
+                    class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+                  />
+                </ProfileFormField>
 
-          <div class="flex flex-col gap-1.5">
-            <label for="email" class="text-[13px] font-semibold text-slate-700">Email Address</label>
-            <input
-              id="email"
-              v-model="form.email"
-              type="email"
-              required
-              :disabled="isOAuthUser"
-              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.12)] focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"
-            />
-            <span v-if="isOAuthUser" class="text-xs text-slate-400">
-              Email is managed by your {{ user?.provider }} account.
-            </span>
-          </div>
+                <ProfileFormField id="class_name" label="Class">
+                  <div class="flex gap-2">
+                    <select
+                      id="class_name"
+                      v-model="classPrefix"
+                      class="w-24 shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+                    >
+                      <option value="WEB">WEB</option>
+                      <option value="SNA">SNA</option>
+                    </select>
+                    <input
+                      v-model="classSuffix"
+                      type="text"
+                      placeholder="e.g. B 2026"
+                      class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+                    />
+                  </div>
+                </ProfileFormField>
 
-          <div class="flex flex-col gap-1.5">
-            <label for="gender" class="text-[13px] font-semibold text-slate-700">Gender</label>
-            <select
-              id="gender"
-              v-model="form.gender"
-              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.12)] focus:outline-none"
-            >
-              <option value="">Prefer not to say</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
+                <ProfileFormField id="generation" label="Generation">
+                  <input
+                    id="generation"
+                    v-model="form.generation"
+                    type="text"
+                    placeholder="e.g. 2026"
+                    class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+                  />
+                </ProfileFormField>
 
-          <p v-if="profileError" class="text-[13px] text-red-600">{{ profileError }}</p>
-          <p v-if="profileSuccess" class="text-[13px] text-green-700">Profile updated successfully.</p>
+                <ProfileFormField id="province" label="Province">
+                  <select
+                    id="province"
+                    v-model="form.province"
+                    class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
+                  >
+                    <option value="">Select province</option>
+                    <option v-for="p in CAMBODIA_PROVINCES" :key="p" :value="p">{{ p }}</option>
+                  </select>
+                </ProfileFormField>
+              </div>
+            </div>
+          </template>
 
-          <div class="flex justify-end">
+          <p v-if="profileError" class="rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-600">
+            {{ profileError }}
+          </p>
+          <p
+            v-if="profileSuccess"
+            class="rounded-lg bg-green-50 px-3 py-2 text-[13px] text-green-700"
+          >
+            Profile updated successfully.
+          </p>
+
+          <div class="flex justify-end pt-2">
             <button
               type="submit"
-              class="inline-flex items-center gap-1.5 rounded-lg border-none bg-cyan-500 px-4 py-2 text-sm font-semibold text-white cursor-pointer hover:enabled:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
+              class="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:enabled:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="savingProfile"
             >
               {{ savingProfile ? 'Saving…' : 'Save Changes' }}
             </button>
           </div>
         </form>
-      </section>
+      </ProfileSectionCard>
 
-      <section id="security" class="rounded-xl border border-slate-200 bg-white p-5 px-6">
-        <h3 class="mb-0.5 flex items-center gap-1.5 text-[15px] font-bold text-slate-900">
-          <Lock :size="16" />
+      <section
+        class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-6 py-5"
+      >
+        <div>
+          <h3 class="text-[15px] font-bold text-slate-900">Change Password</h3>
+          <p class="text-[13px] text-slate-400">
+            Choose a strong password you don't use elsewhere.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+          @click="openPasswordModal"
+        >
+          <Lock :size="15" />
           Change Password
-        </h3>
-        <p v-if="isOAuthUser" class="mb-4 text-[13px] text-slate-400">
-          Your account signs in via {{ user?.provider }}, so there's no password to change here.
-        </p>
-        <template v-else>
-          <p class="mb-4 text-[13px] text-slate-400">Choose a strong password you don't use elsewhere.</p>
-
-          <form class="flex flex-col gap-4" @submit.prevent="submitPassword">
-            <div class="flex flex-col gap-1.5">
-              <label for="current-password" class="text-[13px] font-semibold text-slate-700">Current Password</label>
-              <input
-                id="current-password"
-                v-model="passwordForm.current"
-                type="password"
-                required
-                class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.12)] focus:outline-none"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label for="new-password" class="text-[13px] font-semibold text-slate-700">New Password</label>
-              <input
-                id="new-password"
-                v-model="passwordForm.next"
-                type="password"
-                required
-                minlength="8"
-                class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.12)] focus:outline-none"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label for="confirm-password" class="text-[13px] font-semibold text-slate-700">Confirm New Password</label>
-              <input
-                id="confirm-password"
-                v-model="passwordForm.confirm"
-                type="password"
-                required
-                minlength="8"
-                class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(6,182,212,0.12)] focus:outline-none"
-              />
-            </div>
-
-            <p v-if="passwordError" class="text-[13px] text-red-600">{{ passwordError }}</p>
-            <p v-if="passwordSuccess" class="text-[13px] text-green-700">Password updated successfully.</p>
-
-            <div class="flex justify-end">
-              <button
-                type="submit"
-                class="inline-flex items-center gap-1.5 rounded-lg border-none bg-cyan-500 px-4 py-2 text-sm font-semibold text-white cursor-pointer hover:enabled:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
-                :disabled="savingPassword"
-              >
-                {{ savingPassword ? 'Updating…' : 'Update Password' }}
-              </button>
-            </div>
-          </form>
-        </template>
+        </button>
       </section>
     </div>
+
+    <ChangePasswordModal
+      :open="showPasswordModal"
+      v-model:next="passwordForm.next"
+      v-model:confirm="passwordForm.confirm"
+      :error="passwordError"
+      :success="passwordSuccess"
+      :saving="savingPassword"
+      @close="closePasswordModal"
+      @submit="submitPassword(() => (showPasswordModal = false))"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
-import { useAuthStore } from '@/stores/auth';
-import { ArrowLeft, Upload, Lock } from 'lucide-vue-next';
-import { authService } from '@/services/authService';
+import { ref, reactive, computed, watch, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+import { ArrowLeft, Lock } from 'lucide-vue-next';
+import { useDefaultAvatars } from '../composables/useDefaultAvatars';
+import { useChangePassword } from '../composables/useChangePassword';
+import { extractErrorMessage } from '../utils/errors';
+import type { Gender } from '../types/user';
+import ProfileSectionCard from '../components/user/ProfileSectionCard.vue';
+import AvatarPicker from '../components/user/AvatarPicker.vue';
+import ProfileFormField from '../components/user/ProfileFormField.vue';
+import ChangePasswordModal from '../components/user/ChangePasswordModal.vue';
+
+const CAMBODIA_PROVINCES = [
+  'Banteay Meanchey',
+  'Battambang',
+  'Kampong Cham',
+  'Kampong Chhnang',
+  'Kampong Speu',
+  'Kampong Thom',
+  'Kampot',
+  'Kandal',
+  'Kep',
+  'Koh Kong',
+  'Kratié',
+  'Mondulkiri',
+  'Oddar Meanchey',
+  'Pailin',
+  'Phnom Penh',
+  'Preah Sihanouk',
+  'Preah Vihear',
+  'Prey Veng',
+  'Pursat',
+  'Ratanakiri',
+  'Siem Reap',
+  'Stung Treng',
+  'Svay Rieng',
+  'Takéo',
+  'Tboung Khmum',
+];
 
 const auth = useAuthStore();
+const router = useRouter();
 const user = computed(() => auth.user);
-const isOAuthUser = computed(() => !!user.value?.provider);
+const isStudent = computed(() => user.value?.role === 'student');
 
 const initials = computed(() =>
   (user.value?.name ?? '')
@@ -175,87 +253,102 @@ const initials = computed(() =>
     .toUpperCase(),
 );
 
+const { avatars: defaultAvatars, loading: loadingAvatars, urlFor } = useDefaultAvatars();
+const selectedAvatarUrl = computed(() => urlFor(form.avatar_id));
+
+function padStudentId(value) {
+  if (value === null || value === undefined || value === '') return '';
+  return String(value).padStart(3, '0');
+}
+
 const form = reactive({
   name: user.value?.name ?? '',
   email: user.value?.email ?? '',
-  gender: user.value?.gender ?? '',
+  phone: user.value?.phone ?? '',
+  gender: (user.value?.gender ?? ''),
+  student_id: padStudentId(user.value?.student_id),
+  class_name: user.value?.class_name ?? '',
+  generation: user.value?.generation ?? '',
+  province: user.value?.province ?? '',
+  avatar_id: user.value?.avatar_id ?? null,
 });
-
-const avatarFile = ref<File | null>(null);
-const avatarPreview = ref<string | null>(user.value?.avatar ?? null);
-
-function onAvatarChange(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (!file) return;
-  avatarFile.value = file;
-  avatarPreview.value = URL.createObjectURL(file);
-}
-
-function removeAvatar() {
-  avatarFile.value = null;
-  avatarPreview.value = null;
-}
 
 const savingProfile = ref(false);
 const profileError = ref('');
 const profileSuccess = ref(false);
+const CLASS_PREFIXES = ['WEB', 'SNA'];
+function splitClass(value) {
+  const match = CLASS_PREFIXES.find((prefix) => value.toUpperCase().startsWith(prefix));
+  if (match) {
+
+    const rest = value.slice(match.length).replace(/^\s*-?\s*/, '');
+    return { prefix: match, suffix: rest };
+  }
+  return { prefix: CLASS_PREFIXES[0], suffix: value };
+}
+
+const initialClassParts = splitClass(form.class_name);
+const classPrefix = ref(initialClassParts.prefix);
+const classSuffix = ref(initialClassParts.suffix);
+
+watch([classPrefix, classSuffix], ([prefix, suffix]) => {
+  form.class_name = `${prefix} - ${suffix.trim()}`;
+});
 
 async function submitProfile() {
   savingProfile.value = true;
   profileError.value = '';
   profileSuccess.value = false;
   try {
-    const payload = new FormData();
-    payload.append('name', form.name);
-    if (!isOAuthUser.value) payload.append('email', form.email);
-    if (form.gender) payload.append('gender', form.gender);
-    if (avatarFile.value) payload.append('avatar', avatarFile.value);
-
-    const { data: updatedUser } = await authService.updateProfile(payload);
-    auth.setUser(updatedUser); 
+    await auth.updateProfile({
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      avatar_id: form.avatar_id,
+      ...(isStudent.value
+        ? {
+            gender: form.gender || undefined,
+            student_id: form.student_id,
+            class_name: form.class_name,
+            generation: form.generation,
+            province: form.province,
+          }
+        : {}),
+    });
     profileSuccess.value = true;
-  } catch (err: any) {
-    profileError.value = err?.response?.data?.message ?? 'Could not update profile.';
+    setTimeout(() => {
+      router.push('/profile');
+    }, 900);
+  } catch (err) {
+    profileError.value = extractErrorMessage(err, 'Could not update profile.');
   } finally {
     savingProfile.value = false;
   }
 }
 
-const passwordForm = reactive({ current: '', next: '', confirm: '' });
-const savingPassword = ref(false);
-const passwordError = ref('');
-const passwordSuccess = ref(false);
+const showPasswordModal = ref(false);
+const {
+  form: passwordForm,
+  saving: savingPassword,
+  error: passwordError,
+  success: passwordSuccess,
+  submit: submitPassword,
+  reset: resetPasswordForm,
+} = useChangePassword({ autoCloseMs: 1200 });
 
-async function submitPassword() {
-  passwordError.value = '';
-  passwordSuccess.value = false;
+function openPasswordModal() {
+  resetPasswordForm();
+  showPasswordModal.value = true;
+}
 
-  if (passwordForm.next !== passwordForm.confirm) {
-    passwordError.value = 'New password and confirmation do not match.';
-    return;
-  }
-
-  savingPassword.value = true;
-  try {
-    await authService.changePassword({
-      current_password: passwordForm.current,
-      password: passwordForm.next,
-      password_confirmation: passwordForm.confirm,
-    });
-    passwordSuccess.value = true;
-    passwordForm.current = '';
-    passwordForm.next = '';
-    passwordForm.confirm = '';
-  } catch (err: any) {
-    passwordError.value = err?.response?.data?.message ?? 'Could not update password.';
-  } finally {
-    savingPassword.value = false;
-  }
+function closePasswordModal() {
+  showPasswordModal.value = false;
+  resetPasswordForm();
 }
 
 onMounted(() => {
   if (window.location.hash === '#security') {
-    document.getElementById('security')?.scrollIntoView({ behavior: 'smooth' });
+    openPasswordModal();
   }
 });
 </script>

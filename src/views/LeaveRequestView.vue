@@ -20,14 +20,14 @@
       <LeaveLoadingSkeleton v-if="loading" />
 
       <LeaveEmptyState
-        v-else-if="items.length === 0"
+        v-else-if="displayItems.length === 0"
         :hasActiveFilters="hasActiveFilters"
         @clear-filters="clearAllFilters"
       />
 
       <LeaveRequestsTable
         v-else
-        :items="items"
+        :items="displayItems"
         :formatDate="formatDate"
         :viewRequest="viewRequest"
         :editRequest="editRequest"
@@ -59,20 +59,26 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useLeaveRequests } from '@/composables/useLeaveRequests'
 
-import LeaveRequestsHero from '@/components/leave/LeaveRequestsHero.vue'
-import LeaveStatsRow from '@/components/leave/LeaveStatsRow.vue'
-import LeaveFiltersBar from '@/components/leave/LeaveFiltersBar.vue'
-import LeaveErrorBanner from '@/components/leave/LeaveErrorBanner.vue'
-import LeaveLoadingSkeleton from '@/components/leave/LeaveLoadingSkeleton.vue'
-import LeaveEmptyState from '@/components/leave/LeaveEmptyState.vue'
-import LeaveRequestsTable from '@/components/leave/LeaveRequestsTable.vue'
-import LeaveRequestsPagination from '@/components/leave/LeaveRequestsPagination.vue'
-import CancelLeaveModal from '@/components/leave/CancelLeaveModal.vue'
+import LeaveRequestsHero from '@/components/leave-request/LeaveRequestsHero.vue'
+import LeaveStatsRow from '@/components/leave-request/LeaveStatsRow.vue'
+import LeaveFiltersBar from '@/components/leave-request/LeaveFiltersBar.vue'
+import LeaveErrorBanner from '@/components/leave-request/LeaveErrorBanner.vue'
+import LeaveLoadingSkeleton from '@/components/leave-request/LeaveLoadingSkeleton.vue'
+import LeaveEmptyState from '@/components/leave-request/LeaveEmptyState.vue'
+import LeaveRequestsTable from '@/components/leave-request/LeaveRequestsTable.vue'
+import LeaveRequestsPagination from '@/components/leave-request/LeaveRequestsPagination.vue'
+import CancelLeaveModal from '@/components/leave-request/CancelLeaveModal.vue'
+
+const route = useRoute()
+const router = useRouter()
 
 const {
   items,
+  displayItems,
   leaveTypes,
   loading,
   errMsg,
@@ -98,4 +104,13 @@ const {
   confirmCancel,
   doCancel,
 } = useLeaveRequests()
+
+onMounted(() => {
+  const idParam = route.query.request
+  if (!idParam) return
+
+  const numericId = Number(idParam)
+  if (Number.isFinite(numericId)) viewRequest(numericId)
+  router.replace({ query: { ...route.query, request: undefined } })
+})
 </script>

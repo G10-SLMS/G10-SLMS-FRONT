@@ -1,4 +1,17 @@
-// ── API-driven leave request types (used by leaveService + useLeaveRequests) ──
+
+export interface LeaveRequestUser {
+  id: number
+  name: string
+  email?: string
+  phone?: string | null
+  gender?: 'male' | 'female' | null
+  student_id?: number | null
+  class_name?: string | null
+  generation?: string | null
+  province?: string | null
+  avatar_id?: number | null
+  avatar?: { id: number; url: string | null } | null
+}
 
 export interface LeaveRequestPayload {
   leave_type_id: number | null
@@ -12,6 +25,7 @@ export interface LeaveRequestPayload {
 export interface LeaveRequestResponse {
   id: number
   user_id: number
+  user: LeaveRequestUser | null
   leave_type_id: number
   leave_type_name: string
   start_date: string
@@ -27,6 +41,7 @@ export interface LeaveRequestResponse {
 export interface LeaveRequestListItem {
   id: number
   user_id: number
+  user: LeaveRequestUser | null
   leave_type_id: number
   leave_type_name: string
   start_date: string
@@ -55,13 +70,52 @@ export interface PaginatedResponse<T> {
   total: number
 }
 
-// ── UI-facing types (used by the Approvals table) ──
+export interface RawLeaveTypeRef {
+  id: number
+  name: string
+  code?: string
+}
 
-export type LeaveStatus = 'Pending' | 'Approved' | 'Rejected'
+export interface RawLeaveRequest {
+  id: number
+  user_id: number
+  leave_type_id: number
+  leave_type?: RawLeaveTypeRef | null
+  start_date: string
+  end_date: string
+  reason: string
+  status: string
+  review_note?: string | null
+  reviewed_by?: number | null
+  reviewed_at?: string | null
+  created_at: string
+  updated_at: string
+  user?: LeaveRequestUser | null
+  reviewer?: { id: number; name: string } | null
+}
+
+export interface RawPaginationMeta {
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+  from?: number | null
+  to?: number | null
+}
+
+export interface RawApiEnvelope<T> {
+  success: boolean
+  message: string
+  data: T
+  meta?: RawPaginationMeta
+}
+
+export type LeaveStatus = 'Pending' | 'Approved' | 'Rejected' | 'Cancelled'
 
 export interface LeaveRequest {
   id: number
   student: string
+  studentAvatarUrl?: string | null
   type: string
   startDate: string
   endDate: string
@@ -70,13 +124,44 @@ export interface LeaveRequest {
   processing?: boolean
 }
 
-// ── Leave type configuration (used by Leave Types management) ──
-
 export interface LeaveType {
-  id?: number | string
+  id?: number
   name: string
-  description?: string
-  defaultDays: number
-  requiresApproval: boolean
-  active: boolean
+  code: string
+  description: string | null
+  max_days_per_year: number
+  requires_attachment: boolean
+  is_active: boolean
+  created_at?: string
+  updated_at?: string
+  deleted_at?: string | null
+}
+
+export interface LeaveTypePayload {
+  name: string
+  code: string
+  description?: string | null
+  max_days_per_year: number
+  requires_attachment?: boolean
+  is_active?: boolean
+}
+
+export interface LeaveRequestDetail {
+  student: string
+  studentAvatarUrl?: string | null
+  leaveType: string
+  reason: string
+  startDate: string
+  endDate: string
+  attachment?: { name: string; url: string } | null
+  status: LeaveStatus
+  reviewer?: string | null
+  reviewDate?: string | null
+  comment?: string | null
+}
+
+export interface LeaveTypeResponse {
+  success: boolean
+  message: string
+  data: LeaveType
 }

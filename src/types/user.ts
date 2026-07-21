@@ -1,13 +1,26 @@
 export type UserRole = 'admin' | 'trainer' | 'student'
 
+// Matches the `gender` enum defined on the users table migration.
+export type Gender = 'male' | 'female'
 export interface User {
   id: number
   name: string
   email: string
   role: UserRole
   trainer_id: number | null
-  avatar: string | null
+  avatar_id: number | null
   email_verified_at: string | null
+
+  // Applies to all roles
+  phone: string | null
+
+  // Student-only fields
+  gender: Gender | null
+  student_id: string | null
+  class_name: string | null
+  generation: string | null
+  province: string | null
+
   created_at: string
   updated_at: string
 }
@@ -24,13 +37,12 @@ export interface RegisterPayload {
   password_confirmation: string
   role?: UserRole
   trainer_id?: number | null
+  student_id?: string | null
 }
 
 export interface LoginPayload {
   email: string
   password: string
-  remember?: boolean
-  role?: 'student' | 'trainer' 
 }
 
 export interface ResetPasswordPayload {
@@ -42,6 +54,75 @@ export interface ResetPasswordPayload {
 
 export interface UpdateProfilePayload {
   name?: string
+  email?: string
   password?: string
   password_confirmation?: string
+  avatar_id?: number | null
+  phone?: string
+  student_id?: string
+  class_name?: string
+  generation?: string
+  province?: string
+  gender?: Gender
+}
+
+export interface DefaultAvatar {
+  id: number
+  filename: string
+  url: string
+  gender: Gender | null
+}
+
+export interface ChangePasswordPayload {
+  current_password: string
+  new_password: string
+  new_password_confirmation: string
+}
+
+// Used by the User Management screen (admin CRUD)
+export interface ManagedUser {
+  id: number
+  name: string
+  email: string
+  role: UserRole
+  joined: string
+  avatar_id: number | null
+  avatar_url: string | null
+}
+
+export interface RawUser {
+  id: number
+  name: string
+  email: string
+  role: UserRole
+  created_at: string
+  avatar_id: number | null
+  avatar_url: string | null
+}
+
+export interface UserPayload {
+  name: string
+  email: string
+  role: UserRole
+}
+
+export interface UserListMeta {
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+}
+
+export interface UserRoleCounts {
+  total: number
+  student: number
+  trainer: number
+  admin: number
+}
+
+export interface UserListParams {
+  search?: string
+  role?: UserRole | ''
+  page?: number
+  per_page?: number
 }

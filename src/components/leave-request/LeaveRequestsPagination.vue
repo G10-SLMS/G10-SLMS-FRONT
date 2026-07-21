@@ -44,7 +44,7 @@
     <select
       class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 outline-none focus:border-blue-500"
       :value="perPage"
-      @change="$emit('update:perPage', Number(($event.target as HTMLSelectElement).value)); fetchRequests(1)"
+      @change="$emit('update:perPage', Number(($event.target as HTMLSelectElement).value))"
     >
       <option :value="5">5 / page</option>
       <option :value="10">10 / page</option>

@@ -1,16 +1,16 @@
 <template>
   <div class="flex h-[calc(100vh-120px)] max-w-full flex-col">
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <button class="flex h-9 w-9 items-center justify-center rounded-lg border-none bg-cyan-400/20 text-cyan-600 cursor-default" aria-hidden="true">
+    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+        <button class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-none bg-cyan-400/20 text-cyan-600 cursor-default" aria-hidden="true">
           <CalendarDays :size="20" :stroke-width="1.8" />
         </button>
         <h1 class="m-0">Calendar</h1>
         <button
-          class="h-[34px] rounded-md border border-gray-200 bg-white px-3.5 text-[13px] font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
+          class="h-[34px] shrink-0 rounded-md border border-gray-200 bg-white px-3.5 text-[13px] font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
           @click="goToday"
         >Today</button>
-        <div class="flex gap-1">
+        <div class="flex shrink-0 gap-1">
           <button
             class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 cursor-pointer hover:bg-gray-100"
             aria-label="Previous week"
@@ -26,7 +26,7 @@
             <ChevronRight :size="18" :stroke-width="1.8" />
           </button>
         </div>
-        <span class="text-base font-semibold text-gray-800">{{ rangeLabel }}</span>
+        <span class="text-sm font-semibold text-gray-800 sm:text-base">{{ rangeLabel }}</span>
       </div>
 
       <div class="flex items-center">
@@ -45,59 +45,61 @@
     </div>
 
     <div class="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[10px] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
-      <!-- Day headers -->
-      <div class="grid shrink-0 grid-cols-[56px_repeat(7,1fr)] border-b border-gray-200">
-        <div class="border-r border-gray-100"></div>
-        <div
-          v-for="d in weekDays"
-          :key="d.dateStr"
-          class="flex flex-col items-center justify-center gap-0.5 px-1 py-2"
-        >
-          <span class="text-[11px] font-semibold tracking-wide text-gray-500" :class="d.isToday ? 'text-cyan-500' : ''">{{ d.dayName }}</span>
-          <span
-            class="flex h-[30px] w-[30px] items-center justify-center rounded-full text-base font-semibold text-gray-800"
-            :class="d.isToday ? 'bg-cyan-400 text-white' : ''"
-          >{{ d.dayNumber }}</span>
-        </div>
-      </div>
-
-      <!-- Scrollable time grid -->
-      <div class="flex-1 overflow-y-auto">
-        <div class="relative grid grid-cols-[56px_repeat(7,1fr)]">
-          <!-- Hour labels -->
-          <div class="border-r border-gray-100">
-            <div v-for="h in hours" :key="h" class="relative h-[56px]">
-              <span class="absolute -top-[7px] right-2 bg-white px-0.5 text-[11px] text-gray-400">{{ formatHour(h) }}</span>
+      <div class="flex-1 min-h-0 overflow-auto">
+        <div class="min-w-[610px]">
+          <!-- Day headers -->
+          <div class="sticky top-0 z-20 grid grid-cols-[56px_repeat(7,minmax(76px,1fr))] border-b border-gray-200 bg-white">
+            <div class="sticky left-0 z-10 border-r border-gray-100 bg-white"></div>
+            <div
+              v-for="d in weekDays"
+              :key="d.dateStr"
+              class="flex flex-col items-center justify-center gap-0.5 px-1 py-2"
+            >
+              <span class="text-[11px] font-semibold tracking-wide text-gray-500" :class="d.isToday ? 'text-cyan-500' : ''">{{ d.dayName }}</span>
+              <span
+                class="flex h-[30px] w-[30px] items-center justify-center rounded-full text-base font-semibold text-gray-800"
+                :class="d.isToday ? 'bg-cyan-400 text-white' : ''"
+              >{{ d.dayNumber }}</span>
             </div>
           </div>
 
-          <!-- Day columns -->
-          <div v-for="d in weekDays" :key="d.dateStr" class="relative border-r border-gray-100 last:border-none">
-            <div v-for="h in hours" :key="h" class="h-[56px] border-b border-gray-100"></div>
+          <!-- Time grid -->
+          <div class="relative grid grid-cols-[56px_repeat(7,minmax(76px,1fr))]">
+            <!-- Hour labels -->
+            <div class="sticky left-0 z-10 border-r border-gray-100 bg-white">
+              <div v-for="h in hours" :key="h" class="relative h-[56px]">
+                <span class="absolute -top-[7px] right-2 bg-white px-0.5 text-[11px] text-gray-400">{{ formatHour(h) }}</span>
+              </div>
+            </div>
 
-            <CalendarLeaveBlock
-              v-for="(leave, i) in leavesFor(d.dateStr)"
-              :key="leave.id"
-              :status="leave.status"
-              :title="leaveChipTitle(leave)"
-              :block-style="leaveBlockStyle(i, leavesFor(d.dateStr).length)"
-            >
-              <template #title>
-                <template v-if="auth.isAdmin">{{ leave.student }}</template>
-                <template v-else>{{ leave.type }}</template>
-              </template>
-              <template #subtitle>
-                <template v-if="auth.isAdmin">{{ leave.type }} · </template>{{ leave.status }}
-              </template>
-            </CalendarLeaveBlock>
+            <!-- Day columns -->
+            <div v-for="d in weekDays" :key="d.dateStr" class="relative border-r border-gray-100 last:border-none">
+              <div v-for="h in hours" :key="h" class="h-[56px] border-b border-gray-100"></div>
 
-            <!-- Current time line -->
-            <div
-              v-if="d.isToday && nowLineVisible"
-              class="absolute left-0 right-0 z-[5] h-0 border-t-2 border-red-500"
-              :style="{ top: nowOffset + 'px' }"
-            >
-              <span class="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-red-500"></span>
+              <CalendarLeaveBlock
+                v-for="(leave, i) in leavesFor(d.dateStr)"
+                :key="leave.id"
+                :status="leave.status"
+                :title="leaveChipTitle(leave)"
+                :block-style="leaveBlockStyle(i, leavesFor(d.dateStr).length)"
+              >
+                <template #title>
+                  <template v-if="auth.isAdmin">{{ leave.student }}</template>
+                  <template v-else>{{ leave.type }}</template>
+                </template>
+                <template #subtitle>
+                  <template v-if="auth.isAdmin">{{ leave.type }} · </template>{{ leave.status }}
+                </template>
+              </CalendarLeaveBlock>
+
+              <!-- Current time line -->
+              <div
+                v-if="d.isToday && nowLineVisible"
+                class="absolute left-0 right-0 z-[5] h-0 border-t-2 border-red-500"
+                :style="{ top: nowOffset + 'px' }"
+              >
+                <span class="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-red-500"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -111,6 +113,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import CalendarLeaveBlock from '@/components/calendar/CalendarLeaveBlock.vue'
+import { formatWeekday } from '@/utils/date'
 
 const auth = useAuthStore()
 
@@ -180,7 +183,7 @@ const weekDays = computed(() => {
   return Array.from({ length: 7 }, (_, i) => {
     const d = addDays(start, i)
     const key = dateKey(d)
-    return { dateStr: key, dayName: d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(), dayNumber: d.getDate(), isToday: key === todayKey }
+    return { dateStr: key, dayName: formatWeekday(d), dayNumber: d.getDate(), isToday: key === todayKey }
   })
 })
 

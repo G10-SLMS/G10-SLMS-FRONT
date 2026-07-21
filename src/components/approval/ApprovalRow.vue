@@ -2,8 +2,14 @@
   <tr class="border-b border-gray-100 last:border-none">
     <td class="px-4 py-3.5 align-middle text-left">
       <div class="flex items-center gap-2.5 font-medium">
-        <span class="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-cyan-400 text-xs font-semibold text-white">
-          {{ getInitials(request.student) }}
+        <span class="flex h-[30px] w-[30px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white">
+          <img
+            v-if="request.studentAvatarUrl"
+            :src="request.studentAvatarUrl"
+            :alt="request.student"
+            class="h-full w-full object-cover"
+          />
+          <template v-else>{{ getInitials(request.student) }}</template>
         </span>
         {{ request.student }}
       </div>
@@ -21,28 +27,38 @@
       <LeaveStatusBadge :status="request.status" />
     </td>
 
-    <td v-if="showActions" class="px-4 py-3.5 align-middle text-left">
+    <td class="px-4 py-3.5 align-middle text-left">
       <div class="flex gap-2">
         <button
-          v-for="action in actions"
-          :key="action.decision"
-          :class="[actionButtonBaseClasses, action.classes]"
-          :disabled="request.processing"
-          @click="$emit('decide', action.decision)"
+          class="flex items-center gap-1 whitespace-nowrap rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50"
+          @click="$emit('view')"
         >
-          <component :is="action.icon" :size="15" />
-          {{ action.label }}
+          <Eye :size="15" />
+          View
         </button>
+
+        <template v-if="showActions">
+          <button
+            v-for="action in actions"
+            :key="action.decision"
+            :class="[actionButtonBaseClasses, action.classes]"
+            :disabled="request.processing"
+            @click="$emit('decide', action.decision)"
+          >
+            <component :is="action.icon" :size="15" />
+            {{ action.label }}
+          </button>
+        </template>
       </div>
     </td>
   </tr>
 </template>
 
 <script setup lang="ts">
-import { Check, X } from 'lucide-vue-next'
-import LeaveStatusBadge from '@/components/leave/LeaveStatusBadge.vue'
+import { Check, X, Eye } from 'lucide-vue-next'
+import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
 import { getInitials } from '@/utils/initials'
-import type { LeaveRequest, LeaveStatus } from '@/types/leave'
+import type { LeaveRequest } from '@/types/leave'
 
 defineProps<{
   request: LeaveRequest
@@ -50,7 +66,8 @@ defineProps<{
 }>()
 
 defineEmits<{
-  decide: [decision: LeaveStatus]
+  decide: [decision: 'Approved' | 'Rejected']
+  view: []
 }>()
 
 const actionButtonBaseClasses =

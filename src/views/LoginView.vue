@@ -26,7 +26,7 @@ function fillDemo(kind: 'student' | 'fellow' | 'trainer') {
   const demoEmails: Record<typeof kind, string> = {
     student: '@student.passerellesnumeriques.org',
     fellow: '@fellow.passerellesnumeriques.org',
-    trainer: '@trainer.passerellesnumeriques.org',
+    trainer: '@passerellesnumeriques.org',
   }
   form.email = demoEmails[kind]
   form.password = kind === 'trainer' ? 'password' : 'password123'
@@ -41,11 +41,11 @@ function handleForgotPassword() {
 }
 
 async function handleSubmit() {
+  // Note: the backend's /login endpoint only accepts email + password —
+  // there's no "remember me" or role parameter on AuthController::login.
   const success = await auth.login({
     email: form.email,
     password: form.password,
-    remember: form.remember,
-    role: selectedRole.value ?? undefined,
   })
   if (success) router.push('/')
 }

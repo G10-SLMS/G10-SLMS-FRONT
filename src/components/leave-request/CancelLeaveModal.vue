@@ -91,9 +91,5 @@ const props = defineProps<{
   emitClose: () => void
 }>()
 
-// Destructuring props directly (e.g. `const { cancelTarget } = props`) breaks
-// reactivity outside of the compiler-supported reactive-props-destructure
-// pattern, so the modal would stop updating after the first render. A
-// computed keeps this reactive while still reading fresh values from props.
 const cancelTarget = computed(() => props.cancelTarget)
 </script>
