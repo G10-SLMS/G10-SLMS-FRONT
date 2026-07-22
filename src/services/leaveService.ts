@@ -49,7 +49,14 @@ function toListItem(raw: RawLeaveRequest): LeaveRequestListItem {
   }
 }
 
+function latestAttachment(raw: RawLeaveRequest) {
+  const attachments = raw.attachments ?? []
+  return attachments.length > 0 ? attachments[attachments.length - 1] : null
+}
+
 function toRequestResponse(raw: RawLeaveRequest): LeaveRequestResponse {
+  const attachment = latestAttachment(raw)
+
   return {
     id: raw.id,
     user_id: raw.user_id,
@@ -60,16 +67,10 @@ function toRequestResponse(raw: RawLeaveRequest): LeaveRequestResponse {
     end_date: raw.end_date.split('T')[0],
     total_days: totalDaysBetween(raw.start_date, raw.end_date),
     reason: raw.reason,
-    supporting_document: null,
+    supporting_document: attachment?.url ?? null,
     status: raw.status,
     created_at: raw.created_at,
     updated_at: raw.updated_at,
-  }
-}
-
-function multipartConfig() {
-  return {
-    headers: { 'Content-Type': undefined },
   }
 }
 
@@ -143,11 +144,7 @@ export const leaveService = {
       formData.append('supporting_document', payload.supporting_document)
     }
 
-    const { data } = await api.post<RawApiEnvelope<RawLeaveRequest>>(
-      '/leave-requests',
-      formData,
-      multipartConfig(),
-    )
+    const { data } = await api.post<RawApiEnvelope<RawLeaveRequest>>('/leave-requests', formData)
     return toRequestResponse(data.data)
   },
 
@@ -166,14 +163,13 @@ export const leaveService = {
     formData.append('reason', payload.reason)
     if (payload.supporting_document) {
       formData.append('supporting_document', payload.supporting_document)
+    } else if (payload.supporting_document === null) {
+ 
+      formData.append('remove_attachment', '1')
     }
     formData.append('_method', 'PUT')
 
-    const { data } = await api.post<RawApiEnvelope<RawLeaveRequest>>(
-      `/leave-requests/${id}`,
-      formData,
-      multipartConfig(),
-    )
+    const { data } = await api.post<RawApiEnvelope<RawLeaveRequest>>(`/leave-requests/${id}`, formData)
     return toRequestResponse(data.data)
   },
 

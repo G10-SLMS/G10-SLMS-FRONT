@@ -226,46 +226,33 @@
                   Supporting Document
                 </label>
 
-                <a
-                  :href="existingAttachmentUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="flex items-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-3.5 py-2.5 text-xs text-cyan-700 transition-colors hover:bg-gray-100"
-                >
-                  <Paperclip :size="16" />
-                  <span class="truncate">View attached file</span>
-                </a>
+                <AttachmentCard
+                  :url="existingAttachmentUrl"
+                  :name="existingAttachmentName"
+                  :size="existingAttachmentSize"
+                />
               </div>
 
               <!-- Attachment (create/edit mode) -->
               <div v-if="!isViewMode" class="mb-4">
-                <label class="mb-1.5 block text-xs font-medium text-gray-700"
-                  >Supporting Document (optional)</label
-                >
+                <label class="mb-1.5 block text-xs font-medium text-gray-700">
+                  Supporting Document
+                  <span v-if="attachmentRequired" class="text-red-600">*</span>
+                  <span v-else class="text-gray-400">(optional)</span>
+                </label>
 
                 <!-- Existing file on an edit, shown until replaced/removed -->
-                <div
+                <AttachmentCard
                   v-if="hasExistingAttachment && !removeExistingAttachment && !form.attachment"
-                  class="mb-2 flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-gray-50 px-3.5 py-2.5 text-xs"
-                >
-                  <a
-                    :href="existingAttachmentUrl ?? undefined"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="flex items-center gap-2 text-cyan-700 hover:underline"
-                  >
-                    <Paperclip :size="16" />
-                    <span class="truncate">Current file</span>
-                  </a>
-                  <button
-                    type="button"
-                    class="shrink-0 text-red-600 hover:underline"
-                    :disabled="submitting"
-                    @click="removeExistingAttachment = true"
-                  >
-                    Remove
-                  </button>
-                </div>
+                  class="mb-2"
+                  :url="existingAttachmentUrl"
+                  :name="existingAttachmentName"
+                  :size="existingAttachmentSize"
+                  removable
+                  :show-view-label="false"
+                  :disabled="submitting"
+                  @remove="removeExistingAttachment = true"
+                />
                 <p v-else-if="removeExistingAttachment" class="mb-2 text-xs text-gray-500">
                   Existing file will be removed on save.
                   <button
@@ -283,7 +270,11 @@
                   :max-size-m-b="5"
                   :accept="['pdf', 'docx', 'png', 'jpg']"
                   :disabled="submitting"
+                  :mock-upload="false"
                 />
+                <p v-if="attachmentRequired" class="mt-1.5 text-xs text-gray-500">
+                  This leave type requires a supporting document before it can be submitted.
+                </p>
               </div>
             </form>
 
@@ -340,10 +331,11 @@ import { commentService } from '@/services/commentService';
 import type { LeaveType, LeaveRequestPayload, LeaveRequestUser } from '@/types/leave';
 import type { Comment } from '@/types/comment';
 import type { AxiosError } from 'axios';
-import { FileText, Calendar, Paperclip, X, Lock } from 'lucide-vue-next';
+import { FileText, Calendar, X, Lock } from 'lucide-vue-next';
 import { getInitials, getAvatarColor } from '@/utils/initials';
 import StudentProfileModal from '@/components/leave-request/StudentProfileModal.vue';
 import FileUpload from '@/components/ui/FileUpload.vue';
+import AttachmentCard from '@/components/shared/AttachmentCard.vue';
 import CommentSection from '@/components/ui/CommentSection.vue';
 
 const auth = useAuthStore();
@@ -367,10 +359,9 @@ const originalStatus = ref('');
 const requestUser = ref<LeaveRequestUser | null>(null);
 const showProfile = ref(false);
 const existingAttachmentUrl = ref<string | null>(null);
-// Tracks whether the loaded request already has a supporting document on the
-// server, so we know whether to keep it if the user doesn't pick a new file.
+const existingAttachmentName = ref<string | null>(null);
+const existingAttachmentSize = ref<number | null>(null);
 const hasExistingAttachment = ref(false);
-// Lets the user explicitly remove the previously-attached file.
 const removeExistingAttachment = ref(false);
 
 const comments = ref<Comment[]>([]);
@@ -379,6 +370,14 @@ const commentsLoading = ref(false);
 const leaveTypes = ref<LeaveType[]>([]);
 const typesLoading = ref(false);
 const activeLeaveTypes = computed(() => leaveTypes.value.filter((t) => t.is_active));
+const selectedLeaveType = computed(() =>
+  leaveTypes.value.find((t) => t.id === Number(form.leaveTypeId)),
+);
+const attachmentRequired = computed(() => selectedLeaveType.value?.requires_attachment === true);
+const hasAttachment = computed(
+  () => Boolean(form.attachment) || (hasExistingAttachment.value && !removeExistingAttachment.value),
+);
+const attachmentMissing = computed(() => attachmentRequired.value && !hasAttachment.value);
 
 const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -391,8 +390,6 @@ const form = reactive({
   attachment: null as File | null,
 });
 
-// Guards against a stale async load overwriting a newer one if the modal is
-// reused for a different request before the previous fetch resolves.
 let loadToken = 0;
 
 function resetForm() {
@@ -410,6 +407,8 @@ function resetForm() {
   requestUser.value = null;
   showProfile.value = false;
   existingAttachmentUrl.value = null;
+  existingAttachmentName.value = null;
+  existingAttachmentSize.value = null;
   hasExistingAttachment.value = false;
   removeExistingAttachment.value = false;
   comments.value = [];
@@ -429,7 +428,8 @@ const canSubmit = computed(
     form.startDate.length > 0 &&
     form.endDate.length > 0 &&
     form.reason.trim().length > 0 &&
-    !dateRangeError.value,
+    !dateRangeError.value &&
+    !attachmentMissing.value,
 );
 
 function onStartDateChange() {
@@ -493,9 +493,6 @@ async function loadRequest() {
     canEdit.value = data.status === 'pending';
     requestUser.value = data.user;
 
-    // Restore "Other" custom leave types correctly. If leave_type_id is null
-    // but a custom_leave_type string exists, select the "other" option and
-    // populate the free-text field; otherwise use the known type id.
     if (data.leave_type_id == null && data.custom_leave_type) {
       form.leaveTypeId = 'other';
       form.customType = data.custom_leave_type;
@@ -507,6 +504,8 @@ async function loadRequest() {
     form.endDate = data.end_date;
     form.reason = data.reason;
     existingAttachmentUrl.value = data.supporting_document;
+    existingAttachmentName.value = data.supporting_document_name ?? null;
+    existingAttachmentSize.value = data.supporting_document_size ?? null;
     hasExistingAttachment.value = Boolean(data.supporting_document);
 
     if (isViewMode.value) {
@@ -520,8 +519,6 @@ async function loadRequest() {
   }
 }
 
-// Re-load whenever the modal opens OR when it's already open and switches to
-// a different request (editingId changes), not just on the open/close edge.
 watch(
   () => [modal.isOpen, modal.editingId],
   ([open]) => {
@@ -618,10 +615,6 @@ async function handleSubmit() {
       start_date: form.startDate,
       end_date: form.endDate,
       reason: form.reason,
-      // Only overwrite the supporting document when the user picked a new
-      // file or explicitly asked to remove the existing one. Otherwise leave
-      // it untouched so editing a request doesn't silently delete the
-      // previously attached file.
       ...(form.attachment
         ? { supporting_document: form.attachment }
         : removeExistingAttachment.value
@@ -638,12 +631,6 @@ async function handleSubmit() {
     modal.notifySubmitted();
     modal.close();
   } catch (err) {
-    // Distinguish a genuine axios network/HTTP error from a plain JS error
-    // (e.g. a bug in response parsing). A plain error also lacks
-    // `.response`, so treating "no response" as automatically meaning
-    // "network failure" is wrong and can mask real bugs — including cases
-    // where the request actually succeeded server-side but the client
-    // crashed while handling the result.
     const isAxiosStyleError =
       typeof err === 'object' && err !== null && 'isAxiosError' in err && (err as AxiosError).isAxiosError;
 
