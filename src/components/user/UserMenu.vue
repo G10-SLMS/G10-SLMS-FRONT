@@ -41,11 +41,8 @@
       </button>
     </div>
 
-    <ConfirmDialog
+    <LogoutConfirmModal
       :open="confirmOpen"
-      title="Log out"
-      message="Are you sure you want to log out?"
-      confirm-label="Log out"
       :loading="loggingOut"
       @confirm="logout"
       @cancel="confirmOpen = false"
@@ -58,7 +55,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useDefaultAvatars } from '@/composables/useDefaultAvatars'
-import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
+import LogoutConfirmModal from '@/components/user/LogoutConfirmModal.vue'
 import { User, ChevronDown, UserCircle, LogOut } from 'lucide-vue-next'
 
 const router = useRouter()

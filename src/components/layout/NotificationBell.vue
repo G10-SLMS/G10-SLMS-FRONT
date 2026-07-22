@@ -59,7 +59,7 @@
         >
           <BellOff :size="22" class="text-slate-300" />
           <p class="text-sm font-medium text-slate-600">You're all caught up</p>
-          <p class="text-xs text-slate-400">New leave request updates will show up here.</p>
+          <p class="text-xs text-slate-400">New leave request updates and comments will show up here.</p>
         </div>
 
         <div v-else class="divide-y divide-slate-100">
@@ -77,17 +77,20 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { Bell, BellOff, AlertTriangle } from 'lucide-vue-next'
 import { useLeaveNotificationsStore } from '@/stores/leaveNotifications'
 import { useAuthStore } from '@/stores/auth'
+import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
 import NotificationItem from '@/components/layout/NotificationItem.vue'
 import ActivityListSkeleton from '@/components/shared/ActivityListSkeleton.vue'
 import type { LeaveNotificationItem } from '@/types/notification'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 const store = useLeaveNotificationsStore()
+const leaveFormModal = useLeaveFormModalStore()
 
 const open = ref(false)
 const bellRef = ref<HTMLElement | null>(null)
@@ -106,7 +109,11 @@ function handleOpen(notification: LeaveNotificationItem) {
   open.value = false
 
   const destination = auth.isStudent ? 'LeaveRequests' : 'Approvals'
-  router.push({ name: destination, query: { leaveRequestId: String(notification.leave_request_id) } })
+  if (route.name !== destination) {
+    router.push({ name: destination })
+  }
+
+  leaveFormModal.openView(notification.leave_request_id)
 }
 
 function handleClickOutside(e: MouseEvent) {

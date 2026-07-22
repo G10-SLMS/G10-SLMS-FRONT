@@ -278,6 +278,12 @@ async function fetchRequests(p?: number) {
 }
 
 onMounted(async () => {
+  const statusParam = route.query.status
+  if (typeof statusParam === 'string') {
+    statusFilter.value = statusParam
+    router.replace({ query: { ...route.query, status: undefined } })
+  }
+
   await fetchRequests()
 
   const idParam = route.query.request

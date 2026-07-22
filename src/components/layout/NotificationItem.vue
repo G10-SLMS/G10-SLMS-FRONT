@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { CheckCircle2, XCircle, Ban, Clock3 } from 'lucide-vue-next'
+import { CheckCircle2, XCircle, Ban, Clock3, MessageCircle, AtSign } from 'lucide-vue-next'
 import { formatRelativeTime } from '@/utils/date'
 import type { LeaveNotificationItem } from '@/types/notification'
 
@@ -51,6 +51,11 @@ const iconStyle = computed(() => {
       return { icon: XCircle, bg: 'bg-red-100', text: 'text-red-600' }
     case 'leave_cancelled':
       return { icon: Ban, bg: 'bg-slate-200', text: 'text-slate-500' }
+    case 'comment_mention':
+      return { icon: AtSign, bg: 'bg-violet-100', text: 'text-violet-600' }
+    case 'comment_added':
+    case 'comment_reply':
+      return { icon: MessageCircle, bg: 'bg-cyan-100', text: 'text-cyan-600' }
     case 'leave_submitted':
     default:
       return { icon: Clock3, bg: 'bg-amber-100', text: 'text-amber-600' }
