@@ -21,6 +21,15 @@ export interface LeaveRequestPayload {
   custom_leave_type?: string | null
 }
 
+export interface RawAttachment {
+  id: number
+  original_name: string
+  path: string
+  url: string | null
+  mime_type: string | null
+  size: number | null
+}
+
 export interface LeaveRequestResponse {
   id: number
   user_id: number
@@ -92,6 +101,7 @@ export interface RawLeaveRequest {
   updated_at: string
   user?: LeaveRequestUser | null
   reviewer?: { id: number; name: string } | null
+  attachments?: RawAttachment[]
 }
 
 export interface RawPaginationMeta {
