@@ -61,7 +61,8 @@
 
               <label class="mb-1.5 block text-[13px] font-semibold text-slate-700" for="review-note">
                 {{ mode === 'approve' ? 'Note' : 'Reason for rejection' }}
-                <span class="text-red-500">*</span>
+                <span v-if="mode === 'reject'" class="text-red-500">*</span>
+                <span v-else class="font-normal text-slate-400">(optional)</span>
               </label>
 
               <textarea
@@ -87,7 +88,7 @@
                     {{ errorMessage }}
                   </p>
                   <p v-else class="m-0 text-xs text-slate-400">
-                    Required — visible to the student.
+                    {{ isRequired ? 'Required' : 'Optional' }} — visible to the student.
                     <span class="hidden sm:inline">Press <kbd class="rounded border border-slate-200 bg-slate-50 px-1 py-0.5 font-mono text-[10px] text-slate-500">⌘Enter</kbd> to submit.</span>
                   </p>
                 </div>
@@ -176,14 +177,19 @@ const placeholder = computed(() =>
     : 'Explain why this request is being rejected...'
 )
 
-const isValid = computed(() => note.value.trim().length >= props.minLength)
+const isRequired = computed(() => props.mode === 'reject')
+
+const isValid = computed(() => {
+  const length = note.value.trim().length
+  if (!isRequired.value) return length === 0 || length >= props.minLength
+  return length >= props.minLength
+})
 
 const showError = computed(() => touched.value && !isValid.value)
 
 const errorMessage = computed(() => {
   if (isValid.value) return ''
-  const label = props.mode === 'approve' ? 'note' : 'reason for rejecting this request'
-  if (note.value.trim().length === 0) return `Please provide a ${label}.`
+  if (note.value.trim().length === 0) return 'Please provide a reason for rejecting this request.'
   return `Note must be at least ${props.minLength} characters (${note.value.trim().length}/${props.minLength}).`
 })
 
@@ -226,4 +232,3 @@ function handleSubmit() {
   emit('confirm', note.value.trim())
 }
 </script>
-
