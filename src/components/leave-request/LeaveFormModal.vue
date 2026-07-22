@@ -251,6 +251,19 @@
                 />
               </div>
             </form>
+
+            <!-- Comments (view mode only) -->
+            <div v-if="isViewMode && editableLoaded && !loadError" class="mt-5">
+              <CommentSection
+                :comments="comments"
+                :loading="commentsLoading"
+                :current-user-id="auth.user?.id ?? 0"
+                @add-comment="handleAddComment"
+                @reply-comment="handleReplyComment"
+                @edit-comment="handleEditComment"
+                @delete-comment="handleDeleteComment"
+              />
+            </div>
           </div>
 
           <!-- Footer -->
@@ -288,12 +301,15 @@ import { computed, reactive, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal';
 import { leaveService } from '@/services/leaveService';
+import { commentService } from '@/services/commentService';
 import type { LeaveType, LeaveRequestPayload, LeaveRequestUser } from '@/types/leave';
+import type { Comment } from '@/types/comment';
 import type { AxiosError } from 'axios';
 import { FileText, Calendar, Paperclip, X, Lock } from 'lucide-vue-next';
 import { getInitials, getAvatarColor } from '@/utils/initials';
 import StudentProfileModal from '@/components/leave-request/StudentProfileModal.vue';
 import FileUpload from '@/components/ui/FileUpload.vue';
+import CommentSection from '@/components/ui/CommentSection.vue';
 
 const auth = useAuthStore();
 const modal = useLeaveFormModalStore();
@@ -316,6 +332,9 @@ const originalStatus = ref('');
 const requestUser = ref<LeaveRequestUser | null>(null);
 const showProfile = ref(false);
 const existingAttachmentUrl = ref<string | null>(null);
+
+const comments = ref<Comment[]>([]);
+const commentsLoading = ref(false);
 
 const leaveTypes = ref<LeaveType[]>([]);
 const typesLoading = ref(false);
@@ -347,6 +366,8 @@ function resetForm() {
   requestUser.value = null;
   showProfile.value = false;
   existingAttachmentUrl.value = null;
+  comments.value = [];
+  commentsLoading.value = false;
 }
 
 const dateRangeError = computed(() => {
@@ -428,6 +449,10 @@ watch(
       form.endDate = data.end_date;
       form.reason = data.reason;
       existingAttachmentUrl.value = data.supporting_document;
+
+      if (isViewMode.value) {
+        loadComments();
+      }
     } catch {
       loadError.value = 'Failed to load this leave request.';
     } finally {
@@ -435,6 +460,81 @@ watch(
     }
   },
 );
+
+async function loadComments() {
+  const leaveRequestId = Number(modal.editingId);
+  if (!Number.isFinite(leaveRequestId)) return;
+
+  commentsLoading.value = true;
+  try {
+    comments.value = await commentService.getComments(leaveRequestId);
+  } catch {
+    // Comments are supplementary — a failed load shouldn't block viewing the request.
+    comments.value = [];
+  } finally {
+    commentsLoading.value = false;
+  }
+}
+
+async function handleAddComment(body: string) {
+  const leaveRequestId = Number(modal.editingId);
+  if (!Number.isFinite(leaveRequestId)) return;
+
+  try {
+    const created = await commentService.addComment({ leave_request_id: leaveRequestId, body });
+    comments.value = [created, ...comments.value];
+  } catch {
+    // Silently ignore — the composer keeps the typed text so the user can retry.
+  }
+}
+
+async function handleReplyComment(parentId: number, body: string) {
+  const leaveRequestId = Number(modal.editingId);
+  if (!Number.isFinite(leaveRequestId)) return;
+
+  try {
+    const created = await commentService.addComment({ leave_request_id: leaveRequestId, body, parent_id: parentId });
+    comments.value = comments.value.map((comment) =>
+      comment.id === parentId
+        ? { ...comment, replies: [...comment.replies, created] }
+        : comment,
+    );
+  } catch {
+    // No-op — user can retry the reply.
+  }
+}
+
+async function handleEditComment(id: number, body: string) {
+  try {
+    const updated = await commentService.updateComment(id, body);
+    comments.value = comments.value.map((comment) => {
+      if (comment.id === id) return updated;
+      if (comment.replies.some((reply) => reply.id === id)) {
+        return {
+          ...comment,
+          replies: comment.replies.map((reply) => (reply.id === id ? updated : reply)),
+        };
+      }
+      return comment;
+    });
+  } catch {
+    // No-op — user can retry the edit.
+  }
+}
+
+async function handleDeleteComment(id: number) {
+  try {
+    await commentService.deleteComment(id);
+    comments.value = comments.value
+      .filter((comment) => comment.id !== id)
+      .map((comment) => ({
+        ...comment,
+        replies: comment.replies.filter((reply) => reply.id !== id),
+      }));
+  } catch {
+    // No-op — the comment stays visible so the user can retry.
+  }
+}
 
 async function handleSubmit() {
   if (!canSubmit.value) return;
