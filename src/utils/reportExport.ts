@@ -1,20 +1,21 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
-import type { ReportByLeaveType, ReportMonthly, ReportSummary } from '@/types/stats'
+import type { ReportByLeaveType, ReportMonthly, ReportSummary, ReportTopStudent } from '@/types/stats'
 
 export interface ReportExportPayload {
   rangeLabel: string
   summary: ReportSummary
   byType: ReportByLeaveType[]
   monthly: ReportMonthly[]
+  topStudents: ReportTopStudent[]
 }
 
 function fileTimestamp(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-export function exportReportToPdf({ rangeLabel, summary, byType, monthly }: ReportExportPayload): void {
+export function exportReportToPdf({ rangeLabel, summary, byType, monthly, topStudents }: ReportExportPayload): void {
   const doc = new jsPDF()
 
   doc.setFontSize(16)
@@ -73,10 +74,25 @@ export function exportReportToPdf({ rangeLabel, summary, byType, monthly }: Repo
     headStyles: { fillColor: [37, 99, 235] },
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const afterMonthlyY = (doc as any).lastAutoTable.finalY + 10
+  doc.setFontSize(12)
+  doc.text('Top 10 Students by Leave Requests', 14, afterMonthlyY)
+
+  autoTable(doc, {
+    startY: afterMonthlyY + 4,
+    head: [['#', 'Student', 'Email', 'Total Requests']],
+    body: topStudents.length
+      ? topStudents.map((s, i) => [String(i + 1), s.name, s.email, String(s.total_requests)])
+      : [['-', 'No data', '-', '-']],
+    theme: 'grid',
+    headStyles: { fillColor: [37, 99, 235] },
+  })
+
   doc.save(`leave-report-${fileTimestamp()}.pdf`)
 }
 
-export function exportReportToExcel({ rangeLabel, summary, byType, monthly }: ReportExportPayload): void {
+export function exportReportToExcel({ rangeLabel, summary, byType, monthly, topStudents }: ReportExportPayload): void {
   const workbook = XLSX.utils.book_new()
 
   const summarySheet = XLSX.utils.aoa_to_sheet([
@@ -109,6 +125,18 @@ export function exportReportToExcel({ rangeLabel, summary, byType, monthly }: Re
       : [{ Month: 'No data', Submitted: 0, Approved: 0, Rejected: 0, 'Approval Rate (%)': 0 }],
   )
   XLSX.utils.book_append_sheet(workbook, monthlySheet, 'Monthly Summary')
+
+  const topStudentsSheet = XLSX.utils.json_to_sheet(
+    topStudents.length
+      ? topStudents.map((s, i) => ({
+          '#': i + 1,
+          Student: s.name,
+          Email: s.email,
+          'Total Requests': s.total_requests,
+        }))
+      : [{ '#': '-', Student: 'No data', Email: '-', 'Total Requests': 0 }],
+  )
+  XLSX.utils.book_append_sheet(workbook, topStudentsSheet, 'Top Students')
 
   XLSX.writeFile(workbook, `leave-report-${fileTimestamp()}.xlsx`)
 }

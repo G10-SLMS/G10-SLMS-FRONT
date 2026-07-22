@@ -221,8 +221,78 @@
         </template>
       </template>
     </div>
+
+    <div class="mt-5 rounded-[10px] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
+      <div class="flex items-center justify-between p-5 pb-4">
+        <h2 class="m-0 text-base">Top 10 Students by Leave Requests</h2>
+      </div>
+
+      <TableRowSkeleton v-if="loading" :rows="5" :columns="3" />
+
+      <template v-else>
+        <p v-if="!topStudents.length" class="px-5 pb-5 text-[13px] text-gray-400">
+          No student leave requests in this period.
+        </p>
+
+        <template v-else>
+          <!-- Mobile card list -->
+          <ul class="divide-y divide-gray-100 px-5 pb-5 sm:hidden">
+            <li
+              v-for="(student, index) in topStudents"
+              :key="student.user_id"
+              class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+            >
+              <div class="min-w-0">
+                <p class="m-0 text-sm font-semibold text-gray-900">
+                  {{ index + 1 }}. {{ student.name }}
+                </p>
+                <p class="m-0 truncate text-[13px] text-gray-500">{{ student.email }}</p>
+              </div>
+              <span class="shrink-0 rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-700">
+                {{ student.total_requests }}
+              </span>
+            </li>
+          </ul>
+
+          <!-- Desktop / tablet table -->
+          <div class="hidden w-full overflow-x-auto px-5 pb-5 sm:block">
+            <table class="w-full min-w-[420px] border-collapse text-sm md:min-w-0">
+              <thead>
+                <tr>
+                  <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">
+                    #
+                  </th>
+                  <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">
+                    Student
+                  </th>
+                  <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">
+                    Email
+                  </th>
+                  <th class="border-b border-gray-200 px-2 py-3 text-right text-[13px] font-medium text-gray-500">
+                    Total Requests
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(student, index) in topStudents"
+                  :key="student.user_id"
+                  class="border-b border-gray-100 last:border-none"
+                >
+                  <td class="px-2 py-3 text-left text-gray-500">{{ index + 1 }}</td>
+                  <td class="px-2 py-3 text-left font-medium text-gray-900">{{ student.name }}</td>
+                  <td class="px-2 py-3 text-left text-gray-600">{{ student.email }}</td>
+                  <td class="px-2 py-3 text-right">{{ student.total_requests }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+      </template>
+    </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
@@ -233,7 +303,13 @@ import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
 import ReportBarRow from '@/components/reports/ReportBarRow.vue'
 import { reportService } from '@/services/reportService'
 import { exportReportToExcel, exportReportToPdf } from '@/utils/reportExport'
-import type { ReportRange, ReportSummary, ReportByLeaveType, ReportMonthly } from '@/types/stats'
+import type {
+  ReportRange,
+  ReportSummary,
+  ReportByLeaveType,
+  ReportMonthly,
+  ReportTopStudent,
+} from '@/types/stats'
 
 const RANGE_LABELS: Record<Exclude<ReportRange, 'custom'>, string> = {
   '30d': 'Last 30 days',
@@ -255,13 +331,18 @@ const showExportMenu = ref(false)
 const summary = ref<ReportSummary>({ total: 0, approved: 0, pending: 0, rejected: 0 })
 const byType = ref<ReportByLeaveType[]>([])
 const monthly = ref<ReportMonthly[]>([])
+const topStudents = ref<ReportTopStudent[]>([])
 const resolvedStartDate = ref('')
 const resolvedEndDate = ref('')
 
 const maxCount = computed(() => Math.max(...byType.value.map((r) => r.count), 1))
 
 const hasData = computed(
-  () => summary.value.total > 0 || byType.value.length > 0 || monthly.value.length > 0,
+  () =>
+    summary.value.total > 0 ||
+    byType.value.length > 0 ||
+    monthly.value.length > 0 ||
+    topStudents.value.length > 0,
 )
 
 const dateRangeInvalid = computed(() => {
@@ -302,11 +383,13 @@ async function loadReport() {
     summary.value = data.summary
     byType.value = data.by_leave_type
     monthly.value = data.monthly
+    topStudents.value = data.top_students
     resolvedStartDate.value = data.start_date
     resolvedEndDate.value = data.end_date
   } catch (err) {
     error.value = 'Failed to load report data. Please try again.'
     console.error('[ReportsView] Failed to load report data:', err)
+    topStudents.value = []
   } finally {
     loading.value = false
   }
@@ -327,6 +410,7 @@ async function handleExport(format: 'pdf' | 'excel') {
       summary: summary.value,
       byType: byType.value,
       monthly: monthly.value,
+      topStudents: topStudents.value,
     }
 
     if (format === 'pdf') {
