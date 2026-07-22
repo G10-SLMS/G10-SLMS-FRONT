@@ -67,6 +67,12 @@ function toRequestResponse(raw: RawLeaveRequest): LeaveRequestResponse {
   }
 }
 
+function multipartConfig() {
+  return {
+    headers: { 'Content-Type': undefined },
+  }
+}
+
 export const leaveService = {
   async getLeaveTypes(): Promise<LeaveType[]> {
     const { data } = await api.get<{ success: boolean; message: string; data: LeaveType[] }>('/leave-types')
@@ -96,7 +102,7 @@ export const leaveService = {
     page?: number
     per_page?: number
   }) {
- 
+
     const { date_from, date_to, ...rest } = params ?? {}
     const requestParams = {
       ...rest,
@@ -137,10 +143,12 @@ export const leaveService = {
       formData.append('supporting_document', payload.supporting_document)
     }
 
-    const { data } = await api.post<RawLeaveRequest>('/leave-requests', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    return toRequestResponse(data)
+    const { data } = await api.post<RawApiEnvelope<RawLeaveRequest>>(
+      '/leave-requests',
+      formData,
+      multipartConfig(),
+    )
+    return toRequestResponse(data.data)
   },
 
   async updateLeaveRequest(id: number, payload: LeaveRequestPayload): Promise<LeaveRequestResponse> {
@@ -161,9 +169,11 @@ export const leaveService = {
     }
     formData.append('_method', 'PUT')
 
-    const { data } = await api.post<RawApiEnvelope<RawLeaveRequest>>(`/leave-requests/${id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    const { data } = await api.post<RawApiEnvelope<RawLeaveRequest>>(
+      `/leave-requests/${id}`,
+      formData,
+      multipartConfig(),
+    )
     return toRequestResponse(data.data)
   },
 

@@ -167,7 +167,7 @@
                       id="m-startDate"
                       v-model="form.startDate"
                       type="date"
-                      :min="todayStr"
+                      :min="isViewMode || isEditMode ? undefined : todayStr"
                       required
                       :disabled="isViewMode || submitting"
                       class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10 disabled:bg-gray-50 disabled:text-gray-500"
@@ -188,7 +188,7 @@
                       id="m-endDate"
                       v-model="form.endDate"
                       type="date"
-                      :min="form.startDate || todayStr"
+                      :min="form.startDate || (isViewMode || isEditMode ? undefined : todayStr)"
                       required
                       :disabled="isViewMode || submitting"
                       class="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-800 transition-colors focus:border-cyan-500 focus:outline-none focus:ring-3 focus:ring-cyan-500/10 disabled:bg-gray-50 disabled:text-gray-500"
@@ -237,11 +237,46 @@
                 </a>
               </div>
 
-              <!-- Attachment -->
+              <!-- Attachment (create/edit mode) -->
               <div v-if="!isViewMode" class="mb-4">
                 <label class="mb-1.5 block text-xs font-medium text-gray-700"
                   >Supporting Document (optional)</label
                 >
+
+                <!-- Existing file on an edit, shown until replaced/removed -->
+                <div
+                  v-if="hasExistingAttachment && !removeExistingAttachment && !form.attachment"
+                  class="mb-2 flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-gray-50 px-3.5 py-2.5 text-xs"
+                >
+                  <a
+                    :href="existingAttachmentUrl ?? undefined"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-center gap-2 text-cyan-700 hover:underline"
+                  >
+                    <Paperclip :size="16" />
+                    <span class="truncate">Current file</span>
+                  </a>
+                  <button
+                    type="button"
+                    class="shrink-0 text-red-600 hover:underline"
+                    :disabled="submitting"
+                    @click="removeExistingAttachment = true"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <p v-else-if="removeExistingAttachment" class="mb-2 text-xs text-gray-500">
+                  Existing file will be removed on save.
+                  <button
+                    type="button"
+                    class="text-cyan-700 hover:underline"
+                    @click="removeExistingAttachment = false"
+                  >
+                    Undo
+                  </button>
+                </p>
+
                 <FileUpload
                   v-model="attachmentFiles"
                   :multiple="false"
@@ -332,6 +367,11 @@ const originalStatus = ref('');
 const requestUser = ref<LeaveRequestUser | null>(null);
 const showProfile = ref(false);
 const existingAttachmentUrl = ref<string | null>(null);
+// Tracks whether the loaded request already has a supporting document on the
+// server, so we know whether to keep it if the user doesn't pick a new file.
+const hasExistingAttachment = ref(false);
+// Lets the user explicitly remove the previously-attached file.
+const removeExistingAttachment = ref(false);
 
 const comments = ref<Comment[]>([]);
 const commentsLoading = ref(false);
@@ -351,6 +391,10 @@ const form = reactive({
   attachment: null as File | null,
 });
 
+// Guards against a stale async load overwriting a newer one if the modal is
+// reused for a different request before the previous fetch resolves.
+let loadToken = 0;
+
 function resetForm() {
   form.leaveTypeId = '';
   form.customType = '';
@@ -366,6 +410,8 @@ function resetForm() {
   requestUser.value = null;
   showProfile.value = false;
   existingAttachmentUrl.value = null;
+  hasExistingAttachment.value = false;
+  removeExistingAttachment.value = false;
   comments.value = [];
   commentsLoading.value = false;
 }
@@ -394,6 +440,8 @@ const attachmentFiles = computed<File[]>({
   get: () => (form.attachment ? [form.attachment] : []),
   set: (files) => {
     form.attachment = files[0] ?? null;
+    // Picking a new file supersedes any pending "remove" intent.
+    if (form.attachment) removeExistingAttachment.value = false;
   },
 });
 
@@ -421,43 +469,64 @@ async function ensureLeaveTypes() {
   }
 }
 
-watch(
-  () => modal.isOpen,
-  async (open) => {
-    if (!open) return;
-    resetForm();
-    ensureLeaveTypes();
+async function loadRequest() {
+  const token = ++loadToken;
+  resetForm();
+  ensureLeaveTypes();
 
-    if (!needsLoad.value) {
-      editableLoaded.value = true;
+  if (!needsLoad.value) {
+    editableLoaded.value = true;
+    return;
+  }
+
+  try {
+    const data = await leaveService.getLeaveRequest(Number(modal.editingId));
+    // A newer load started while this one was in flight — discard this result.
+    if (token !== loadToken) return;
+
+    if (isEditMode.value && data.user_id !== auth.user?.id) {
+      loadError.value = 'You do not have permission to edit this request.';
       return;
     }
 
-    try {
-      const data = await leaveService.getLeaveRequest(Number(modal.editingId));
+    originalStatus.value = data.status;
+    canEdit.value = data.status === 'pending';
+    requestUser.value = data.user;
 
-      if (isEditMode.value && data.user_id !== auth.user?.id) {
-        loadError.value = 'You do not have permission to edit this request.';
-        return;
-      }
-
-      originalStatus.value = data.status;
-      canEdit.value = data.status === 'pending';
-      requestUser.value = data.user;
+    // Restore "Other" custom leave types correctly. If leave_type_id is null
+    // but a custom_leave_type string exists, select the "other" option and
+    // populate the free-text field; otherwise use the known type id.
+    if (data.leave_type_id == null && data.custom_leave_type) {
+      form.leaveTypeId = 'other';
+      form.customType = data.custom_leave_type;
+    } else {
       form.leaveTypeId = data.leave_type_id;
-      form.startDate = data.start_date;
-      form.endDate = data.end_date;
-      form.reason = data.reason;
-      existingAttachmentUrl.value = data.supporting_document;
-
-      if (isViewMode.value) {
-        loadComments();
-      }
-    } catch {
-      loadError.value = 'Failed to load this leave request.';
-    } finally {
-      editableLoaded.value = true;
     }
+
+    form.startDate = data.start_date;
+    form.endDate = data.end_date;
+    form.reason = data.reason;
+    existingAttachmentUrl.value = data.supporting_document;
+    hasExistingAttachment.value = Boolean(data.supporting_document);
+
+    if (isViewMode.value) {
+      loadComments();
+    }
+  } catch {
+    if (token !== loadToken) return;
+    loadError.value = 'Failed to load this leave request.';
+  } finally {
+    if (token === loadToken) editableLoaded.value = true;
+  }
+}
+
+// Re-load whenever the modal opens OR when it's already open and switches to
+// a different request (editingId changes), not just on the open/close edge.
+watch(
+  () => [modal.isOpen, modal.editingId],
+  ([open]) => {
+    if (!open) return;
+    loadRequest();
   },
 );
 
@@ -549,7 +618,15 @@ async function handleSubmit() {
       start_date: form.startDate,
       end_date: form.endDate,
       reason: form.reason,
-      supporting_document: form.attachment,
+      // Only overwrite the supporting document when the user picked a new
+      // file or explicitly asked to remove the existing one. Otherwise leave
+      // it untouched so editing a request doesn't silently delete the
+      // previously attached file.
+      ...(form.attachment
+        ? { supporting_document: form.attachment }
+        : removeExistingAttachment.value
+          ? { supporting_document: null }
+          : {}),
     };
 
     if (isEditMode.value) {
@@ -561,9 +638,38 @@ async function handleSubmit() {
     modal.notifySubmitted();
     modal.close();
   } catch (err) {
-    submitError.value =
-      (err as AxiosError<{ message?: string }>).response?.data?.message ||
-      'Something went wrong. Please try again.';
+    // Distinguish a genuine axios network/HTTP error from a plain JS error
+    // (e.g. a bug in response parsing). A plain error also lacks
+    // `.response`, so treating "no response" as automatically meaning
+    // "network failure" is wrong and can mask real bugs — including cases
+    // where the request actually succeeded server-side but the client
+    // crashed while handling the result.
+    const isAxiosStyleError =
+      typeof err === 'object' && err !== null && 'isAxiosError' in err && (err as AxiosError).isAxiosError;
+
+    if (!isAxiosStyleError) {
+      submitError.value = 'Something went wrong while processing the response. Please refresh and check if your request went through before submitting again.';
+      // eslint-disable-next-line no-console
+      console.error('Non-axios error in handleSubmit — likely a response-parsing bug, not a network issue:', err);
+    } else {
+      const axiosErr = err as AxiosError<{ message?: string; errors?: Record<string, string[]> }>;
+
+      if (!axiosErr.response) {
+        // Genuinely no response: network failure, timeout, or CORS issue.
+        submitError.value = 'Could not reach the server. Check your connection and try again.';
+      } else {
+        const fieldErrors = axiosErr.response.data?.errors;
+        const firstFieldError = fieldErrors ? Object.values(fieldErrors)[0]?.[0] : undefined;
+        const status = axiosErr.response.status;
+
+        submitError.value =
+          firstFieldError ||
+          axiosErr.response.data?.message ||
+          (status >= 500
+            ? `Server error (${status}). Please try again, and contact support if it persists.`
+            : `Request failed (${status}). Please check your inputs and try again.`);
+      }
+    }
   } finally {
     submitting.value = false;
   }

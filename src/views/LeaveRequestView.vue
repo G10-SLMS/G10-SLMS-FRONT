@@ -105,6 +105,13 @@ const {
 } = useLeaveRequests()
 
 onMounted(() => {
+  const statusParam = route.query.status
+  if (typeof statusParam === 'string' && statusParam) {
+    filters.status = statusParam
+    fetchRequests(1)
+    router.replace({ query: { ...route.query, status: undefined } })
+  }
+
   const idParam = route.query.request
   if (!idParam) return
 
