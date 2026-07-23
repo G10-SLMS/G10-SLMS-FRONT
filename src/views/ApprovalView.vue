@@ -223,7 +223,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CheckCircle2, Search, SearchX, ChevronDown, X } from 'lucide-vue-next';
 import ApprovalRow from '@/components/approval/ApprovalRow.vue';
@@ -239,6 +239,7 @@ import api from '@/services/api';
 import type { AxiosError } from 'axios';
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal';
 import { useNotificationStore } from '@/stores/notification';
+import { usePolling } from '@/composables/usePolling';
 
 const leaveFormModal = useLeaveFormModalStore();
 const notificationStore = useNotificationStore();
@@ -285,18 +286,23 @@ interface LeaveRequest {
   processing?: boolean;
 }
 
+const STATUS_MAP: Record<string, LeaveRequest['status']> = {
+  approved: 'Approved',
+  rejected: 'Rejected',
+  cancelled: 'Cancelled',
+  pending: 'Pending',
+};
+
+function statusToTab(status: string): LeaveRequest['status'] {
+  return STATUS_MAP[status] ?? 'Pending';
+}
+
 const requests = ref<LeaveRequest[]>([]);
 const loading = ref(true);
 const errorMsg = ref('');
 
 const reviewTarget = ref<{ request: LeaveRequest; mode: 'approve' | 'reject' } | null>(null);
 const reviewSubmitting = ref(false);
-
-function statusToTab(status: string): LeaveRequest['status'] {
-  if (status === 'approved') return 'Approved';
-  if (status === 'rejected') return 'Rejected';
-  return 'Pending';
-}
 
 function toRow(raw: RawLeaveRequest): LeaveRequest {
   return {
@@ -352,6 +358,16 @@ onMounted(async () => {
     if (Number.isFinite(numericId)) focusRequest(numericId);
     router.replace({ query: { ...route.query, request: undefined } });
   }
+});
+
+const { pause: pausePolling, resume: resumePolling } = usePolling(
+  () => fetchRequests(page.value),
+  { interval: 15000, skipImmediate: true },
+);
+
+watch(reviewTarget, (target) => {
+  if (target) pausePolling();
+  else resumePolling();
 });
 
 const highlightedId = ref<number | null>(null);
@@ -415,15 +431,12 @@ function clearFilters() {
 function friendlyErrorMessage(err: unknown): string {
   const status = (err as AxiosError)?.response?.status;
   if (status === 403) {
-    return (
-      'Only accounts with the "trainer" role can approve or reject requests. ' +
-      'The backend currently blocks admins and students from this action (see routes/api.php).'
-    );
+    return 'Only trainers can approve or reject requests. You don\'t have permission to take this action.';
   }
   return extractErrorMessage(err, 'Failed to update this request.');
 }
 
-async function handleDecision(request: LeaveRequest, decision: 'Approved' | 'Rejected') {
+function handleDecision(request: LeaveRequest, decision: 'Approved' | 'Rejected') {
   reviewTarget.value = {
     request,
     mode: decision === 'Approved' ? 'approve' : 'reject',

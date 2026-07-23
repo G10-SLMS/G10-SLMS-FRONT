@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { leaveService } from '@/services/leaveService'
 import api from '@/services/api'
@@ -72,6 +72,7 @@ import {
   ClipboardList,
   CalendarDays,
 } from 'lucide-vue-next'
+import { usePolling } from '@/composables/usePolling'
 
 interface AssignedStudent {
   id: number
@@ -112,7 +113,5 @@ async function loadStats() {
   }
 }
 
-onMounted(() => {
-  loadStats()
-})
+usePolling(() => loadStats(), { interval: 20000 })
 </script>

@@ -85,6 +85,7 @@ import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
 import NotificationItem from '@/components/layout/NotificationItem.vue'
 import ActivityListSkeleton from '@/components/shared/ActivityListSkeleton.vue'
 import type { LeaveNotificationItem } from '@/types/notification'
+import { usePolling } from '@/composables/usePolling'
 
 const router = useRouter()
 const route = useRoute()
@@ -122,9 +123,10 @@ function handleClickOutside(e: MouseEvent) {
   }
 }
 
+usePolling(() => store.fetchNotifications(), { interval: 20000 })
+
 onMounted(() => {
   document.addEventListener('mousedown', handleClickOutside)
-  store.fetchNotifications()
 })
 onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
 </script>

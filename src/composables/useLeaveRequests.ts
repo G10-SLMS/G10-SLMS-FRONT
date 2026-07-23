@@ -7,6 +7,7 @@ import { leaveService, LEAVE_REQUESTS_API_AVAILABLE } from '@/services/leaveServ
 import type { AxiosError } from 'axios';
 import type { LeaveRequestListItem, LeaveType } from '@/types/leave';
 import { AlertOctagon, Ban, CheckCircle, Clock } from 'lucide-vue-next';
+import { usePolling } from '@/composables/usePolling';
 
 export function useLeaveRequests() {
   const authStore = useAuthStore();
@@ -266,6 +267,23 @@ export function useLeaveRequests() {
     () => {
       fetchRequests(page.value);
       loadStats();
+    },
+  );
+
+  const { pause: pausePolling, resume: resumePolling } = usePolling(
+    async () => {
+      if (!LEAVE_REQUESTS_API_AVAILABLE) return;
+      await Promise.all([fetchRequests(page.value), loadStats()]);
+    },
+    { interval: 15000, skipImmediate: true },
+  );
+
+  // Don't refresh the list while the user has a request open or is cancelling one.
+  watch(
+    () => leaveModal.isOpen || cancelTarget.value !== null,
+    (busy) => {
+      if (busy) pausePolling();
+      else resumePolling();
     },
   );
 
