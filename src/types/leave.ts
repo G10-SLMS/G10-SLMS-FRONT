@@ -187,6 +187,7 @@ export interface CalendarEvent {
   endDate: string
   startTime?: string
   endTime?: string
+  leaveTypeId: number
 }
 
 export interface LeaveTypeResponse {

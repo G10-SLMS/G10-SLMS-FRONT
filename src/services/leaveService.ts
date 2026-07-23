@@ -132,49 +132,40 @@ export const leaveService = {
   async getLeaveRequestsForCalendar(
     dateFrom: string,
     dateTo: string,
-    controller?: AbortController,
+    options?: {
+      status?: string
+      leave_type_id?: number | string
+      search?: string
+      controller?: AbortController
+      view?: 'Day' | 'Week' | 'Month'
+    },
   ): Promise<CalendarEvent[]> {
     const REQUEST_TIMEOUT = 20000
     let collected: RawLeaveRequest[] = []
     let page = 1
     let lastPage = 1
-    let timedOut = false
     let timeoutId: ReturnType<typeof setTimeout> | undefined
 
-    const abortPromise = new Promise<never>((_, reject) => {
-      const reason = controller?.signal?.reason ?? new Error('Request aborted')
-      if (controller?.signal?.aborted) {
-        reject(reason)
-        return
-      }
-      if (controller) {
-        controller.signal.addEventListener(
-          'abort',
-          () => reject(reason),
-          { once: true },
-        )
-      }
-      timeoutId = setTimeout(() => {
-        timedOut = true
-        controller?.abort()
-        reject(new Error(`Calendar request timed out after ${REQUEST_TIMEOUT}ms`))
-      }, REQUEST_TIMEOUT)
-    })
+    timeoutId = setTimeout(() => {
+      options?.controller?.abort()
+    }, REQUEST_TIMEOUT)
+
+    const perPage = options?.view === 'Month' ? 500 : 100
+    const requestParams: Record<string, string | number> = {
+      start_date: dateFrom,
+      end_date: dateTo,
+      per_page: perPage,
+    }
+    if (options?.status) requestParams.status = options.status
+    if (options?.leave_type_id) requestParams.leave_type_id = options.leave_type_id
+    if (options?.search) requestParams.search = options.search
 
     try {
       do {
-        const { data } = await Promise.race([
-          api.get<RawApiEnvelope<RawLeaveRequest[]>>('/leave-requests', {
-            params: {
-              start_date: dateFrom,
-              end_date: dateTo,
-              per_page: 500,
-              page,
-            },
-            signal: timedOut ? undefined : controller?.signal,
-          }),
-          abortPromise,
-        ])
+        const { data } = await api.get<RawApiEnvelope<RawLeaveRequest[]>>('/leave-requests', {
+          params: { ...requestParams, page },
+          signal: options?.controller?.signal,
+        })
         collected = collected.concat(data.data)
         const meta = data.meta
         if (!meta) break
@@ -183,7 +174,7 @@ export const leaveService = {
       } while (page <= lastPage)
     } finally {
       clearTimeout(timeoutId)
-      controller?.signal.removeEventListener('abort', () => {})
+      options?.controller?.signal.removeEventListener('abort', () => {})
     }
 
     return collected.map((raw) => {
@@ -201,8 +192,9 @@ export const leaveService = {
         status: raw.status,
         startDate: start,
         endDate: end,
-        startTime: startParts.length > 1 ? startParts[1]! : undefined,
-        endTime: endParts.length > 1 ? endParts[1]! : undefined,
+      startTime: startParts.length > 1 && !['00:00:00', '00:00'].includes(startParts[1]!) ? startParts[1]! : undefined,
+      endTime: endParts.length > 1 && !['00:00:00', '00:00'].includes(endParts[1]!) ? endParts[1]! : undefined,
+        leaveTypeId: raw.leave_type_id,
       } as CalendarEvent
     })
   },
