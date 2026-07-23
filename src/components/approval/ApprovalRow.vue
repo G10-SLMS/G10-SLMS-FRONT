@@ -2,7 +2,9 @@
   <tr class="border-b border-gray-100 last:border-none">
     <td class="px-4 py-3.5 align-middle text-left">
       <div class="flex items-center gap-2.5 font-medium">
-        <span class="flex h-[30px] w-[30px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white">
+        <span
+          class="flex h-[30px] w-[30px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white"
+        >
           <img
             v-if="request.studentAvatarUrl"
             :src="request.studentAvatarUrl"
@@ -15,11 +17,17 @@
       </div>
     </td>
 
+    <td class="px-4 py-3.5 align-middle text-left text-slate-600">
+      {{ formatStudentId(request.studentId) || '—' }}
+    </td>
+
     <td class="px-4 py-3.5 align-middle text-left">{{ request.type }}</td>
     <td class="px-4 py-3.5 align-middle text-left">{{ request.startDate }}</td>
     <td class="px-4 py-3.5 align-middle text-left">{{ request.endDate }}</td>
 
-    <td class="max-w-[220px] overflow-hidden text-ellipsis whitespace-nowrap px-4 py-3.5 align-middle text-left text-gray-500">
+    <td
+      class="max-w-[220px] overflow-hidden text-ellipsis whitespace-nowrap px-4 py-3.5 align-middle text-left text-gray-500"
+    >
       {{ request.reason }}
     </td>
 
@@ -55,26 +63,27 @@
 </template>
 
 <script setup lang="ts">
-import { Check, X, Eye } from 'lucide-vue-next'
-import { computed } from 'vue'
-import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
-import { getInitials } from '@/utils/initials'
-import type { LeaveRequest } from '@/types/leave'
+import { Check, X, Eye } from 'lucide-vue-next';
+import { computed } from 'vue';
+import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue';
+import { getInitials } from '@/utils/initials';
+import { formatStudentId } from '@/utils/formatters';
+import type { LeaveRequest } from '@/types/leave';
 
 const props = defineProps<{
-  request: LeaveRequest
-  showActions?: boolean
-}>()
+  request: LeaveRequest;
+  showActions?: boolean;
+}>();
 
 defineEmits<{
-  decide: [decision: 'Approved' | 'Rejected']
-  view: []
-}>()
+  decide: [decision: 'Approved' | 'Rejected'];
+  view: [];
+}>();
 
-const canDecide = computed(() => !!props.showActions && props.request.status === 'Pending')
+const canDecide = computed(() => !!props.showActions && props.request.status === 'Pending');
 
 const actionButtonBaseClasses =
-  'flex items-center gap-1 whitespace-nowrap rounded-md border border-transparent px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60'
+  'flex items-center gap-1 whitespace-nowrap rounded-md border border-transparent px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60';
 
 const actions = [
   {
@@ -89,5 +98,5 @@ const actions = [
     icon: X,
     classes: 'bg-red-100 text-red-700 enabled:hover:bg-red-200',
   },
-]
+];
 </script>

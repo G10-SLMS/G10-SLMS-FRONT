@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-[1120px]">
+  <div class="mx-auto max-w-[1600px]">
     <LeaveRequestsHero />
 
     <LeaveStatsRow :stats="stats" />
