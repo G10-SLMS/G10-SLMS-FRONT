@@ -12,11 +12,21 @@ export interface LeaveRequestUser {
   avatar?: { id: number; url: string | null } | null
 }
 
+export type LeaveDurationType = 'full_day' | 'hourly'
+
+export const LEAVE_MIN_HOURLY_DURATION = 0.5
+export const LEAVE_MAX_HOURLY_DURATION = 8
+export const LEAVE_HOURLY_DURATION_STEP = 0.5
+
 export interface LeaveRequestPayload {
   leave_type_id: number | null
   start_date: string
   end_date: string
   reason: string
+  duration_type: LeaveDurationType
+  duration_hours?: number | null
+  start_time?: string | null
+  end_time?: string | null
   supporting_document?: File | null
   custom_leave_type?: string | null
 }
@@ -40,6 +50,11 @@ export interface LeaveRequestResponse {
   end_date: string
   total_days: number
   reason: string
+  duration_type: LeaveDurationType
+  duration_hours: number | null
+  start_time: string | null
+  end_time: string | null
+  duration_label: string
   supporting_document: string | null
   status: string
   created_at: string
@@ -56,6 +71,11 @@ export interface LeaveRequestListItem {
   end_date: string
   total_days: number
   reason: string
+  duration_type: LeaveDurationType
+  duration_hours: number | null
+  start_time: string | null
+  end_time: string | null
+  duration_label: string
   status: string
   submission_date: string
   created_at: string
@@ -93,6 +113,11 @@ export interface RawLeaveRequest {
   start_date: string
   end_date: string
   reason: string
+  duration_type: LeaveDurationType
+  duration_hours: string | number | null
+  start_time?: string | null
+  end_time?: string | null
+  duration_label?: string
   status: string
   review_note?: string | null
   reviewed_by?: number | null

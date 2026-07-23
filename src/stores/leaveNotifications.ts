@@ -50,6 +50,11 @@ export const useLeaveNotificationsStore = defineStore('leaveNotifications', () =
     }
   }
 
+  function receiveRealtime(notification: LeaveNotificationItem) {
+    if (items.value.some((n) => n.id === notification.id)) return
+    items.value.unshift(notification)
+  }
+
   return {
     items,
     loading,
@@ -59,5 +64,6 @@ export const useLeaveNotificationsStore = defineStore('leaveNotifications', () =
     fetchNotifications,
     markAsRead,
     markAllAsRead,
+    receiveRealtime,
   }
 })
