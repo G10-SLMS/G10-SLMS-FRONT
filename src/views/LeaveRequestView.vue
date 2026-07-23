@@ -44,7 +44,10 @@
         :perPage="perPage"
         :visiblePages="visiblePages"
         :fetchRequests="fetchRequests"
-        @update:per-page="perPage = $event"
+        @update:per-page="
+          perPage = $event;
+          fetchRequests(1);
+        "
       />
     </div>
 
@@ -59,22 +62,22 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useLeaveRequests } from '@/composables/useLeaveRequests'
+import { onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useLeaveRequests } from '@/composables/useLeaveRequests';
 
-import LeaveRequestsHero from '@/components/leave-request/LeaveRequestsHero.vue'
-import LeaveStatsRow from '@/components/leave-request/LeaveStatsRow.vue'
-import LeaveFiltersBar from '@/components/leave-request/LeaveFiltersBar.vue'
-import LeaveErrorBanner from '@/components/leave-request/LeaveErrorBanner.vue'
-import LeaveLoadingSkeleton from '@/components/leave-request/LeaveLoadingSkeleton.vue'
-import LeaveEmptyState from '@/components/leave-request/LeaveEmptyState.vue'
-import LeaveRequestsTable from '@/components/leave-request/LeaveRequestsTable.vue'
-import LeaveRequestsPagination from '@/components/leave-request/LeaveRequestsPagination.vue'
-import CancelLeaveModal from '@/components/leave-request/CancelLeaveModal.vue'
+import LeaveRequestsHero from '@/components/leave-request/LeaveRequestsHero.vue';
+import LeaveStatsRow from '@/components/leave-request/LeaveStatsRow.vue';
+import LeaveFiltersBar from '@/components/leave-request/LeaveFiltersBar.vue';
+import LeaveErrorBanner from '@/components/leave-request/LeaveErrorBanner.vue';
+import LeaveLoadingSkeleton from '@/components/leave-request/LeaveLoadingSkeleton.vue';
+import LeaveEmptyState from '@/components/leave-request/LeaveEmptyState.vue';
+import LeaveRequestsTable from '@/components/leave-request/LeaveRequestsTable.vue';
+import LeaveRequestsPagination from '@/components/leave-request/LeaveRequestsPagination.vue';
+import CancelLeaveModal from '@/components/leave-request/CancelLeaveModal.vue';
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
 const {
   items,
@@ -102,21 +105,21 @@ const {
   editRequest,
   confirmCancel,
   doCancel,
-} = useLeaveRequests()
+} = useLeaveRequests();
 
 onMounted(() => {
-  const statusParam = route.query.status
+  const statusParam = route.query.status;
   if (typeof statusParam === 'string' && statusParam) {
-    filters.status = statusParam
-    fetchRequests(1)
-    router.replace({ query: { ...route.query, status: undefined } })
+    filters.status = statusParam;
+    fetchRequests(1);
+    router.replace({ query: { ...route.query, status: undefined } });
   }
 
-  const idParam = route.query.request
-  if (!idParam) return
+  const idParam = route.query.request;
+  if (!idParam) return;
 
-  const numericId = Number(idParam)
-  if (Number.isFinite(numericId)) viewRequest(numericId)
-  router.replace({ query: { ...route.query, request: undefined } })
-})
+  const numericId = Number(idParam);
+  if (Number.isFinite(numericId)) viewRequest(numericId);
+  router.replace({ query: { ...route.query, request: undefined } });
+});
 </script>
