@@ -6,7 +6,7 @@ import type {
   RawLeaveNotification,
 } from '@/types/notification'
 
-function toItem(raw: RawLeaveNotification): LeaveNotificationItem {
+export function toNotificationItem(raw: RawLeaveNotification): LeaveNotificationItem {
   return {
     id: raw.id,
     type: raw.type,
@@ -25,7 +25,7 @@ export const notificationService = {
       '/notifications',
     )
     return {
-      data: data.data.map(toItem),
+      data: data.data.map(toNotificationItem),
       unread_count: data.unread_count ?? data.data.filter((n) => n.read_at === null).length,
     }
   },

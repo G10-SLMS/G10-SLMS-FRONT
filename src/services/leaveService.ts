@@ -7,9 +7,16 @@ import type {
   LeaveRequestPayload,
   LeaveRequestResponse,
   LeaveRequestListItem,
+  LeaveDurationType,
   RawApiEnvelope,
   RawLeaveRequest,
 } from '@/types/leave'
+
+function toDurationHours(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined || value === '') return null
+  const parsed = typeof value === 'number' ? value : parseFloat(value)
+  return Number.isNaN(parsed) ? null : parsed
+}
 
 export const LEAVE_REQUESTS_API_AVAILABLE = true
 
@@ -42,6 +49,11 @@ function toListItem(raw: RawLeaveRequest): LeaveRequestListItem {
     end_date: raw.end_date.split('T')[0],
     total_days: totalDaysBetween(raw.start_date, raw.end_date),
     reason: raw.reason,
+    duration_type: raw.duration_type,
+    duration_hours: toDurationHours(raw.duration_hours),
+    start_time: raw.start_time ?? null,
+    end_time: raw.end_time ?? null,
+    duration_label: raw.duration_label ?? (raw.duration_type === 'hourly' ? `${toDurationHours(raw.duration_hours) ?? ''} hours` : 'Full day'),
     status: raw.status,
     submission_date: formatSubmissionDate(raw.created_at),
     created_at: raw.created_at,
@@ -69,6 +81,11 @@ function toRequestResponse(raw: RawLeaveRequest): LeaveRequestResponse {
     end_date: raw.end_date.split('T')[0],
     total_days: totalDaysBetween(raw.start_date, raw.end_date),
     reason: raw.reason,
+    duration_type: raw.duration_type,
+    duration_hours: toDurationHours(raw.duration_hours),
+    start_time: raw.start_time ?? null,
+    end_time: raw.end_time ?? null,
+    duration_label: raw.duration_label ?? (raw.duration_type === 'hourly' ? `${toDurationHours(raw.duration_hours) ?? ''} hours` : 'Full day'),
     supporting_document: attachment?.url ?? null,
     status: raw.status,
     created_at: raw.created_at,
@@ -197,6 +214,12 @@ export const leaveService = {
         leaveTypeId: raw.leave_type_id,
       } as CalendarEvent
     })
+  async getLeaveRequestStats(): Promise<{ pending: number; approved: number; rejected: number; cancelled: number }> {
+    const { data } = await api.get<{
+      success: boolean
+      data: { pending: number; approved: number; rejected: number; cancelled: number }
+    }>('/leave-requests/stats')
+    return data.data
   },
 
   async getLeaveRequest(id: number): Promise<LeaveRequestResponse> {
@@ -217,6 +240,11 @@ export const leaveService = {
     formData.append('start_date', payload.start_date)
     formData.append('end_date', payload.end_date)
     formData.append('reason', payload.reason)
+    formData.append('duration_type', payload.duration_type)
+    if (payload.duration_type === 'hourly') {
+      if (payload.start_time) formData.append('start_time', payload.start_time)
+      if (payload.end_time) formData.append('end_time', payload.end_time)
+    }
     if (payload.supporting_document) {
       formData.append('supporting_document', payload.supporting_document)
     }
@@ -238,6 +266,11 @@ export const leaveService = {
     formData.append('start_date', payload.start_date)
     formData.append('end_date', payload.end_date)
     formData.append('reason', payload.reason)
+    formData.append('duration_type', payload.duration_type)
+    if (payload.duration_type === 'hourly') {
+      if (payload.start_time) formData.append('start_time', payload.start_time)
+      if (payload.end_time) formData.append('end_time', payload.end_time)
+    }
     if (payload.supporting_document) {
       formData.append('supporting_document', payload.supporting_document)
     } else if (payload.supporting_document === null) {
