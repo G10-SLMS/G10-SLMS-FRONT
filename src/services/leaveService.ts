@@ -214,12 +214,6 @@ export const leaveService = {
         leaveTypeId: raw.leave_type_id,
       } as CalendarEvent
     })
-  async getLeaveRequestStats(): Promise<{ pending: number; approved: number; rejected: number; cancelled: number }> {
-    const { data } = await api.get<{
-      success: boolean
-      data: { pending: number; approved: number; rejected: number; cancelled: number }
-    }>('/leave-requests/stats')
-    return data.data
   },
 
   async getLeaveRequest(id: number): Promise<LeaveRequestResponse> {

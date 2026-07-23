@@ -41,24 +41,24 @@ export interface RawAttachment {
 }
 
 export interface LeaveRequestResponse {
-  id: number;
-  user_id: number;
-  user: LeaveRequestUser | null;
-  leave_type_id: number;
-  leave_type_name: string;
-  start_date: string;
-  end_date: string;
-  total_days: number;
-  reason: string;
-  duration_type: LeaveDurationType;
-  duration_hours: number | null;
-  start_time: string | null;
-  end_time: string | null;
-  duration_label: string;
-  supporting_document: string | null;
-  status: string;
-  created_at: string;
-  updated_at: string;
+  id: number
+  user_id: number
+  user: LeaveRequestUser | null
+  leave_type_id: number
+  leave_type_name: string
+  start_date: string
+  end_date: string
+  total_days: number
+  reason: string
+  supporting_document: string | null
+  status: string
+  created_at: string
+  updated_at: string
+  reviewer?: { id: number; name: string } | null
+  reviewed_at?: string | null
+  review_note?: string | null
+  start_time?: string | null
+  end_time?: string | null
 }
 
 export interface LeaveRequestListItem {
