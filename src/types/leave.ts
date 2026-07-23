@@ -44,6 +44,11 @@ export interface LeaveRequestResponse {
   status: string
   created_at: string
   updated_at: string
+  reviewer?: { id: number; name: string } | null
+  reviewed_at?: string | null
+  review_note?: string | null
+  start_time?: string | null
+  end_time?: string | null
 }
 
 export interface LeaveRequestListItem {
@@ -168,6 +173,20 @@ export interface LeaveRequestDetail {
   reviewer?: string | null
   reviewDate?: string | null
   comment?: string | null
+}
+
+export interface CalendarEvent {
+  id: number
+  studentId: number
+  student: string
+  studentGeneration?: string | null
+  studentClassName?: string | null
+  type: string
+  status: string
+  startDate: string
+  endDate: string
+  startTime?: string
+  endTime?: string
 }
 
 export interface LeaveTypeResponse {
