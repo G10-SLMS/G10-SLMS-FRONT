@@ -2,7 +2,9 @@
   <li class="flex flex-col gap-3 p-4">
     <div class="flex items-start justify-between gap-3">
       <div class="flex min-w-0 items-center gap-2.5">
-        <span class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white">
+        <span
+          class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white"
+        >
           <img
             v-if="request.studentAvatarUrl"
             :src="request.studentAvatarUrl"
@@ -11,7 +13,12 @@
           />
           <template v-else>{{ getInitials(request.student) }}</template>
         </span>
-        <p class="m-0 truncate font-semibold text-slate-900">{{ request.student }}</p>
+        <div class="min-w-0">
+          <p class="m-0 truncate font-semibold text-slate-900">{{ request.student }}</p>
+          <p v-if="request.studentId != null" class="m-0 text-xs text-slate-500">
+            Student ID: {{ formatStudentId(request.studentId) }}
+          </p>
+        </div>
       </div>
 
       <LeaveStatusBadge :status="request.status" class="shrink-0" />
@@ -61,26 +68,27 @@
 </template>
 
 <script setup lang="ts">
-import { Check, X, Eye } from 'lucide-vue-next'
-import { computed } from 'vue'
-import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
-import { getInitials } from '@/utils/initials'
-import type { LeaveRequest } from '@/types/leave'
+import { Check, X, Eye } from 'lucide-vue-next';
+import { computed } from 'vue';
+import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue';
+import { getInitials } from '@/utils/initials';
+import { formatStudentId } from '@/utils/formatters';
+import type { LeaveRequest } from '@/types/leave';
 
 const props = defineProps<{
-  request: LeaveRequest
-  showActions?: boolean
-}>()
+  request: LeaveRequest;
+  showActions?: boolean;
+}>();
 
 defineEmits<{
-  decide: [decision: 'Approved' | 'Rejected']
-  view: []
-}>()
+  decide: [decision: 'Approved' | 'Rejected'];
+  view: [];
+}>();
 
-const canDecide = computed(() => !!props.showActions && props.request.status === 'Pending')
+const canDecide = computed(() => !!props.showActions && props.request.status === 'Pending');
 
 const actionButtonBaseClasses =
-  'flex items-center gap-1 whitespace-nowrap rounded-md border border-transparent px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60'
+  'flex items-center gap-1 whitespace-nowrap rounded-md border border-transparent px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60';
 
 const actions = [
   {
@@ -95,5 +103,5 @@ const actions = [
     icon: X,
     classes: 'bg-red-100 text-red-700 enabled:hover:bg-red-200',
   },
-]
+];
 </script>

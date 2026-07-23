@@ -5,11 +5,18 @@
   >
     <div class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
       <div class="relative flex-1">
-        <Search :size="16" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Search
+          :size="16"
+          class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+        />
         <input
           v-model="filters.search"
           type="text"
-          placeholder="Search by ID or leave type..."
+          :placeholder="
+            isStudent
+              ? 'Search by request ID or leave type...'
+              : 'Search by name, student ID, or leave type...'
+          "
           class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-9 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
           @input="onSearchDebounced"
         />
@@ -54,7 +61,9 @@
         <option value="cancelled">Cancelled</option>
       </select>
 
-      <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5">
+      <div
+        class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5"
+      >
         <Calendar :size="14" class="text-slate-400" />
         <input
           type="date"
@@ -77,24 +86,28 @@
 </template>
 
 <script setup lang="ts">
-import type { LeaveType } from '@/types/leave'
-import { Search, X, Calendar, RotateCcw } from 'lucide-vue-next'
+import type { LeaveType } from '@/types/leave';
+import { Search, X, Calendar, RotateCcw } from 'lucide-vue-next';
+import { useAuthStore } from '@/stores/auth';
 
 type Filters = {
-  search: string
-  leave_type_id: string | number
-  status: string
-  date_from: string
-  date_to: string
-}
+  search: string;
+  leave_type_id: string | number;
+  status: string;
+  date_from: string;
+  date_to: string;
+};
 
 defineProps<{
-  filters: Filters
-  leaveTypes: LeaveType[]
-  hasActiveFilters: boolean
-  onSearchDebounced: () => void
-  clearSearch: () => void
-  clearAllFilters: () => void
-  fetchRequests: (p?: number) => Promise<void>
-}>()
+  filters: Filters;
+  leaveTypes: LeaveType[];
+  hasActiveFilters: boolean;
+  onSearchDebounced: () => void;
+  clearSearch: () => void;
+  clearAllFilters: () => void;
+  fetchRequests: (p?: number) => Promise<void>;
+}>();
+
+const auth = useAuthStore();
+const isStudent = auth.isStudent;
 </script>
