@@ -1,4 +1,5 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notification'
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
@@ -16,6 +17,8 @@ export function useLeaveRequests() {
   const authStore = useAuthStore()
   const notificationStore = useNotificationStore()
   const leaveModal = useLeaveFormModalStore()
+  const route = useRoute()
+  const router = useRouter()
 
   const items = ref<LeaveRequestListItem[]>([])
   const leaveTypes = ref<LeaveType[]>([])
@@ -62,16 +65,13 @@ export function useLeaveRequests() {
     if (!LEAVE_REQUESTS_API_AVAILABLE) return
     statsLoading.value = true
     try {
-
-      const [pending, approved, rejected, cancelled] = await Promise.all(
-        (['pending', 'approved', 'rejected', 'cancelled'] as const).map((status) =>
-          leaveService.getLeaveRequests({ status, per_page: 1 }),
-        ),
-      )
-      statusCounts.pending = pending.total
-      statusCounts.approved = approved.total
-      statusCounts.rejected = rejected.total
-      statusCounts.cancelled = cancelled.total
+      // One grouped-count query on the server instead of 4 separate
+      // per_page:1 requests.
+      const counts = await leaveService.getLeaveRequestStats()
+      statusCounts.pending = counts.pending
+      statusCounts.approved = counts.approved
+      statusCounts.rejected = counts.rejected
+      statusCounts.cancelled = counts.cancelled
     } catch {
       // Leave previous counts in place rather than zeroing them on a blip.
     } finally {
@@ -114,6 +114,28 @@ export function useLeaveRequests() {
     return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown'
   }
 
+  function syncFiltersFromQuery() {
+    const q = route.query
+    filters.search = typeof q.q === 'string' ? q.q : ''
+    filters.leave_type_id = typeof q.type === 'string' ? q.type : ''
+    filters.status = typeof q.status === 'string' ? q.status : ''
+    filters.date_from = typeof q.from === 'string' ? q.from : ''
+    filters.date_to = typeof q.to === 'string' ? q.to : ''
+    const parsedPage = Number(q.page)
+    page.value = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1
+  }
+
+  function syncQueryFromFilters(p: number) {
+    const query: Record<string, string> = {}
+    if (filters.search) query.q = filters.search
+    if (filters.leave_type_id) query.type = String(filters.leave_type_id)
+    if (filters.status) query.status = filters.status
+    if (filters.date_from) query.from = filters.date_from
+    if (filters.date_to) query.to = filters.date_to
+    if (p > 1) query.page = String(p)
+    router.replace({ query }).catch(() => {})
+  }
+
   function onSearchDebounced() {
     if (searchTimeout) clearTimeout(searchTimeout)
     searchTimeout = setTimeout(() => fetchRequests(1), 400)
@@ -146,6 +168,7 @@ export function useLeaveRequests() {
     loading.value = true
     errMsg.value = ''
     page.value = p
+    syncQueryFromFilters(p)
 
     try {
       const params: Record<string, string | number | undefined> = { page: p, per_page: perPage.value }
@@ -210,12 +233,13 @@ export function useLeaveRequests() {
       errMsg.value = 'Leave requests are not available yet — the backend for this feature hasn\'t shipped.'
       return
     }
+    syncFiltersFromQuery()
     await Promise.all([
       leaveService
         .getLeaveTypes()
         .then((types) => (leaveTypes.value = types))
         .catch(() => {}),
-      fetchRequests(),
+      fetchRequests(page.value),
       loadStats(),
     ])
   })
