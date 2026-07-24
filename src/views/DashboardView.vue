@@ -51,6 +51,8 @@
       <ApprovedTodayCard />
       <RejectedTodayCard />
     </div>
+
+    <DashboardCharts v-if="auth.isAdmin" />
   </div>
 </template>
 
@@ -64,6 +66,7 @@ import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
 import PendingTodayCard from '@/components/dashboard/PendingTodayCard.vue'
 import ApprovedTodayCard from '@/components/dashboard/ApprovedTodayCard.vue'
 import RejectedTodayCard from '@/components/dashboard/RejectedTodayCard.vue'
+import DashboardCharts from '@/components/dashboard/DashboardCharts.vue'
 import {
   Users,
   Clock,
