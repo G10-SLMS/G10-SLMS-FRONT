@@ -433,7 +433,7 @@ import { useLeaveFormModalStore } from '@/stores/leaveFormModal';
 import { leaveService } from '@/services/leaveService';
 import { commentService } from '@/services/commentService';
 import type { LeaveType, LeaveRequestPayload, LeaveRequestUser, LeaveDurationType } from '@/types/leave';
-import { LEAVE_MIN_HOURLY_DURATION, LEAVE_MAX_HOURLY_DURATION, LEAVE_HOURLY_DURATION_STEP } from '@/types/leave';
+import { LEAVE_MIN_HOURLY_DURATION, LEAVE_MAX_HOURLY_DURATION } from '@/types/leave';
 import type { Comment } from '@/types/comment';
 import type { AxiosError } from 'axios';
 import { FileText, Calendar, Clock, X, Lock, CheckCircle2, XCircle, UserCheck } from 'lucide-vue-next';
@@ -534,7 +534,6 @@ const form = reactive({
 
 const hourlyMin = LEAVE_MIN_HOURLY_DURATION;
 const hourlyMax = LEAVE_MAX_HOURLY_DURATION;
-const hourlyStep = LEAVE_HOURLY_DURATION_STEP;
 
 function setDurationType(type: LeaveDurationType) {
   form.durationType = type;
@@ -599,7 +598,7 @@ const hourlyDurationHours = computed<number | null>(() => {
   if (startMinutes == null || endMinutes == null) return null;
   const diff = endMinutes - startMinutes;
   if (diff <= 0) return null;
-  return Math.round((diff / 60) * 10) / 10;
+  return Math.round((diff / 60) * 60) / 60;
 });
 
 const timeRangeError = computed(() => {
@@ -612,16 +611,19 @@ const timeRangeError = computed(() => {
     return 'End time must be after start time.';
   }
 
-  const hours = hourlyDurationHours.value;
-  if (hours == null) return 'End time must be after start time.';
+  // Compare the raw minute difference directly — hourlyDurationHours is rounded
+  // to 0.1hr (6 min) for display and would let e.g. a 29-minute gap round up to
+  // 0.5hr and slip past the minimum check.
+  const diffMinutes = endMinutes - startMinutes;
+  const minMinutes = hourlyMin * 60;
+  const maxMinutes = hourlyMax * 60;
 
-  if (hours < hourlyMin || hours > hourlyMax) {
-    return `Duration must be between ${hourlyMin} and ${hourlyMax} hours.`;
+  if (diffMinutes < minMinutes) {
+    return `Leave duration must be at least ${minMinutes} minutes.`;
   }
 
-  const steps = hours / hourlyStep;
-  if (Math.abs(steps - Math.round(steps)) > 0.0001) {
-    return `Duration must be in increments of ${hourlyStep} hours (30 minutes).`;
+  if (diffMinutes > maxMinutes) {
+    return `Duration must be between ${hourlyMin} and ${hourlyMax} hours.`;
   }
 
   return '';
