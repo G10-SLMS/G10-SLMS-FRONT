@@ -51,7 +51,7 @@ let fetchSeq = 0
 
 onMounted(async () => {
   await fetchLeaveTypes()
-  if (auth.isTrainer) {
+  if (auth.isEducator) {
     await loadAssignedStudents()
   }
   fetchEvents()
@@ -142,7 +142,7 @@ async function fetchLeaveTypes() {
 
 async function loadAssignedStudents() {
   try {
-    const { data } = await api.get<{ students: { id: number }[] }>('/trainer/students')
+    const { data } = await api.get<{ students: { id: number }[] }>('/educator/students')
     assignedStudentIds.value = data.students.map((s) => s.id)
   } catch {
     assignedStudentIds.value = []

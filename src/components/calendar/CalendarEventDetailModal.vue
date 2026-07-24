@@ -244,7 +244,7 @@ function canAccessEvent(event: CalendarEvent | undefined): boolean {
   if (!event) return false
   if (auth.isAdmin) return true
   if (auth.isStudent) return event.studentId === auth.user?.id
-  if (auth.isTrainer) {
+  if (auth.isEducator) {
     if (props.assignedStudentIds.length > 0) {
       return props.assignedStudentIds.includes(event.studentId)
     }

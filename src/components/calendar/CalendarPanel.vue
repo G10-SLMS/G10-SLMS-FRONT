@@ -172,7 +172,7 @@
         <div v-if="view === 'Week' || view === 'Day'" class="vuecal__body flex-1 overflow-y-auto relative">
           <div v-if="filteredEvents.length === 0 && !hasAllDayEvents" class="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
             <p class="rounded-lg bg-white/80 px-4 py-2 text-sm font-medium text-gray-400 shadow-sm">
-              {{ auth.isTrainer ? 'No events for your assigned students' : 'No events' }}
+              {{ auth.isEducator ? 'No events for your assigned students' : 'No events' }}
             </p>
           </div>
           <div class="flex relative" :class="{ 'min-w-[640px]': view === 'Week' }">
@@ -377,7 +377,7 @@ const statusColorVars = computed(() => {
 const filteredByPermission = computed(() => {
   if (props.auth.isAdmin) return props.events
   if (props.auth.isStudent) return props.events.filter((r) => r.studentId === props.auth.user?.id)
-  if (props.auth.isTrainer) {
+  if (props.auth.isEducator) {
     if (props.assignedStudentIds.length > 0) {
       return props.events.filter((r) => props.assignedStudentIds.includes(r.studentId))
     }
