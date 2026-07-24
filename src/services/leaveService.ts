@@ -1,12 +1,12 @@
 import api from './api'
 import type {
+  CalendarEvent,
   LeaveType,
   LeaveTypePayload,
   LeaveTypeResponse,
   LeaveRequestPayload,
   LeaveRequestResponse,
   LeaveRequestListItem,
-  LeaveDurationType,
   RawApiEnvelope,
   RawLeaveRequest,
 } from '@/types/leave'
@@ -68,7 +68,6 @@ function latestAttachment(raw: RawLeaveRequest) {
 
 function toRequestResponse(raw: RawLeaveRequest): LeaveRequestResponse {
   const attachment = latestAttachment(raw)
-
   return {
     id: raw.id,
     user_id: raw.user_id,
@@ -85,9 +84,15 @@ function toRequestResponse(raw: RawLeaveRequest): LeaveRequestResponse {
     end_time: raw.end_time ?? null,
     duration_label: raw.duration_label ?? (raw.duration_type === 'hourly' ? `${toDurationHours(raw.duration_hours) ?? ''} hours` : 'Full day'),
     supporting_document: attachment?.url ?? null,
+    supporting_document_name: attachment?.original_name ?? null,
+    supporting_document_size: attachment?.size ?? null,
     status: raw.status,
     created_at: raw.created_at,
     updated_at: raw.updated_at,
+    reviewer: raw.reviewer ?? null,
+    reviewed_at: raw.reviewed_at ?? null,
+    review_note: raw.review_note ?? null,
+    custom_leave_type: raw.custom_leave_type ?? null,
   }
 }
 
@@ -145,6 +150,75 @@ export const leaveService = {
       data: { pending: number; approved: number; rejected: number; cancelled: number }
     }>('/leave-requests/stats')
     return data.data
+  },
+
+  async getLeaveRequestsForCalendar(
+    dateFrom: string,
+    dateTo: string,
+    options?: {
+      status?: string
+      leave_type_id?: number | string
+      search?: string
+      controller?: AbortController
+      view?: 'Day' | 'Week' | 'Month'
+    },
+  ): Promise<CalendarEvent[]> {
+    const REQUEST_TIMEOUT = 20000
+    let collected: RawLeaveRequest[] = []
+    let page = 1
+    let lastPage = 1
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+    timeoutId = setTimeout(() => {
+      options?.controller?.abort()
+    }, REQUEST_TIMEOUT)
+
+    const perPage = options?.view === 'Month' ? 500 : 100
+    const requestParams: Record<string, string | number> = {
+      start_date: dateFrom,
+      end_date: dateTo,
+      per_page: perPage,
+    }
+    if (options?.status) requestParams.status = options.status
+    if (options?.leave_type_id) requestParams.leave_type_id = options.leave_type_id
+    if (options?.search) requestParams.search = options.search
+
+    try {
+      do {
+        const { data } = await api.get<RawApiEnvelope<RawLeaveRequest[]>>('/leave-requests', {
+          params: { ...requestParams, page },
+          signal: options?.controller?.signal,
+        })
+        collected = collected.concat(data.data)
+        const meta = data.meta
+        if (!meta) break
+        lastPage = meta.last_page
+        page++
+      } while (page <= lastPage)
+    } finally {
+      clearTimeout(timeoutId)
+      options?.controller?.signal.removeEventListener('abort', () => {})
+    }
+
+    return collected.map((raw) => {
+      const start = raw.start_date.split('T')[0]
+      const end = raw.end_date.split('T')[0]
+      return {
+        id: raw.id,
+        studentId: raw.user_id,
+        student: raw.user?.name ?? 'Unknown',
+        studentGeneration: raw.user?.generation ?? null,
+        studentClassName: raw.user?.class_name ?? null,
+        type: raw.leave_type?.name ?? 'Leave',
+        status: raw.status,
+        startDate: start,
+        endDate: end,
+        startTime: raw.start_time ?? undefined,
+        endTime: raw.end_time ?? undefined,
+        leaveTypeId: raw.leave_type_id,
+        duration_type: raw.duration_type,
+      } as CalendarEvent
+    })
   },
 
   async getLeaveRequest(id: number): Promise<LeaveRequestResponse> {

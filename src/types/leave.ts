@@ -41,24 +41,30 @@ export interface RawAttachment {
 }
 
 export interface LeaveRequestResponse {
-  id: number;
-  user_id: number;
-  user: LeaveRequestUser | null;
-  leave_type_id: number;
-  leave_type_name: string;
-  start_date: string;
-  end_date: string;
-  total_days: number;
-  reason: string;
-  duration_type: LeaveDurationType;
-  duration_hours: number | null;
-  start_time: string | null;
-  end_time: string | null;
-  duration_label: string;
-  supporting_document: string | null;
-  status: string;
-  created_at: string;
-  updated_at: string;
+  id: number
+  user_id: number
+  user: LeaveRequestUser | null
+  leave_type_id: number
+  leave_type_name: string
+  start_date: string
+  end_date: string
+  total_days: number
+  reason: string
+  status: string
+  duration_type: LeaveDurationType
+  duration_hours: number | null
+  duration_label: string
+  start_time?: string | null
+  end_time?: string | null
+  supporting_document: string | null
+  supporting_document_name?: string | null
+  supporting_document_size?: number | null
+  custom_leave_type?: string | null
+  created_at: string
+  updated_at: string
+  reviewer?: { id: number; name: string } | null
+  reviewed_at?: string | null
+  review_note?: string | null
 }
 
 export interface LeaveRequestListItem {
@@ -126,6 +132,7 @@ export interface RawLeaveRequest {
   updated_at: string;
   user?: LeaveRequestUser | null;
   reviewer?: { id: number; name: string } | null;
+  custom_leave_type?: string | null;
   attachments?: RawAttachment[];
 }
 
@@ -194,6 +201,22 @@ export interface LeaveRequestDetail {
   reviewer?: string | null;
   reviewDate?: string | null;
   comment?: string | null;
+}
+
+export interface CalendarEvent {
+  id: number
+  studentId: number
+  student: string
+  studentGeneration?: string | null
+  studentClassName?: string | null
+  type: string
+  status: string
+  startDate: string
+  endDate: string
+  startTime?: string
+  endTime?: string
+  leaveTypeId: number
+  duration_type: LeaveDurationType
 }
 
 export interface LeaveTypeResponse {
