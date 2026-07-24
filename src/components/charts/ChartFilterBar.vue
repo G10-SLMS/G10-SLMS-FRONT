@@ -1,34 +1,36 @@
 <template>
   <div class="mb-4 flex flex-wrap items-center gap-2.5">
-    <select
-      :value="range"
-      class="rounded-md border border-gray-200 bg-white px-2.5 py-[7px] text-[13px] text-gray-700 outline-none focus:border-blue-400"
-      @change="$emit('update:range', ($event.target as HTMLSelectElement).value as ReportRange)"
-    >
-      <option v-for="opt in rangeOptions" :key="opt.value" :value="opt.value">
-        {{ opt.label }}
-      </option>
-    </select>
+    <template v-if="!hideRangeControls">
+      <select
+        :value="range"
+        class="rounded-md border border-gray-200 bg-white px-2.5 py-[7px] text-[13px] text-gray-700 outline-none focus:border-blue-400"
+        @change="$emit('update:range', ($event.target as HTMLSelectElement).value as ReportRange)"
+      >
+        <option v-for="opt in rangeOptions" :key="opt.value" :value="opt.value">
+          {{ opt.label }}
+        </option>
+      </select>
 
-    <template v-if="range === 'custom'">
-      <input
-        type="date"
-        :value="startDate"
-        :max="endDate || undefined"
-        class="rounded-md border border-gray-200 bg-white px-2.5 py-[7px] text-[13px] text-gray-700 outline-none focus:border-blue-400"
-        @change="$emit('update:startDate', ($event.target as HTMLInputElement).value)"
-      />
-      <span class="text-[13px] text-gray-400">to</span>
-      <input
-        type="date"
-        :value="endDate"
-        :min="startDate || undefined"
-        class="rounded-md border border-gray-200 bg-white px-2.5 py-[7px] text-[13px] text-gray-700 outline-none focus:border-blue-400"
-        @change="$emit('update:endDate', ($event.target as HTMLInputElement).value)"
-      />
+      <template v-if="range === 'custom'">
+        <input
+          type="date"
+          :value="startDate"
+          :max="endDate || undefined"
+          class="rounded-md border border-gray-200 bg-white px-2.5 py-[7px] text-[13px] text-gray-700 outline-none focus:border-blue-400"
+          @change="$emit('update:startDate', ($event.target as HTMLInputElement).value)"
+        />
+        <span class="text-[13px] text-gray-400">to</span>
+        <input
+          type="date"
+          :value="endDate"
+          :min="startDate || undefined"
+          class="rounded-md border border-gray-200 bg-white px-2.5 py-[7px] text-[13px] text-gray-700 outline-none focus:border-blue-400"
+          @change="$emit('update:endDate', ($event.target as HTMLInputElement).value)"
+        />
+      </template>
     </template>
 
-    <div v-if="statusOptions.length" class="ml-auto flex flex-wrap gap-1.5">
+    <div v-if="statusOptions.length" class="flex flex-wrap gap-1.5" :class="hideRangeControls ? '' : 'ml-auto'">
       <button
         v-for="opt in statusOptions"
         :key="opt.value"
@@ -64,14 +66,16 @@ export interface ChartFilterStatusOption {
 
 const props = withDefaults(
   defineProps<{
-    range: ReportRange
+    range?: ReportRange
     startDate?: string
     endDate?: string
     rangeOptions?: ChartFilterRangeOption[]
     statusOptions?: ChartFilterStatusOption[]
     selectedStatuses?: string[]
+    hideRangeControls?: boolean
   }>(),
   {
+    range: '30d',
     startDate: '',
     endDate: '',
     rangeOptions: () => [
@@ -82,6 +86,7 @@ const props = withDefaults(
     ],
     statusOptions: () => [],
     selectedStatuses: () => [],
+    hideRangeControls: false,
   },
 )
 
@@ -99,7 +104,7 @@ function isSelected(value: string) {
 function toggleStatus(value: string) {
   const current = props.selectedStatuses
   const next = isSelected(value) ? current.filter((v) => v !== value) : [...current, value]
-  
+
   if (next.length === 0) return
 
   emit('update:selectedStatuses', next)

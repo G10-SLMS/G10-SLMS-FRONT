@@ -10,20 +10,25 @@
         </div>
         <p class="mb-3 text-xs text-gray-400">{{ rangeLabel }}</p>
 
+        <DateRangeFilter
+          class="mb-3"
+          :preset="preset"
+          :start-date="customStart"
+          :end-date="customEnd"
+          @update:preset="onPresetChange"
+          @update:start-date="customStart = $event"
+          @update:end-date="customEnd = $event"
+        />
+
         <ChartFilterBar
-          :range="range"
-          :start-date="startDate"
-          :end-date="endDate"
+          hide-range-controls
           :status-options="STATUS_OPTIONS"
           :selected-statuses="selectedStatuses"
-          @update:range="onRangeChange"
-          @update:start-date="startDate = $event"
-          @update:end-date="endDate = $event"
           @update:selected-statuses="selectedStatuses = $event"
         />
 
         <p
-          v-if="range === 'custom' && dateRangeInvalid"
+          v-if="preset === 'custom' && !resolvedRange"
           class="mb-4 rounded-md bg-amber-50 px-3 py-2 text-[13px] text-amber-700"
         >
           Select both a start and end date (end date on or after start date) to load this range.
@@ -72,18 +77,21 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import Chart from '@/components/charts/Chart.vue'
 import ChartFilterBar, { type ChartFilterStatusOption } from '@/components/charts/ChartFilterBar.vue'
+import DateRangeFilter from '@/components/dashboard/DateRangeFilter.vue'
+import { resolveDateRange, type DateRangePreset } from '@/utils/dateRange'
 import { reportService } from '@/services/reportService'
-import type { ReportByLeaveType, ReportMonthly, ReportRange } from '@/types/stats'
+import type { ReportByLeaveType, ReportMonthly } from '@/types/stats'
 import type { ChartDataset } from '@/components/charts/Chart'
 
 interface StatusDataset extends ChartDataset {
   key: string
 }
 
-const RANGE_LABELS: Record<Exclude<ReportRange, 'custom'>, string> = {
-  '30d': 'Last 30 days',
-  '90d': 'Last 90 days',
-  ytd: 'Year to date',
+const PRESET_LABELS: Record<Exclude<DateRangePreset, 'custom'>, string> = {
+  today: 'Today',
+  last_7_days: 'Last 7 Days',
+  last_30_days: 'Last 30 Days',
+  this_month: 'This Month',
 }
 
 const STATUS_OPTIONS: ChartFilterStatusOption[] = [
@@ -92,32 +100,24 @@ const STATUS_OPTIONS: ChartFilterStatusOption[] = [
   { value: 'rejected', label: 'Rejected', color: '#dc2626' },
 ]
 
-const range = ref<ReportRange>('30d')
-const startDate = ref('')
-const endDate = ref('')
+const preset = ref<DateRangePreset>('last_30_days')
+const customStart = ref('')
+const customEnd = ref('')
 const selectedStatuses = ref<string[]>(STATUS_OPTIONS.map((s) => s.value))
 
 const loading = ref(true)
 const error = ref('')
 const monthly = ref<ReportMonthly[]>([])
 const byType = ref<ReportByLeaveType[]>([])
-const resolvedStartDate = ref('')
-const resolvedEndDate = ref('')
-
-const dateRangeInvalid = computed(() => {
-  if (range.value !== 'custom') return false
-  if (!startDate.value || !endDate.value) return true
-  return new Date(startDate.value) > new Date(endDate.value)
-})
+const resolvedRange = computed(() => resolveDateRange(preset.value, customStart.value, customEnd.value))
 
 const rangeLabel = computed(() => {
-  if (range.value === 'custom') {
-    if (resolvedStartDate.value && resolvedEndDate.value) {
-      return `${resolvedStartDate.value} to ${resolvedEndDate.value}`
-    }
-    return 'Custom range'
+  if (preset.value === 'custom') {
+    return resolvedRange.value
+      ? `${resolvedRange.value.startDate} to ${resolvedRange.value.endDate}`
+      : 'Custom range'
   }
-  return RANGE_LABELS[range.value]
+  return PRESET_LABELS[preset.value]
 })
 
 const monthlyLabels = computed(() => monthly.value.map((m) => m.month))
@@ -137,13 +137,14 @@ const byTypeDatasets = computed<ChartDataset[]>(() => [
   { label: 'Requests', data: byType.value.map((t) => t.count) },
 ])
 
-function onRangeChange(value: ReportRange) {
-  range.value = value
+function onPresetChange(value: DateRangePreset) {
+  preset.value = value
 }
 
 async function load() {
-  if (range.value === 'custom' && dateRangeInvalid.value) {
-    // Wait for the user to finish picking a valid custom range before calling the API.
+  const resolved = resolvedRange.value
+  if (!resolved) {
+    // Waiting on a valid custom range — leave the last successful data on screen.
     return
   }
 
@@ -151,15 +152,14 @@ async function load() {
   error.value = ''
 
   try {
+
     const data = await reportService.getDashboard({
-      range: range.value,
-      startDate: startDate.value,
-      endDate: endDate.value,
+      range: 'custom',
+      startDate: resolved.startDate,
+      endDate: resolved.endDate,
     })
     monthly.value = data.monthly
     byType.value = data.by_leave_type
-    resolvedStartDate.value = data.start_date
-    resolvedEndDate.value = data.end_date
   } catch {
     error.value = 'Failed to load chart data.'
   } finally {
@@ -167,20 +167,16 @@ async function load() {
   }
 }
 
-watch(range, (newRange, oldRange) => {
-  if (newRange !== 'custom') {
-    startDate.value = ''
-    endDate.value = ''
+watch(preset, (newPreset) => {
+  if (newPreset !== 'custom') {
+    customStart.value = ''
+    customEnd.value = ''
   }
-  if (newRange !== oldRange) {
-    load()
-  }
+  load()
 })
 
-watch([startDate, endDate], () => {
-  if (range.value === 'custom' && !dateRangeInvalid.value) {
-    load()
-  }
+watch([customStart, customEnd], () => {
+  if (preset.value === 'custom') load()
 })
 
 onMounted(load)
