@@ -46,17 +46,6 @@
             />
           </div>
           <select
-            :value="statusFilter"
-            @change="onStatusFilterChange(($event.target as HTMLSelectElement).value)"
-            class="h-9 rounded-lg border border-gray-200 bg-white px-3 pr-8 text-sm text-gray-700 shadow-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
-          >
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <select
             :value="leaveTypeFilter"
             @change="onLeaveTypeFilterChange(($event.target as HTMLSelectElement).value)"
             class="h-9 rounded-lg border border-gray-200 bg-white px-3 pr-8 text-sm text-gray-700 shadow-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
@@ -172,7 +161,7 @@
         <div v-if="view === 'Week' || view === 'Day'" class="vuecal__body flex-1 overflow-y-auto relative">
           <div v-if="filteredEvents.length === 0 && !hasAllDayEvents" class="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
             <p class="rounded-lg bg-white/80 px-4 py-2 text-sm font-medium text-gray-400 shadow-sm">
-              {{ auth.isEducator ? 'No events for your assigned students' : 'No events' }}
+              No events
             </p>
           </div>
           <div class="flex relative" :class="{ 'min-w-[640px]': view === 'Week' }">
@@ -202,7 +191,7 @@
 
                 <!-- Current time red line -->
                 <div
-                  v-if="isTodayView && isToday(day.dateKey)"
+                  v-if="isTodayView && isToday(day.dateKey) && currentTimePos >= 0 && currentTimePos <= hours.length * CELL_HEIGHT"
                   class="pointer-events-none absolute left-0 right-0 z-30"
                   :style="{ top: currentTimePos + 'px' }"
                 >
@@ -295,7 +284,6 @@
     :is-open="isDetailModalOpen"
     :event-id="selectedEventId ?? undefined"
     :event="selectedEvent ?? undefined"
-    :assigned-student-ids="assignedStudentIds"
     @close="closeDetailModal"
   />
   </div>
@@ -319,13 +307,11 @@ const props = defineProps<{
   fetching: boolean
   fetchError: string | null
   auth: ReturnType<typeof useAuthStore>
-  statusFilter: string
   leaveTypeFilter: number | ''
   dateFrom: string
   dateTo: string
   searchQuery: string
   filteredLeaveTypes: LeaveType[]
-  assignedStudentIds: number[]
 }>()
 
 const emit = defineEmits<{
@@ -334,12 +320,10 @@ const emit = defineEmits<{
   'fetch-leave-types': []
   'clear-search': []
   'search': [value: string]
-  'status-filter': [value: string]
   'leave-type-filter': [value: number | '']
   'date-from-change': [value: string]
   'date-to-change': [value: string]
   'retry': []
-  'load-assigned-students': []
 }>()
 
 const selectedEventId = ref<number | null>(null)
@@ -347,8 +331,8 @@ const selectedEvent = ref<CalendarEvent | null>(null)
 const isDetailModalOpen = ref(false)
 
 const CELL_HEIGHT = 56
-const START_HOUR = 0
-const END_HOUR = 24
+const START_HOUR = 7
+const END_HOUR = 23
 
 const hours = computed(() => {
   const h: number[] = []
@@ -375,27 +359,20 @@ const statusColorVars = computed(() => {
 })
 
 const filteredByPermission = computed(() => {
-  if (props.auth.isAdmin) return props.events
-  if (props.auth.isStudent) return props.events.filter((r) => r.studentId === props.auth.user?.id)
-  if (props.auth.isEducator) {
-    if (props.assignedStudentIds.length > 0) {
-      return props.events.filter((r) => props.assignedStudentIds.includes(r.studentId))
-    }
-    return []
-  }
+  const approvedOnly = props.events.filter((r) => r.status.toLowerCase() === 'approved')
+  if (props.auth.isAdmin || props.auth.isEducator) return approvedOnly
+  if (props.auth.isStudent) return approvedOnly.filter((r) => r.studentId === props.auth.user?.id)
   return []
 })
 
 const filteredEvents = computed(() => {
   const visible = filteredByPermission.value
-  const sf = props.statusFilter.trim().toLowerCase()
   const lt = props.leaveTypeFilter
   const df = props.dateFrom.trim()
   const dt = props.dateTo.trim()
   const query = props.searchQuery.trim().toLowerCase()
 
   return visible.filter((ev) => {
-    const matchStatus = !sf || ev.status.toLowerCase() === sf
     const matchLeaveType = !lt || ev.leaveTypeId === lt
     const matchDate = !df || ev.endDate >= df
     const matchDateTo = !dt || ev.startDate <= dt
@@ -405,7 +382,7 @@ const filteredEvents = computed(() => {
       String(ev.studentId).includes(query) ||
       (ev.studentGeneration ?? '').toLowerCase().includes(query) ||
       (ev.studentClassName ?? '').toLowerCase().includes(query)
-    return matchStatus && matchLeaveType && matchDate && matchDateTo && matchSearch
+    return matchLeaveType && matchDate && matchDateTo && matchSearch
   })
 })
 
@@ -553,7 +530,7 @@ let timeInterval: ReturnType<typeof setInterval> | null = null
 function updateCurrentTime() {
   const now = new Date()
   const minutes = now.getHours() * 60 + now.getMinutes()
-  currentTimePos.value = (minutes / 60) * CELL_HEIGHT
+  currentTimePos.value = ((minutes - START_HOUR * 60) / 60) * CELL_HEIGHT
 }
 
 onMounted(() => {
@@ -892,10 +869,6 @@ function onSearchInput(value: string) {
   searchTimer = setTimeout(() => {
     emit('search', value)
   }, 300)
-}
-
-function onStatusFilterChange(value: string) {
-  emit('status-filter', value)
 }
 
 function onLeaveTypeFilterChange(value: string) {

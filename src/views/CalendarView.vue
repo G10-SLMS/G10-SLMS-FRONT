@@ -6,23 +6,19 @@
     :fetching="fetching"
     :fetch-error="fetchError"
     :auth="auth"
-    :status-filter="statusFilter"
     :leave-type-filter="leaveTypeFilter"
     :date-from="dateFrom"
     :date-to="dateTo"
     :search-query="searchQuery"
     :filtered-leave-types="filteredLeaveTypes"
-    :assigned-student-ids="assignedStudentIds"
     @update:current-date="onCurrentDateChange"
     @view-change="onViewChange"
     @search="onSearchInput"
-    @status-filter="onStatusFilterChange"
     @leave-type-filter="onLeaveTypeFilterChange"
     @date-from-change="onDateFromChange"
     @date-to-change="onDateToChange"
     @fetch-leave-types="fetchLeaveTypes"
     @retry="fetchEvents"
-    @load-assigned-students="loadAssignedStudents"
   />
 </template>
 
@@ -30,7 +26,6 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { leaveService } from '@/services/leaveService'
-import api from '@/services/api'
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
 import CalendarPanel from '@/components/calendar/CalendarPanel.vue'
 import type { LeaveType } from '@/types/leave'
@@ -51,9 +46,6 @@ let fetchSeq = 0
 
 onMounted(async () => {
   await fetchLeaveTypes()
-  if (auth.isEducator) {
-    await loadAssignedStudents()
-  }
   fetchEvents()
 })
 onUnmounted(() => {
@@ -74,9 +66,7 @@ onUnmounted(() => {
 const events = ref<import('@/types/leave').CalendarEvent[]>([])
 const fetching = ref(false)
 const fetchError = ref<string | null>(null)
-const assignedStudentIds = ref<number[]>([])
 
-const statusFilter = ref('')
 const leaveTypeFilter = ref<number | ''>('')
 const dateFrom = ref('')
 const dateTo = ref('')
@@ -112,7 +102,7 @@ async function fetchEvents() {
     const { start, end } = viewDateRange(currentDate.value, view.value)
     const result = await leaveService.getLeaveRequestsForCalendar(start, end, {
       controller,
-      status: statusFilter.value || undefined,
+      status: 'approved',
       leave_type_id: leaveTypeFilter.value || undefined,
       view: view.value,
     })
@@ -140,26 +130,12 @@ async function fetchLeaveTypes() {
   }
 }
 
-async function loadAssignedStudents() {
-  try {
-    const { data } = await api.get<{ students: { id: number }[] }>('/educator/students')
-    assignedStudentIds.value = data.students.map((s) => s.id)
-  } catch {
-    assignedStudentIds.value = []
-  }
-}
-
 function onSearchInput(value: string) {
   if (searchTimer) clearTimeout(searchTimer)
   searchTimer = setTimeout(() => {
     if (!isMounted) return
     searchQuery.value = value
   }, 300)
-}
-
-function onStatusFilterChange(value: string) {
-  statusFilter.value = value
-  fetchEvents()
 }
 
 function onLeaveTypeFilterChange(value: number | '') {

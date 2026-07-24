@@ -299,6 +299,31 @@
                 >
               </div>
 
+              <!-- Reviewed by (view mode only) -->
+              <div
+                v-if="isViewMode && reviewer"
+                class="mb-4 flex items-start gap-3 rounded-lg border px-4 py-3.5"
+                :class="reviewTheme.box"
+              >
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" :class="reviewTheme.icon">
+                  <CheckCircle2 v-if="originalStatus.toLowerCase() === 'approved'" :size="18" />
+                  <XCircle v-else-if="originalStatus.toLowerCase() === 'rejected'" :size="18" />
+                  <UserCheck v-else :size="18" />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="m-0 text-xs font-medium uppercase tracking-wide" :class="reviewTheme.text">
+                    {{ reviewLabel }}
+                  </p>
+                  <p class="m-0 mt-0.5 text-sm font-semibold text-gray-900">{{ reviewer.name }}</p>
+                  <p v-if="reviewedAt" class="m-0 mt-0.5 text-xs text-gray-500">
+                    {{ formatReviewedAt(reviewedAt) }}
+                  </p>
+                  <p v-if="reviewNote" class="m-0 mt-1.5 text-xs text-gray-600">
+                    "{{ reviewNote }}"
+                  </p>
+                </div>
+              </div>
+
               <!-- Attachment (view mode) -->
               <div v-if="isViewMode && existingAttachmentUrl" class="mb-4">
                 <label class="mb-1.5 block text-xs font-medium text-gray-700">
@@ -411,7 +436,7 @@ import type { LeaveType, LeaveRequestPayload, LeaveRequestUser, LeaveDurationTyp
 import { LEAVE_MIN_HOURLY_DURATION, LEAVE_MAX_HOURLY_DURATION, LEAVE_HOURLY_DURATION_STEP } from '@/types/leave';
 import type { Comment } from '@/types/comment';
 import type { AxiosError } from 'axios';
-import { FileText, Calendar, Clock, X, Lock } from 'lucide-vue-next';
+import { FileText, Calendar, Clock, X, Lock, CheckCircle2, XCircle, UserCheck } from 'lucide-vue-next';
 import { getInitials, getAvatarColor } from '@/utils/initials';
 import StudentProfileModal from '@/components/leave-request/StudentProfileModal.vue';
 import FileUpload from '@/components/ui/FileUpload.vue';
@@ -438,6 +463,9 @@ const editableLoaded = ref(false);
 const canEdit = ref(true);
 const originalStatus = ref('');
 const requestUser = ref<LeaveRequestUser | null>(null);
+const reviewer = ref<{ id: number; name: string } | null>(null);
+const reviewedAt = ref<string | null>(null);
+const reviewNote = ref<string | null>(null);
 const showProfile = ref(false);
 const existingAttachmentUrl = ref<string | null>(null);
 const existingAttachmentName = ref<string | null>(null);
@@ -459,6 +487,36 @@ const hasAttachment = computed(
   () => Boolean(form.attachment) || (hasExistingAttachment.value && !removeExistingAttachment.value),
 );
 const attachmentMissing = computed(() => attachmentRequired.value && !hasAttachment.value);
+
+const reviewLabel = computed(() => {
+  const status = (originalStatus.value ?? '').toLowerCase();
+  if (status === 'approved') return 'Approved by';
+  if (status === 'rejected') return 'Rejected by';
+  return 'Reviewed by';
+});
+
+const reviewTheme = computed(() => {
+  const status = (originalStatus.value ?? '').toLowerCase();
+  if (status === 'approved') {
+    return { box: 'bg-green-50 border-green-100', icon: 'bg-green-100 text-green-600', text: 'text-green-800' };
+  }
+  if (status === 'rejected') {
+    return { box: 'bg-red-50 border-red-100', icon: 'bg-red-100 text-red-600', text: 'text-red-800' };
+  }
+  return { box: 'bg-gray-50 border-gray-100', icon: 'bg-gray-100 text-gray-600', text: 'text-gray-800' };
+});
+
+function formatReviewedAt(value: string) {
+  if (!value) return '—';
+  const d = new Date(value);
+  return d.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
 
 const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -509,6 +567,9 @@ function resetForm() {
   canEdit.value = true;
   originalStatus.value = '';
   requestUser.value = null;
+  reviewer.value = null;
+  reviewedAt.value = null;
+  reviewNote.value = null;
   showProfile.value = false;
   existingAttachmentUrl.value = null;
   existingAttachmentName.value = null;
@@ -686,6 +747,9 @@ async function loadRequest() {
     originalStatus.value = data.status;
     canEdit.value = data.status === 'pending';
     requestUser.value = data.user;
+    reviewer.value = data.reviewer ?? null;
+    reviewedAt.value = data.reviewed_at ?? null;
+    reviewNote.value = data.review_note ?? null;
 
     if (data.leave_type_id == null && data.custom_leave_type) {
       form.leaveTypeId = 'other';
