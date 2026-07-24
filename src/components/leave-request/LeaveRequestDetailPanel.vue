@@ -64,17 +64,28 @@
             <span v-else class="text-slate-400">—</span>
           </dd>
         </div>
-
-        <div>
-          <dt class="text-xs font-medium text-slate-500">Reviewer</dt>
-          <dd class="mt-0.5 text-sm text-slate-900">{{ request.reviewer || '—' }}</dd>
-        </div>
-
-        <div>
-          <dt class="text-xs font-medium text-slate-500">Review Date</dt>
-          <dd class="mt-0.5 text-sm text-slate-900">{{ request.reviewDate ? formatDate(request.reviewDate) : '—' }}</dd>
-        </div>
       </dl>
+
+      <div
+        v-if="request.reviewer"
+        class="mt-5 flex items-start gap-3 rounded-lg border px-4 py-3.5"
+        :class="reviewTheme.box"
+      >
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" :class="reviewTheme.icon">
+          <CheckCircle2 v-if="request.status?.toLowerCase() === 'approved'" :size="18" />
+          <XCircle v-else-if="request.status?.toLowerCase() === 'rejected'" :size="18" />
+          <UserCheck v-else :size="18" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="m-0 text-xs font-medium uppercase tracking-wide" :class="reviewTheme.text">
+            {{ reviewLabel }}
+          </p>
+          <p class="m-0 mt-0.5 text-sm font-semibold text-slate-900">{{ request.reviewer }}</p>
+          <p v-if="request.reviewDate" class="m-0 mt-0.5 text-xs text-slate-500">
+            {{ formatDate(request.reviewDate) }}
+          </p>
+        </div>
+      </div>
 
       <div v-if="request.comment" class="mt-5">
         <dt class="text-xs font-medium text-slate-500">Comment</dt>
@@ -87,7 +98,8 @@
 </template>
 
 <script setup lang="ts">
-import { Paperclip } from 'lucide-vue-next'
+import { computed } from 'vue'
+import { Paperclip, CheckCircle2, XCircle, UserCheck } from 'lucide-vue-next'
 import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
 import { getInitials, getAvatarColor } from '@/utils/initials'
 import { formatDate } from '@/utils/date'
@@ -96,6 +108,24 @@ import type { LeaveRequestDetail } from '@/types/leave'
 const props = defineProps<{
   request: LeaveRequestDetail
 }>()
+
+const reviewLabel = computed(() => {
+  const status = (props.request.status ?? '').toLowerCase()
+  if (status === 'approved') return 'Approved by'
+  if (status === 'rejected') return 'Rejected by'
+  return 'Reviewed by'
+})
+
+const reviewTheme = computed(() => {
+  const status = (props.request.status ?? '').toLowerCase()
+  if (status === 'approved') {
+    return { box: 'bg-green-50 border-green-100', icon: 'bg-green-100 text-green-600', text: 'text-green-800' }
+  }
+  if (status === 'rejected') {
+    return { box: 'bg-red-50 border-red-100', icon: 'bg-red-100 text-red-600', text: 'text-red-800' }
+  }
+  return { box: 'bg-slate-50 border-slate-100', icon: 'bg-slate-100 text-slate-600', text: 'text-slate-800' }
+})
 </script>
 
 
