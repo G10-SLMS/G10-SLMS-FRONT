@@ -1,5 +1,13 @@
 import api from './api'
-import type { ManagedUser, RawUser, UserPayload, UserListMeta, UserRoleCounts, UserListParams } from '@/types/user'
+import type {
+  ManagedUser,
+  RawUser,
+  UserPayload,
+  UserListMeta,
+  UserRoleCounts,
+  UserListParams,
+  ImportUsersResult,
+} from '@/types/user'
 
 function formatJoined(dateStr: string): string {
   if (!dateStr) return '—'
@@ -59,5 +67,25 @@ export const userService = {
 
   async deleteUser(id: number): Promise<void> {
     await api.delete(`/users/${id}`)
+  },
+
+  async importUsers(file: File): Promise<ImportUsersResult> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const { data } = await api.post<ImportUsersResult>('/users/import', formData)
+    return data
+  },
+
+  async downloadImportTemplate(): Promise<void> {
+    const response = await api.get('/users/import/template', { responseType: 'blob' })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'user-import-template.xlsx'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
   },
 }

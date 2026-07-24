@@ -126,3 +126,41 @@ export interface UserListParams {
   page?: number
   per_page?: number
 }
+
+// Used by the Import Users from Excel feature
+export interface ImportSuccessRow {
+  row: number
+  id: number
+  name: string
+  email: string
+  role: UserRole
+}
+
+export interface ImportFailedRow {
+  row: number
+  email: string | null
+  errors: string[]
+}
+
+export interface ImportSkippedRow {
+  row: number
+  email: string | null
+  reason: string
+}
+
+export interface ImportSummary {
+  total_rows: number
+  successful: number
+  failed: number
+  skipped: number
+}
+
+export interface ImportUsersResult {
+  message: string
+  summary: ImportSummary
+  results: {
+    successful: ImportSuccessRow[]
+    failed: ImportFailedRow[]
+    skipped: ImportSkippedRow[]
+  }
+}

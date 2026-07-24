@@ -5,13 +5,22 @@
         <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
         <p class="mt-1 text-[13px] text-gray-500">Manage students, educators, and admin accounts</p>
       </div>
-      <button
-        class="inline-flex items-center justify-center gap-2 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-blue-700 sm:self-start"
-        @click="openAddModal"
-      >
-        <UserPlus :size="16" :stroke-width="1.8" />
-        Add User
-      </button>
+      <div class="flex flex-col gap-2.5 sm:flex-row sm:self-start">
+        <button
+          class="inline-flex items-center justify-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-gray-50"
+          @click="importModalOpen = true"
+        >
+          <FileSpreadsheet :size="16" :stroke-width="1.8" />
+          Import from Excel
+        </button>
+        <button
+          class="inline-flex items-center justify-center gap-2 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-blue-700"
+          @click="openAddModal"
+        >
+          <UserPlus :size="16" :stroke-width="1.8" />
+          Add User
+        </button>
+      </div>
     </div>
 
     <div class="mb-5 grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
@@ -240,6 +249,12 @@
       @confirm="confirmRemoveUser"
       @cancel="cancelRemoveUser"
     />
+
+    <ImportUsersModal
+      :open="importModalOpen"
+      @close="importModalOpen = false"
+      @imported="onUsersImported"
+    />
   </div>
 </template>
 
@@ -254,10 +269,12 @@ import {
   Search,
   Pencil,
   Trash2,
+  FileSpreadsheet,
 } from 'lucide-vue-next'
-import type { UserRole, ManagedUser, UserRoleCounts } from '@/types/user'
+import type { UserRole, ManagedUser, UserRoleCounts, ImportUsersResult } from '@/types/user'
 import StatCard from '@/components/ui/StatCard.vue'
 import UserCard from '@/components/user/UserCard.vue'
+import ImportUsersModal from '@/components/user/ImportUsersModal.vue'
 import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
 import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
@@ -457,6 +474,14 @@ async function removeUser(id: number) {
   } finally {
     deletingId.value = null
   }
+}
+
+const importModalOpen = ref(false)
+
+async function onUsersImported(result: ImportUsersResult) {
+  errorMsg.value = ''
+  successMsg.value = `Import completed: ${result.summary.successful} created, ${result.summary.skipped} skipped, ${result.summary.failed} failed.`
+  await fetchUsers(1)
 }
 
 </script>
