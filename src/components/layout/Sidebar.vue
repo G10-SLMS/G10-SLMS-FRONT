@@ -182,7 +182,7 @@ const collapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true')
 const hoveredLabel = ref<string | null>(null)
 const tooltipStyle = ref({ top: '0px', left: '0px' })
 
-const canApprove = computed(() => auth.isTrainer || auth.isAdmin)
+const canApprove = computed(() => auth.isEducator || auth.isAdmin)
 const isAdmin = computed(() => auth.isAdmin)
 
 const navGroups = computed(() => [

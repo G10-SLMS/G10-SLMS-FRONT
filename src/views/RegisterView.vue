@@ -18,7 +18,7 @@ const auth = useAuthStore()
 const form = reactive({
   fullName: '',
   email: '',
-  role: 'student' as 'student' | 'trainer',
+  role: 'student' as 'student' | 'educator',
   password: '',
   confirmPassword: '',
   acceptTerms: false,
@@ -95,7 +95,7 @@ async function handleSubmit() {
           <SelectField id="role" label="Account Type" v-model="form.role" required>
             <template #icon><GraduationCap :size="18" :stroke-width="1.8" /></template>
             <option value="student">Student</option>
-            <option value="trainer">Trainer</option>
+            <option value="educator">Educator</option>
           </SelectField>
 
           <div class="flex gap-4">

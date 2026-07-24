@@ -72,7 +72,7 @@ const avatarUrl = computed(() => urlFor(auth.user?.avatar_id))
 
 const roleLabel = computed(() => {
   if (auth.isAdmin) return 'Admin'
-  if (auth.isTrainer) return 'Trainer'
+  if (auth.isEducator) return 'Educator'
   if (auth.isStudent) return 'Student'
   return ''
 })

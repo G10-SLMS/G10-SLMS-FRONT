@@ -98,8 +98,8 @@ const roleStyles = {
     badge: 'bg-red-500/15 text-red-300',
     bar: 'bg-red-400',
   },
-  trainer: {
-    label: 'Trainer',
+  educator: {
+    label: 'Educator',
     badge: 'bg-amber-500/15 text-amber-300',
     bar: 'bg-amber-400',
   },
