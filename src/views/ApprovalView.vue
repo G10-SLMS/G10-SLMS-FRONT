@@ -30,25 +30,6 @@
           </button>
         </div>
 
-        <!-- Status filter -->
-        <div class="relative">
-          <select
-            v-model="statusFilter"
-            class="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm font-medium text-slate-700 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 sm:w-auto"
-            @change="fetchRequests(1)"
-          >
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="">All statuses</option>
-          </select>
-          <ChevronDown
-            :size="14"
-            class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-        </div>
-
         <!-- Leave type filter -->
         <div class="relative">
           <select
@@ -223,7 +204,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CheckCircle2, Search, SearchX, ChevronDown, X } from 'lucide-vue-next';
 import ApprovalRow from '@/components/approval/ApprovalRow.vue';
@@ -239,7 +220,6 @@ import api from '@/services/api';
 import type { AxiosError } from 'axios';
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal';
 import { useNotificationStore } from '@/stores/notification';
-import { usePolling } from '@/composables/usePolling';
 
 const leaveFormModal = useLeaveFormModalStore();
 const notificationStore = useNotificationStore();
@@ -248,7 +228,7 @@ const router = useRouter();
 
 const searchQuery = ref('');
 const typeFilter = ref('All');
-const statusFilter = ref('pending');
+const STATUS_FILTER = 'pending';
 
 const page = ref(1);
 const lastPage = ref(1);
@@ -327,7 +307,7 @@ async function fetchRequests(p?: number) {
       params: {
         page: page.value,
         per_page: perPage.value,
-        ...(statusFilter.value ? { status: statusFilter.value } : {}),
+        status: STATUS_FILTER,
       },
     });
     requests.value = data.data.map(toRow);
@@ -344,12 +324,6 @@ async function fetchRequests(p?: number) {
 }
 
 onMounted(async () => {
-  const statusParam = route.query.status;
-  if (typeof statusParam === 'string') {
-    statusFilter.value = statusParam;
-    router.replace({ query: { ...route.query, status: undefined } });
-  }
-
   await fetchRequests();
 
   const idParam = route.query.request;
@@ -358,16 +332,6 @@ onMounted(async () => {
     if (Number.isFinite(numericId)) focusRequest(numericId);
     router.replace({ query: { ...route.query, request: undefined } });
   }
-});
-
-const { pause: pausePolling, resume: resumePolling } = usePolling(
-  () => fetchRequests(page.value),
-  { interval: 15000, skipImmediate: true },
-);
-
-watch(reviewTarget, (target) => {
-  if (target) pausePolling();
-  else resumePolling();
 });
 
 const highlightedId = ref<number | null>(null);
@@ -398,10 +362,7 @@ const leaveTypes = computed(() => {
 });
 
 const hasActiveFilters = computed(
-  () =>
-    searchQuery.value.trim().length > 0 ||
-    typeFilter.value !== 'All' ||
-    statusFilter.value !== 'pending',
+  () => searchQuery.value.trim().length > 0 || typeFilter.value !== 'All',
 );
 
 const filteredRequests = computed(() => {
@@ -424,7 +385,6 @@ const filteredRequests = computed(() => {
 function clearFilters() {
   searchQuery.value = '';
   typeFilter.value = 'All';
-  statusFilter.value = 'pending';
   fetchRequests(1);
 }
 
