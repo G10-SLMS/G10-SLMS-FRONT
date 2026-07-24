@@ -7,7 +7,6 @@ import type {
   LeaveRequestPayload,
   LeaveRequestResponse,
   LeaveRequestListItem,
-  LeaveDurationType,
   RawApiEnvelope,
   RawLeaveRequest,
 } from '@/types/leave'
@@ -69,8 +68,6 @@ function latestAttachment(raw: RawLeaveRequest) {
 
 function toRequestResponse(raw: RawLeaveRequest): LeaveRequestResponse {
   const attachment = latestAttachment(raw)
-  const startParts = raw.start_date.split('T')
-  const endParts = raw.end_date.split('T')
   return {
     id: raw.id,
     user_id: raw.user_id,
@@ -87,14 +84,15 @@ function toRequestResponse(raw: RawLeaveRequest): LeaveRequestResponse {
     end_time: raw.end_time ?? null,
     duration_label: raw.duration_label ?? (raw.duration_type === 'hourly' ? `${toDurationHours(raw.duration_hours) ?? ''} hours` : 'Full day'),
     supporting_document: attachment?.url ?? null,
+    supporting_document_name: attachment?.original_name ?? null,
+    supporting_document_size: attachment?.size ?? null,
     status: raw.status,
     created_at: raw.created_at,
     updated_at: raw.updated_at,
     reviewer: raw.reviewer ?? null,
     reviewed_at: raw.reviewed_at ?? null,
     review_note: raw.review_note ?? null,
-    start_time: startParts.length > 1 ? startParts[1]! : null,
-    end_time: endParts.length > 1 ? endParts[1]! : null,
+    custom_leave_type: raw.custom_leave_type ?? null,
   }
 }
 
@@ -144,6 +142,14 @@ export const leaveService = {
       per_page: meta?.per_page ?? 10,
       total: meta?.total ?? data.data.length,
     }
+  },
+
+  async getLeaveRequestStats(): Promise<{ pending: number; approved: number; rejected: number; cancelled: number }> {
+    const { data } = await api.get<{
+      success: boolean
+      data: { pending: number; approved: number; rejected: number; cancelled: number }
+    }>('/leave-requests/stats')
+    return data.data
   },
 
   async getLeaveRequestsForCalendar(
@@ -197,8 +203,6 @@ export const leaveService = {
     return collected.map((raw) => {
       const start = raw.start_date.split('T')[0]
       const end = raw.end_date.split('T')[0]
-      const startParts = raw.start_date.split('T')
-      const endParts = raw.end_date.split('T')
       return {
         id: raw.id,
         studentId: raw.user_id,
@@ -209,9 +213,10 @@ export const leaveService = {
         status: raw.status,
         startDate: start,
         endDate: end,
-      startTime: startParts.length > 1 && !['00:00:00', '00:00'].includes(startParts[1]!) ? startParts[1]! : undefined,
-      endTime: endParts.length > 1 && !['00:00:00', '00:00'].includes(endParts[1]!) ? endParts[1]! : undefined,
+        startTime: raw.start_time ?? undefined,
+        endTime: raw.end_time ?? undefined,
         leaveTypeId: raw.leave_type_id,
+        duration_type: raw.duration_type,
       } as CalendarEvent
     })
   },

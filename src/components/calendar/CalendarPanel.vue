@@ -121,28 +121,7 @@
         </button>
       </div>
 
-      <div v-else-if="filteredEvents.length === 0" class="flex flex-col items-center justify-center gap-4 px-5 py-20">
-        <template v-if="auth.isTrainer">
-          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
-            <AlertTriangle :size="24" class="text-amber-500" />
-          </div>
-          <p class="text-sm text-gray-500 font-medium">No leave requests found for your assigned students.</p>
-        </template>
-        <template v-else-if="searchQuery.trim().length > 0">
-          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-            <Inbox :size="24" class="text-gray-400" />
-          </div>
-          <p class="text-sm text-gray-500 font-medium">Try adjusting your search or filters.</p>
-        </template>
-        <template v-else>
-          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-            <Inbox :size="24" class="text-gray-400" />
-          </div>
-          <p class="text-sm text-gray-500 font-medium">No leave requests found.</p>
-        </template>
-      </div>
-
-      <div v-else class="flex h-full flex-col min-w-0 bg-white" :style="statusColorVars">
+      <div class="flex h-full flex-col min-w-0 bg-white overflow-x-auto" :style="statusColorVars">
         <!-- Day / Week / Month headers -->
         <div class="vuecal__header flex border-b border-gray-200 bg-white">
           <div class="w-[52px] shrink-0 border-r border-gray-200"></div>
@@ -187,34 +166,16 @@
           </div>
         </div>
 
-        <!-- All Day Row (Week view only) -->
-        <div v-if="hasAllDayEvents && (view === 'Week' || view === 'Day')" class="vuecal__all-day flex border-b border-gray-200 bg-white">
-          <div class="w-[52px] shrink-0 border-r border-gray-200 py-1">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">All</span>
-          </div>
-          <div class="flex flex-1">
-            <div
-              v-for="day in weekDays"
-              :key="day.dateKey"
-              class="flex-1 border-l border-gray-200 px-1.5 py-1 space-y-1"
-              :class="{ 'bg-cyan-50/30': day.isToday }"
-            >
-              <div
-                v-for="ev in getDayAllDayEvents(day.dateKey)"
-                :key="ev.id"
-                class="vuecal-custom-event cursor-pointer rounded-md px-2 py-1 text-xs font-medium transition hover:opacity-80 border-l-[3px]"
-                :class="statusEventClass(ev.status)"
-                @click="openDetailModal(ev.id)"
-              >
-                <div class="font-semibold truncate">{{ ev.student }} - {{ ev.type }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
+
 
         <!-- Time Grid -->
         <div v-if="view === 'Week' || view === 'Day'" class="vuecal__body flex-1 overflow-y-auto relative">
-          <div class="flex relative">
+          <div v-if="filteredEvents.length === 0 && !hasAllDayEvents" class="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+            <p class="rounded-lg bg-white/80 px-4 py-2 text-sm font-medium text-gray-400 shadow-sm">
+              {{ auth.isTrainer ? 'No events for your assigned students' : 'No events' }}
+            </p>
+          </div>
+          <div class="flex relative" :class="{ 'min-w-[640px]': view === 'Week' }">
             <!-- Time Column -->
             <div class="vuecal__time-column w-[52px] shrink-0 border-r border-gray-200 bg-white">
               <div v-for="hour in hours" :key="hour" class="vuecal__time-cell h-[56px] flex items-start justify-end pr-2 pt-0.5">
@@ -238,24 +199,54 @@
                     :style="{ height: CELL_HEIGHT + 'px' }"
                   ></div>
                 </div>
-                <template v-for="ev in getDayTimedEvents(day.dateKey)" :key="ev.id">
+
+                <!-- Current time red line -->
+                <div
+                  v-if="isTodayView && isToday(day.dateKey)"
+                  class="pointer-events-none absolute left-0 right-0 z-30"
+                  :style="{ top: currentTimePos + 'px' }"
+                >
+                  <div class="flex items-center">
+                    <div class="h-[10px] w-[10px] -ml-[5px] rounded-full bg-red-500 shadow-[0_0_0_2px_white]"></div>
+                    <div class="flex-1 border-t-[2px] border-red-500"></div>
+                  </div>
+                </div>
+
+                <!-- Full-day events as vertical columns -->
+                <template v-for="ev in getDayAllDayEvents(day.dateKey)" :key="`fd-${ev.id}`">
                   <div
-                    class="vuecal-custom-event absolute rounded-md px-2 py-1 text-xs font-medium cursor-pointer transition hover:opacity-80 border-l-[3px] z-10 overflow-hidden"
+                    class="vuecal-custom-event cursor-pointer absolute rounded-md text-[10px] font-medium transition hover:opacity-80 border-l-[3px] z-[5] overflow-hidden flex flex-col"
+                    :class="statusEventClass(ev.status)"
+                    :style="{
+                      top: '0px',
+                      height: (hours.length * CELL_HEIGHT) + 'px',
+                      ...getFullDayColumnStyle(ev, day.dateKey)
+                    }"
+                    @click="openDetailModal(ev)"
+                  >
+                    <div class="p-1.5 flex flex-col h-full justify-start">
+                      <div class="font-semibold truncate leading-tight">{{ ev.student }} · {{ ev.type }}</div>
+                      <div class="text-[9px] font-medium uppercase tracking-wide opacity-75 truncate leading-tight">{{ ev.status }}</div>
+                    </div>
+                  </div>
+                </template>
+
+                <template v-if="filteredEvents.length > 0" v-for="ev in getDayTimedEvents(day.dateKey)" :key="ev.id">
+                  <div
+                    class="vuecal-custom-event absolute rounded-md text-[10px] font-medium cursor-pointer transition hover:opacity-80 border-l-[3px] z-10 overflow-hidden"
                     :class="statusEventClass(ev.status)"
                     :style="{
                       top: getEventTop(ev) + 'px',
                       height: Math.max(getEventHeight(ev), 24) + 'px',
                       ...getEventColumnStyle(ev, day.dateKey)
                     }"
-                    @click="openDetailModal(ev.id)"
+                    @click="openDetailModal(ev)"
                   >
-                    <div class="font-semibold truncate">{{ ev.student }}</div>
-                    <div
-                      v-if="ev.startTime && ev.endTime"
-                      class="truncate opacity-80"
-                    >
-                      {{ formatTimeLabel(ev.startTime) }} - {{ formatTimeLabel(ev.endTime) }}
-                    </div>
+                  <div class="font-semibold truncate leading-tight">{{ ev.student }} · {{ ev.type }}</div>
+                  <div class="flex items-center gap-1 opacity-75 truncate leading-tight">
+                    <span class="inline-block h-[6px] w-[6px] shrink-0 rounded-full" :style="{ background: statusDotBg(ev.status) }"></span>
+                    {{ formatTimeLabel(ev.startTime) }} - {{ formatTimeLabel(ev.endTime) }}
+                  </div>
                   </div>
                 </template>
               </div>
@@ -279,7 +270,7 @@
                     v-for="ev in getDayMiniEvents(day.dateKey)"
                     :key="ev.id"
                     class="h-1.5 w-1.5 rounded-full"
-                    :class="miniDotClass(ev.status)"
+                    :style="miniDotStyle(ev.status)"
                   ></div>
                 </div>
               </div>
@@ -288,8 +279,8 @@
                   v-for="ev in getDayMiniEvents(day.dateKey)"
                   :key="ev.id"
                   class="truncate rounded px-1.5 py-0.5 text-[10px] font-medium cursor-pointer transition hover:opacity-80"
-                  :class="miniClass(ev.status)"
-                  @click="openDetailModal(ev.id)"
+                  :style="miniStyle(ev.status)"
+                  @click="openDetailModal(ev)"
                 >
                   {{ ev.student }} - {{ ev.type }}
                 </div>
@@ -300,16 +291,18 @@
       </div>
     </div>
 
-    <CalendarEventDetailModal
-      :is-open="isDetailModalOpen"
-      :event-id="selectedEventId ?? undefined"
-      @close="closeDetailModal"
-    />
+  <CalendarEventDetailModal
+    :is-open="isDetailModalOpen"
+    :event-id="selectedEventId ?? undefined"
+    :event="selectedEvent ?? undefined"
+    :assigned-student-ids="assignedStudentIds"
+    @close="closeDetailModal"
+  />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { CalendarDays, ChevronLeft, ChevronRight, Search, Inbox, AlertCircle, AlertTriangle } from 'lucide-vue-next'
 import type { CalendarEvent, LeaveType } from '@/types/leave'
 import { STATUS_COLORS } from '@/utils/leaveStatusConfig'
@@ -338,7 +331,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:currentDate': [date: Date]
   'view-change': [view: 'Day' | 'Week' | 'Month']
-  'fetch-events': []
   'fetch-leave-types': []
   'clear-search': []
   'search': [value: string]
@@ -351,6 +343,7 @@ const emit = defineEmits<{
 }>()
 
 const selectedEventId = ref<number | null>(null)
+const selectedEvent = ref<CalendarEvent | null>(null)
 const isDetailModalOpen = ref(false)
 
 const CELL_HEIGHT = 56
@@ -364,7 +357,9 @@ const hours = computed(() => {
 })
 
 function formatHour(hour: number): string {
-  return `${hour.toString().padStart(2, '0')}:00`
+  const ampm = hour >= 12 ? 'PM' : 'AM'
+  const h = hour % 12 || 12
+  return `${h}${ampm}`
 }
 
 const statusColorVars = computed(() => {
@@ -414,12 +409,20 @@ const filteredEvents = computed(() => {
   })
 })
 
+function isFullDayEvent(ev: CalendarEvent): boolean {
+  const type = String(ev.duration_type ?? '').toLowerCase().replace(/[-\s]/g, '_')
+  if (type === 'full_day') return true
+  if (!ev.startTime || !ev.endTime) return true
+  if (type === 'hourly') return false
+  return true
+}
+
 const allDayEvents = computed(() =>
-  filteredEvents.value.filter((ev) => !ev.startTime && !ev.endTime),
+  filteredEvents.value.filter((ev) => isFullDayEvent(ev)),
 )
 
 const timedEvents = computed(() =>
-  filteredEvents.value.filter((ev) => ev.startTime && ev.endTime),
+  filteredEvents.value.filter((ev) => !isFullDayEvent(ev) && ev.startTime && ev.endTime),
 )
 
 const hasAllDayEvents = computed(() => allDayEvents.value.length > 0)
@@ -531,6 +534,33 @@ function isToday(dateKey: string | undefined): boolean {
   return dateKey === todayKey()
 }
 
+const isTodayView = computed(() => {
+  if (props.view === 'Day') {
+    return formatDateKey(props.currentDate) === todayKey()
+  }
+  if (props.view === 'Week') {
+    const monday = mondayOfWeek(props.currentDate)
+    const sunday = addDaysSingle(monday, 6)
+    const today = todayKey()
+    return formatDateKey(monday) <= today && today <= formatDateKey(sunday)
+  }
+  return false
+})
+
+const currentTimePos = ref(0)
+let timeInterval: ReturnType<typeof setInterval> | null = null
+
+function updateCurrentTime() {
+  const now = new Date()
+  const minutes = now.getHours() * 60 + now.getMinutes()
+  currentTimePos.value = (minutes / 60) * CELL_HEIGHT
+}
+
+onMounted(() => {
+  updateCurrentTime()
+  timeInterval = setInterval(updateCurrentTime, 60000)
+})
+
   function parseTime(time: string | undefined) {
     if (!time) return null
     const parts = time.split(':').map(Number)
@@ -629,6 +659,60 @@ function isToday(dateKey: string | undefined): boolean {
     return map
   })
 
+  function assignFullDayColumns(events: CalendarEvent[]): Map<number, { column: number; totalColumns: number }> {
+    const result = new Map<number, { column: number; totalColumns: number }>()
+    const totalColumns = events.length
+    events.forEach((ev, index) => {
+      result.set(ev.id, { column: index, totalColumns })
+    })
+    return result
+  }
+
+  const fullDayColumnCache = new Map<string, { idsKey: string; result: Map<number, { column: number; totalColumns: number }> }>()
+
+  const fullDayEventColumns = computed(() => {
+    const map = new Map<string, Map<number, { column: number; totalColumns: number }>>()
+    for (const day of weekDays.value) {
+      const dayEvents = getDayAllDayEvents(day.dateKey)
+      if (dayEvents.length === 0) {
+        map.set(day.dateKey, new Map())
+        continue
+      }
+      const sortedIds = dayEvents.map((e) => e.id).sort((a, b) => a - b).join(',')
+      const cached = fullDayColumnCache.get(day.dateKey)
+      if (cached && cached.idsKey === sortedIds) {
+        map.set(day.dateKey, cached.result)
+        continue
+      }
+      const result = assignFullDayColumns(dayEvents)
+      fullDayColumnCache.set(day.dateKey, { idsKey: sortedIds, result })
+      map.set(day.dateKey, result)
+    }
+    return map
+  })
+
+  function getFullDayColumnStyle(ev: CalendarEvent, dateKey: string): Record<string, string> {
+    const columns = fullDayEventColumns.value.get(dateKey)
+    if (!columns) return {}
+
+    const assignment = columns.get(ev.id)
+    if (!assignment || assignment.totalColumns <= 1) {
+      return {}
+    }
+
+    const { column, totalColumns } = assignment
+    const gapPercent = 1
+    const availableWidth = 100 - gapPercent
+    const columnWidth = availableWidth / totalColumns
+    const left = gapPercent / 2 + column * columnWidth
+    const width = columnWidth - gapPercent / 2
+
+    return {
+      left: `${left}%`,
+      width: `${width}%`,
+    }
+  }
+
   function getEventTop(ev: CalendarEvent): number {
     const t = parseTime(ev.startTime)
     if (!t) return 0
@@ -675,7 +759,12 @@ function statusEventClass(status: string): string {
   return 'vc-unknown'
 }
 
-function miniClass(status: string): string {
+function statusDotBg(status: string): string {
+  const key = status.toLowerCase()
+  return STATUS_COLORS[key]?.css.background ?? STATUS_COLORS.pending.css.background
+}
+
+function miniStyle(status: string): Record<string, string> {
   const s = status.toLowerCase()
   const map: Record<string, { bg: string; text: string }> = {
     approved: { bg: STATUS_COLORS.approved.css.background, text: STATUS_COLORS.approved.css.color },
@@ -684,28 +773,23 @@ function miniClass(status: string): string {
     pending: { bg: STATUS_COLORS.pending.css.background, text: STATUS_COLORS.pending.css.color },
   }
   const c = map[s] ?? map.pending
-  return `bg-[${c.bg}] text-[${c.text}]`
+  return { background: c.bg, color: c.text }
 }
 
-function miniDotClass(status: string): string {
-  const s = status.toLowerCase()
-  const map: Record<string, string> = {
-    approved: 'bg-green-500',
-    rejected: 'bg-red-500',
-    cancelled: 'bg-gray-400',
-    pending: 'bg-amber-400',
+function miniDotStyle(status: string): Record<string, string> {
+  const key = status.toLowerCase()
+  return { background: STATUS_COLORS[key]?.css.background ?? STATUS_COLORS.pending.css.background }
+}
+
+  function openDetailModal(ev: CalendarEvent) {
+    selectedEventId.value = ev.id
+    selectedEvent.value = ev
+    isDetailModalOpen.value = true
   }
-  return map[s] ?? 'bg-amber-400'
-}
 
-function openDetailModal(id: number) {
-  selectedEventId.value = id
-  isDetailModalOpen.value = true
-}
-
-function closeDetailModal() {
-  isDetailModalOpen.value = false
-}
+  function closeDetailModal() {
+    isDetailModalOpen.value = false
+  }
 
 
 function prev() {
@@ -736,9 +820,15 @@ function goToday() {
   emit('update:currentDate', new Date())
 }
 
-function formatTimeLabel(time: string): string {
+function formatTimeLabel(time: string | undefined): string {
+  if (!time) return ''
   const parts = time.split(':')
-  if (parts.length >= 2) return `${parts[0]}:${parts[1]}`
+  if (parts.length >= 2) {
+    const h = Number(parts[0])
+    const ampm = h >= 12 ? 'PM' : 'AM'
+    const displayHour = h % 12 || 12
+    return `${displayHour}:${parts[1]}${ampm}`
+  }
   return time
 }
 
@@ -806,29 +896,29 @@ function onSearchInput(value: string) {
 
 function onStatusFilterChange(value: string) {
   emit('status-filter', value)
-  emit('fetch-events')
 }
 
 function onLeaveTypeFilterChange(value: string) {
   const num = value === '' ? '' : Number(value)
   emit('leave-type-filter', num)
-  emit('fetch-events')
 }
 
 function onDateFromChange(value: string) {
   emit('date-from-change', value)
-  emit('fetch-events')
 }
 
 function onDateToChange(value: string) {
   emit('date-to-change', value)
-  emit('fetch-events')
 }
 
 onUnmounted(() => {
   if (searchTimer) {
     clearTimeout(searchTimer)
     searchTimer = null
+  }
+  if (timeInterval) {
+    clearInterval(timeInterval)
+    timeInterval = null
   }
 })
 
@@ -879,9 +969,14 @@ const view = computed({
 .vuecal-custom-event {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
   line-height: 1.3;
   z-index: 10;
+}
+
+.vuecal__day-col .vuecal-custom-event {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 5px;
 }
 
 .vuecal-custom-event.vc-approved {
@@ -928,10 +1023,6 @@ const view = computed({
   background: var(--vc-unknown-hover-bg);
 }
 
-.vuecal__all-day {
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
-}
 
 @media (max-width: 640px) {
   .vuecal__time-column {

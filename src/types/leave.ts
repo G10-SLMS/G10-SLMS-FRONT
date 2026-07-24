@@ -50,15 +50,21 @@ export interface LeaveRequestResponse {
   end_date: string
   total_days: number
   reason: string
-  supporting_document: string | null
   status: string
+  duration_type: LeaveDurationType
+  duration_hours: number | null
+  duration_label: string
+  start_time?: string | null
+  end_time?: string | null
+  supporting_document: string | null
+  supporting_document_name?: string | null
+  supporting_document_size?: number | null
+  custom_leave_type?: string | null
   created_at: string
   updated_at: string
   reviewer?: { id: number; name: string } | null
   reviewed_at?: string | null
   review_note?: string | null
-  start_time?: string | null
-  end_time?: string | null
 }
 
 export interface LeaveRequestListItem {
@@ -126,6 +132,7 @@ export interface RawLeaveRequest {
   updated_at: string;
   user?: LeaveRequestUser | null;
   reviewer?: { id: number; name: string } | null;
+  custom_leave_type?: string | null;
   attachments?: RawAttachment[];
 }
 
@@ -209,6 +216,7 @@ export interface CalendarEvent {
   startTime?: string
   endTime?: string
   leaveTypeId: number
+  duration_type: LeaveDurationType
 }
 
 export interface LeaveTypeResponse {

@@ -47,7 +47,19 @@
               Loading details…
             </div>
 
-            <div v-else-if="detail" class="space-y-5">
+            <div
+            v-else-if="accessDenied"
+            class="flex flex-col items-center justify-center gap-3 px-5 py-12 text-center"
+          >
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+              <AlertCircle :size="24" class="text-red-500" />
+            </div>
+            <p class="text-sm font-medium text-gray-900">You do not have permission to view this request.</p>
+            <p class="text-xs text-gray-500">Please contact an administrator if you believe this is an error.</p>
+          </div>
+
+          <div
+            v-else-if="detail" class="space-y-5">
               <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p class="m-0 text-sm font-semibold text-gray-900">
@@ -139,6 +151,10 @@
                       <dd class="mt-0.5 text-sm text-gray-900">{{ detail.reviewed_at ? formatDateTime(detail.reviewed_at) : '—' }}</dd>
                     </div>
                     <div class="sm:col-span-2">
+                      <dt class="text-xs font-medium text-gray-500">Review Note</dt>
+                      <dd class="mt-0.5 text-sm text-gray-900">{{ detail.review_note || '—' }}</dd>
+                    </div>
+                    <div class="sm:col-span-2">
                       <dt class="text-xs font-medium text-gray-500">Reason</dt>
                       <dd class="mt-0.5 text-sm text-gray-900">{{ detail.reason || '—' }}</dd>
                     </div>
@@ -197,18 +213,22 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { X, Paperclip } from 'lucide-vue-next'
+import { X, Paperclip, AlertCircle } from 'lucide-vue-next'
 import { leaveService } from '@/services/leaveService'
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
+import { useAuthStore } from '@/stores/auth'
 import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
 import { formatDate } from '@/utils/date'
-import type { LeaveRequestResponse } from '@/types/leave'
+import type { LeaveRequestResponse, CalendarEvent } from '@/types/leave'
 
+const auth = useAuthStore()
 const leaveModal = useLeaveFormModalStore()
 
 const props = defineProps<{
   isOpen: boolean
   eventId?: number
+  event?: CalendarEvent
+  assignedStudentIds: number[]
 }>()
 
 const emit = defineEmits<{
@@ -218,6 +238,20 @@ const emit = defineEmits<{
 const detail = ref<LeaveRequestResponse | null>(null)
 const loadingDetail = ref(false)
 const loadError = ref<string | null>(null)
+const accessDenied = ref(false)
+
+function canAccessEvent(event: CalendarEvent | undefined): boolean {
+  if (!event) return false
+  if (auth.isAdmin) return true
+  if (auth.isStudent) return event.studentId === auth.user?.id
+  if (auth.isTrainer) {
+    if (props.assignedStudentIds.length > 0) {
+      return props.assignedStudentIds.includes(event.studentId)
+    }
+    return false
+  }
+  return false
+}
 
 const durationText = computed(() => {
   const d = detail.value
@@ -245,10 +279,18 @@ watch(
   () => props.isOpen,
   (open) => {
     if (open && props.eventId) {
-      loadDetail(props.eventId)
+      if (!canAccessEvent(props.event)) {
+        accessDenied.value = true
+        detail.value = null
+        loadError.value = null
+      } else {
+        accessDenied.value = false
+        loadDetail(props.eventId)
+      }
     } else {
       detail.value = null
       loadError.value = null
+      accessDenied.value = false
     }
   },
 )
@@ -257,6 +299,7 @@ async function loadDetail(id: number) {
   loadingDetail.value = true
   loadError.value = null
   detail.value = null
+  accessDenied.value = false
   try {
     detail.value = await leaveService.getLeaveRequest(id)
   } catch {

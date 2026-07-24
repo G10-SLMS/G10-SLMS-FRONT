@@ -20,7 +20,6 @@
     @leave-type-filter="onLeaveTypeFilterChange"
     @date-from-change="onDateFromChange"
     @date-to-change="onDateToChange"
-    @fetch-events="fetchEvents"
     @fetch-leave-types="fetchLeaveTypes"
     @retry="fetchEvents"
     @load-assigned-students="loadAssignedStudents"
@@ -186,13 +185,6 @@ function onCurrentDateChange(date: Date) {
   currentDate.value = date
 }
 
-function startOfWeek(date: Date) {
-  const d = new Date(date)
-  d.setDate(d.getDate() - d.getDay())
-  d.setHours(0, 0, 0, 0)
-  return d
-}
-
 function addDaysSingle(date: Date, n: number) {
   const d = new Date(date)
   d.setDate(d.getDate() + n)
@@ -208,12 +200,16 @@ function formatDateKey(date: Date) {
 
 function viewDateRange(current: Date, v: 'Day' | 'Week' | 'Month') {
   if (v === 'Day') {
-    const weekStart = startOfWeek(current)
-    const weekEnd = addDaysSingle(weekStart, 6)
-    return { start: formatDateKey(weekStart), end: formatDateKey(weekEnd) }
+    const key = formatDateKey(current)
+    return { start: key, end: key }
   }
   if (v === 'Week') {
-    const start = startOfWeek(current)
+    const d = new Date(current)
+    const day = d.getDay()
+    const diff = day === 0 ? -6 : 1 - day
+    d.setDate(d.getDate() + diff)
+    d.setHours(0, 0, 0, 0)
+    const start = d
     const end = addDaysSingle(start, 6)
     return { start: formatDateKey(start), end: formatDateKey(end) }
   }
