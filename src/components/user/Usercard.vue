@@ -13,7 +13,7 @@
         class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium capitalize"
         :class="{
           'bg-blue-600/20 text-[#0a1628]': user.role === 'admin',
-          'bg-green-100 text-green-700': user.role === 'trainer',
+          'bg-green-100 text-green-700': user.role === 'educator',
           'bg-amber-100 text-amber-700': user.role === 'student',
         }"
       >{{ roleLabel }}</span>

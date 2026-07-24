@@ -13,7 +13,7 @@ import { Mail, Phone } from 'lucide-vue-next'
 
 const router = useRouter()
 const auth = useAuthStore()
-const selectedRole = ref<'student' | 'trainer' | null>(null)
+const selectedRole = ref<'student' | 'educator' | null>(null)
 
 const form = reactive({
   email: '',
@@ -21,15 +21,15 @@ const form = reactive({
   remember: false,
 })
 
-function fillDemo(kind: 'student' | 'fellow' | 'trainer') {
-  selectedRole.value = kind === 'trainer' ? 'trainer' : 'student'
+function fillDemo(kind: 'student' | 'fellow' | 'educator') {
+  selectedRole.value = kind === 'educator' ? 'educator' : 'student'
   const demoEmails: Record<typeof kind, string> = {
     student: '@student.passerellesnumeriques.org',
     fellow: '@fellow.passerellesnumeriques.org',
-    trainer: '@passerellesnumeriques.org',
+    educator: '@passerellesnumeriques.org',
   }
   form.email = demoEmails[kind]
-  form.password = kind === 'trainer' ? 'password' : 'password123'
+  form.password = kind === 'educator' ? 'password' : 'password123'
 }
 
 function socialLogin(provider: 'google' | 'github') {
@@ -86,7 +86,7 @@ async function handleSubmit() {
                 <span class="font-medium text-gray-300">|</span>
                 <button type="button" class="cursor-pointer whitespace-nowrap rounded-full border border-[#f5a623]/30 bg-[#f5a623]/10 px-3 py-1 text-[0.8rem] font-semibold leading-snug text-[#e09510] transition-colors hover:border-[#f5a623]/50 hover:bg-[#f5a623]/20 active:scale-[0.98]" @click="fillDemo('fellow')">Fellow Account</button>
                 <span class="font-medium text-gray-300">|</span>
-                <button type="button" class="cursor-pointer whitespace-nowrap rounded-full border border-[#f5a623]/30 bg-[#f5a623]/10 px-3 py-1 text-[0.8rem] font-semibold leading-snug text-[#e09510] transition-colors hover:border-[#f5a623]/50 hover:bg-[#f5a623]/20 active:scale-[0.98]" @click="fillDemo('trainer')">Trainer Account</button>
+                <button type="button" class="cursor-pointer whitespace-nowrap rounded-full border border-[#f5a623]/30 bg-[#f5a623]/10 px-3 py-1 text-[0.8rem] font-semibold leading-snug text-[#e09510] transition-colors hover:border-[#f5a623]/50 hover:bg-[#f5a623]/20 active:scale-[0.98]" @click="fillDemo('educator')">Educator Account</button>
               </p>
             </template>
           </FormField>

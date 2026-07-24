@@ -40,7 +40,7 @@ export const userService = {
     const counts: UserRoleCounts = data.counts ?? {
       total: mapped.length,
       student: mapped.filter((u) => u.role === 'student').length,
-      trainer: mapped.filter((u) => u.role === 'trainer').length,
+      educator: mapped.filter((u) => u.role === 'educator').length,
       admin: mapped.filter((u) => u.role === 'admin').length,
     }
 

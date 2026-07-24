@@ -49,7 +49,7 @@ const MAX_VISIBLE = 3
 const router = useRouter()
 const auth = useAuthStore()
 
-const canReview = computed(() => auth.isTrainer || auth.isAdmin)
+const canReview = computed(() => auth.isEducator || auth.isAdmin)
 
 const items = ref<LeaveRequestListItem[]>([])
 const loading = ref(true)

@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'trainer' | 'student'
+export type UserRole = 'admin' | 'educator' | 'student'
 
 // Matches the `gender` enum defined on the users table migration.
 export type Gender = 'male' | 'female'
@@ -7,7 +7,7 @@ export interface User {
   name: string
   email: string
   role: UserRole
-  trainer_id: number | null
+  educator_id: number | null
   avatar_id: number | null
   email_verified_at: string | null
 
@@ -36,7 +36,7 @@ export interface RegisterPayload {
   password: string
   password_confirmation: string
   role?: UserRole
-  trainer_id?: number | null
+  educator_id?: number | null
   student_id?: string | null
 }
 
@@ -116,7 +116,7 @@ export interface UserListMeta {
 export interface UserRoleCounts {
   total: number
   student: number
-  trainer: number
+  educator: number
   admin: number
 }
 

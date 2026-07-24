@@ -431,7 +431,7 @@ function clearFilters() {
 function friendlyErrorMessage(err: unknown): string {
   const status = (err as AxiosError)?.response?.status;
   if (status === 403) {
-    return 'Only trainers can approve or reject requests. You don\'t have permission to take this action.';
+    return 'Only educators can approve or reject requests. You don\'t have permission to take this action.';
   }
   return extractErrorMessage(err, 'Failed to update this request.');
 }

@@ -3,7 +3,7 @@
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
-        <p class="mt-1 text-[13px] text-gray-500">Manage students, trainers, and admin accounts</p>
+        <p class="mt-1 text-[13px] text-gray-500">Manage students, educators, and admin accounts</p>
       </div>
       <button
         class="inline-flex items-center justify-center gap-2 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-blue-700 sm:self-start"
@@ -21,7 +21,7 @@
       <template v-else>
         <StatCard :icon="Users" label="Total Users" :value="counts.total" color="blue" />
         <StatCard :icon="GraduationCap" label="Students" :value="counts.student" color="green" />
-        <StatCard :icon="UserCheck" label="Trainers" :value="counts.trainer" color="amber" />
+        <StatCard :icon="UserCheck" label="Educators" :value="counts.educator" color="amber" />
         <StatCard :icon="ShieldCheck" label="Admins" :value="counts.admin" color="blue" />
       </template>
     </div>
@@ -55,7 +55,7 @@
           >
             <option value="all">All roles</option>
             <option value="admin">Admin</option>
-            <option value="trainer">Trainer</option>
+            <option value="educator">Educator</option>
             <option value="student">Student</option>
           </select>
         </div>
@@ -97,7 +97,7 @@
                   class="rounded-full px-2.5 py-1 text-xs font-medium capitalize"
                   :class="{
                     'bg-blue-600/20 text-[#0a1628]': u.role === 'admin',
-                    'bg-green-100 text-green-700': u.role === 'trainer',
+                    'bg-green-100 text-green-700': u.role === 'educator',
                     'bg-amber-100 text-amber-700': u.role === 'student',
                   }"
                 >{{ roleLabel(u.role) }}</span>
@@ -203,7 +203,7 @@
               class="rounded-md border border-gray-200 px-2.5 py-[9px] text-sm text-gray-900 focus:border-blue-600 focus:outline-none"
             >
               <option value="student">Student</option>
-              <option value="trainer">Trainer</option>
+              <option value="educator">Educator</option>
               <option value="admin">Admin</option>
             </select>
           </label>
@@ -286,7 +286,7 @@ const perPage = ref(10)
 const total = ref(0)
 const lastPage = ref(1)
 
-const counts = ref<UserRoleCounts>({ total: 0, student: 0, trainer: 0, admin: 0 })
+const counts = ref<UserRoleCounts>({ total: 0, student: 0, educator: 0, admin: 0 })
 
 const totalPages = computed(() => lastPage.value)
 const from = computed(() => (total.value === 0 ? 0 : (page.value - 1) * perPage.value + 1))

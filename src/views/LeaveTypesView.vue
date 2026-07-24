@@ -3,7 +3,7 @@
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h1 class="text-[22px] font-bold tracking-tight text-slate-900">Leave Types Management</h1>
-        <p class="mt-1 text-[13px] text-slate-500">Define the leave categories available to students and trainers</p>
+        <p class="mt-1 text-[13px] text-slate-500">Define the leave categories available to students and educators</p>
       </div>
       <button
         class="inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 sm:self-start"
@@ -138,9 +138,9 @@ const confirmMessage = computed(() => {
     case 'delete':
       return `Are you sure you want to delete '${name}'? This cannot be undone.`
     case 'activate':
-      return `Are you sure you want to activate '${name}'? Students and trainers will be able to select it again.`
+      return `Are you sure you want to activate '${name}'? Students and educators will be able to select it again.`
     default:
-      return `Are you sure you want to deactivate '${name}'? Students and trainers won't be able to select it until it's reactivated.`
+      return `Are you sure you want to deactivate '${name}'? Students and educators won't be able to select it until it's reactivated.`
   }
 })
 const confirmLabel = computed(() => {

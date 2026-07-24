@@ -15,8 +15,8 @@
       </template>
     </div>
 
-    <!-- Staff / Trainer dashboard -->
-    <div v-else-if="auth.isTrainer" class="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+    <!-- Staff / Educator dashboard -->
+    <div v-else-if="auth.isEducator" class="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       <template v-if="statsLoading">
         <StatCardSkeleton v-for="n in 4" :key="n" />
       </template>
@@ -105,8 +105,8 @@ async function loadStats() {
     rejectedCount.value = rejected.total
     totalRequests.value = pending.total + approved.total + rejected.total
 
-    if (auth.isTrainer) {
-      const { data } = await api.get<{ students: AssignedStudent[]; count: number }>('/trainer/students')
+    if (auth.isEducator) {
+      const { data } = await api.get<{ students: AssignedStudent[]; count: number }>('/educator/students')
       assignedStudents.value = data.count
     }
   } catch {

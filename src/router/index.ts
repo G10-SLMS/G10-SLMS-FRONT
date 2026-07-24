@@ -62,7 +62,7 @@ export const router = createRouter({
           path: '/approvals',
           name: 'Approvals',
           component: () => import('../views/ApprovalView.vue'),
-          meta: { title: 'Approvals', requiresAuth: true, roles: ['trainer', 'admin'] },
+          meta: { title: 'Approvals', requiresAuth: true, roles: ['educator', 'admin'] },
         },
         {
           path: '/calendar',

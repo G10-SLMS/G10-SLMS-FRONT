@@ -29,7 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
   // --- getters ---
   const isAuthenticated = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
-  const isTrainer = computed(() => user.value?.role === 'trainer')
+  const isEducator = computed(() => user.value?.role === 'educator')
   const isStudent = computed(() => user.value?.role === 'student')
 
   // --- internal helper ---
@@ -154,7 +154,7 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     isAuthenticated,
     isAdmin,
-    isTrainer,
+    isEducator,
     isStudent,
     register,
     login,
