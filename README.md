@@ -9,6 +9,7 @@ Vue 3 frontend for a web application that manages student leave requests — rep
 * **Routing:** Vue Router
 * **State Management:** Pinia
 * **HTTP Client:** Axios
+* **Charts:** Chart.js
 
 
 ## 📅 Sprint 1 — Project Setup & Authentication
@@ -61,6 +62,29 @@ Vue 3 frontend for a web application that manages student leave requests — rep
 - [x] Reusable Status Badge and Leave Type Dropdown used consistently
 - [x] Avatar Picker fully gender-aware end-to-end
 - [x] Profile page fetches live data on load
+## 📅 Sprint 3 — Approval System, Comments & File Upload
+* **Duration:** Week 30 (July 21–27, 2026)
+* **Goal:** Build the approval workflow UI, a commenting system, and file attachment support — so trainers/admins can review and act on leave requests with context, and students receive real-time notifications when their request status changes.
+
+### 1. Completed Features
+* **Approval Dashboard:** Dedicated page for Trainers/Admins to review, approve, and reject leave requests.
+* **Leave Request Detail Panel:** Full request context in one view — comments, attachments, and approval tracking history.
+* **Approve / Reject Actions:** Wired directly into the Detail Panel.
+* **Comment System:** Review Comment Modal connected to the backend Comment API, with `@mention` parsing and comment notifications.
+* **File Upload:** Supporting document attachments (PNG/JPG/PDF/DOCX), with per-leave-type upload requirements enforced.
+* **Notifications:** Bell & dropdown UI wired to the real Notifications API, with real-time delivery and deep-linking to the related leave request.
+* **Calendar View:** Built using a calendar library, displaying leave requests across the month.
+* **Reports Dashboard:** Charts (Chart.js) with filters, hourly/daily options, date range picker, and a Top 10 Students by Leave Requests report.
+* **Role Rename:** "Trainer" renamed to "Educator" across the entire UI.
+* **Time-Based Leave Requests:** Support for leave requests with time granularity, beyond full-day requests.
+
+### 2. Sprint 3 Deliverable Checklist
+- [x] Trainers/Admins can approve or reject leave requests through a dedicated dashboard UI
+- [x] Users can add, view, and reply to comments on a leave request, with @mention support
+- [x] Students can upload supporting documents to their leave requests
+- [x] Notifications are created and shown in real time when a request's status changes or a user is mentioned
+- [x] Calendar view and Reports Dashboard implemented
+
 
 ## 🗂️ Project Structure
 src/
@@ -68,38 +92,121 @@ src/
 │   ├── LoginView.vue
 │   ├── RegisterView.vue
 │   ├── DashboardView.vue
-│   ├── OAuthCallbackView.vue
+│   ├── AuthCallbackView.vue
 │   ├── LeaveRequestView.vue
 │   ├── LeaveFormView.vue
 │   ├── ApprovalView.vue
 │   ├── CalendarView.vue
 │   ├── AdminView.vue
+│   ├── UserManagementView.vue
+│   ├── ReportsView.vue
+│   ├── LeaveTypesView.vue
+│   ├── ProfileView.vue
+│   ├── EditProfileView.vue
 │   └── NotFoundView.vue
 ├── layouts/
 │   └── DashboardLayout.vue
 ├── components/
-|__ |__CalendarGrid.vue
-|__ |__CommentSection.vue
-|__ |__FileUpload.vue
-|__ |__LeaveCard.vue
-|__ |__StatusBadge.vue
 │   ├── Navbar.vue
 │   ├── Sidebar.vue
-│   └── Footer.vue
+│   ├── Footer.vue
+│   ├── StatusBadge.vue
+│   ├── CalendarGrid.vue
+│   ├── LeaveCard.vue
+│   ├── CommentSection.vue
+│   ├── FileUpload.vue
+│   ├── auth/
+│   │   ├── FormField.vue
+│   │   ├── AuthTabs.vue
+│   │   ├── AuthPanelLeft.vue
+│   │   ├── SocialAuthButtons.vue
+│   │   ├── SelectField.vue
+│   │   └── PasswordField.vue
+│   ├── layout/
+│   │   ├── SidebarNavLink.vue
+│   │   ├── SidebarNavGroup.vue
+│   │   ├── NotificationBell.vue
+│   │   └── NotificationItem.vue
+│   ├── charts/
+│   │   ├── Chart.js
+│   │   ├── Chart.vue
+│   │   └── ChartFilterBar.vue
+│   ├── calendar/
+│   │   ├── CalendarPanel.vue
+│   │   └── CalendarEventDetailModal.vue
+│   ├── leave-type/
+│   │   ├── LeaveTypeRow.vue
+│   │   ├── LeaveTypeCard.vue
+│   │   └── LeaveTypeModal.vue
+│   ├── dashboard/
+│   │   ├── DashboardCharts.vue
+│   │   ├── TodayLeaveListItem.vue
+│   │   ├── DateRangeFilter.vue
+│   │   ├── PendingTodayCard.vue
+│   │   ├── ApprovedTodayCard.vue
+│   │   └── RejectedTodayCard.vue
+│   ├── user/
+│   │   ├── UserCard.vue
+│   │   ├── UserMenu.vue
+│   │   ├── AvatarPicker.vue
+│   │   ├── ProfileBadgeCard.vue
+│   │   ├── ProfileSectionCard.vue
+│   │   ├── ProfileFieldRow.vue
+│   │   ├── ProfileFormField.vue
+│   │   ├── ProfileProviderRow.vue
+│   │   ├── ProfileSecuritySection.vue
+│   │   ├── ChangePasswordModal.vue
+│   │   └── LogoutConfirmModal.vue
+│   ├── ui/
+│   │   ├── StatCard.vue
+│   │   ├── TimePicker.vue
+│   │   ├── LeaveCard.vue
+│   │   ├── FileUpload.vue
+│   │   ├── CommentSection.vue
+│   │   └── CommentRow.vue
+│   └── icons/
+│       ├── IconGoogle.vue
+│       └── IconGithub.vue
 ├── router/
 │   └── index.ts
 ├── stores/
-│   └── auth.ts
-|   |__ leave.ts
-|   |__ notification.ts
+│   ├── auth.ts
+│   ├── leave.ts
+│   ├── notification.ts
+│   ├── leaveNotifications.ts
+│   └── leaveFormModal.ts
 ├── services/
-│   └── api.ts
-|   |__ authService.ts
+│   ├── api.ts
+│   ├── authService.ts
+│   ├── userService.ts
+│   ├── leaveService.ts
+│   ├── commentService.ts
+│   ├── notificationService.ts
+│   └── reportService.ts
+├── composables/
+│   ├── usePolling.ts
+│   ├── useLeaveRequests.ts
+│   ├── useDefaultAvatars.ts
+│   └── useChangePassword.ts
+├── utils/
+│   ├── date.js
+│   ├── dateRange.js
+│   ├── errors.js
+│   ├── formatters.js
+│   ├── initials.js
+│   ├── leaveStatusConfig.js
+│   ├── reportExport.js
+│   └── dateRange.d.ts
+├── types/
+│   ├── user.ts
+│   ├── leave.ts
+│   ├── comment.ts
+│   ├── notification.ts
+│   ├── attachment.ts
+│   └── stats.ts
 └── assets/
-|   |__ images
-|   |__ styles
-|__ types/
-|   |__user.ts
+    ├── images/
+    └── styles/
 
 ## 💻 Getting Started
 ### 1. Installation
@@ -111,11 +218,9 @@ npm install
 Run the local development server:
 ```bash
 npm run dev
+```
 The application will be accessible at: `http://localhost:5173`
-## 🌐 Environment Variables
-Create a `.env` file in the project root directory and configure the following keys:
 
-```ini
 ## 🌐 Environment Variables
 Create a `.env` file in the project root directory and configure the following keys:
 
@@ -127,7 +232,7 @@ VITE_API_BASE_URL=http://localhost:8000/api
 VITE_GOOGLE_CLIENT_ID=://googleusercontent.com
 VITE_GITHUB_CLIENT_ID=Ov23liQ90k5noocjxO60
 ```
----
+
 *Requirement: Ensures that the SLMS backend (Laravel) is running locally with CORS configured to explicitly allow requests from `http://localhost:5173`.*
 
 ---
@@ -137,10 +242,10 @@ VITE_GITHUB_CLIENT_ID=Ov23liQ90k5noocjxO60
 | Role | UI Access / Permissions |
 | :--- | :--- |
 | **Admin** | Full dashboard, user management, leave type management, system settings |
-| **Trainer** | Leave request review, approve/reject actions, comment section |
+| **Educator** | Leave request review, approve/reject actions, comment section |
 | **Student** | Submit leave requests, view personal history/status, cancel pending requests |
 
-> ⚠️ *Note: Role-based UI filtering is not yet fully implemented. The sidebar currently displays the same links to all users. This feature is planned for Sprint 3 once `auth.ts` role state is integrated with global route guards.*
+> ✅ Role-based UI filtering is active. The sidebar dynamically shows or hides links based on the authenticated user's role (`isAdmin`, `isEducator`, `isStudent`), and route guards enforce role-based access for protected routes.
 
 ---
 
@@ -165,10 +270,22 @@ VITE_GITHUB_CLIENT_ID=Ov23liQ90k5noocjxO60
   * `feature/pinia-auth`
   * `feature/router-configuration`
   * `feature/social-login`
----
+  * `feature/leave-request`
+  * `feature/avatar-picker`
+  * `feature/calendar-view`
+  * `feature/api-integration`
+  * `feature/readme-documentation`
+
 ## 🔗 Related Repositories
 * **This Repository (Frontend):** [https://github.com/G10-SLMS/G10-SLMS-FRONT.git]
 * **Backend API (Laravel):**  [https://github.com/G10-SLMS/G10-SLMS-BACK.git]
----
-*Last updated: Sprint 1, Week 28 (July 10, 2026)*
-*Last updated: Sprint 2, Week 29 (July 20, 2026)*
+
+## 📜 Document History
+
+| Sprint | Duration | Updated |
+|---|---|---|
+| Sprint 1 — Project Setup & Authentication | Jul 6 – 10, 2026 | Jul 10, 2026 |
+| Sprint 2 — Leave Request System | Jul 14 – 20, 2026 | Jul 20, 2026 |
+| Sprint 3 — Approval System, Comments & File Upload | Jul 21 – 27, 2026 | Jul 27, 2026 |
+
+*Last updated: Sprint 3, Week 30 (July 27, 2026)*
