@@ -18,6 +18,7 @@ export function useLeaveRequests() {
   const items = ref<LeaveRequestListItem[]>([]);
   const leaveTypes = ref<LeaveType[]>([]);
   const loading = ref(true);
+  const searching = ref(false);
   const errMsg = ref('');
 
   const page = ref(1);
@@ -30,6 +31,7 @@ export function useLeaveRequests() {
 
   let searchTimeout: ReturnType<typeof setTimeout> | null = null;
   let requestSeq = 0;
+  let hasLoadedOnce = false;
 
   const filters = reactive({
     search: '',
@@ -175,7 +177,14 @@ export function useLeaveRequests() {
 
     const seq = ++requestSeq;
 
-    loading.value = true;
+    // Only the very first load blanks the table for the full skeleton.
+    // Later fetches (search, filters, pagination) keep existing rows on
+    // screen — same feel as the Approve page's real-time search.
+    if (hasLoadedOnce) {
+      searching.value = true;
+    } else {
+      loading.value = true;
+    }
     errMsg.value = '';
     page.value = p;
     syncQueryFromFilters(p);
@@ -205,7 +214,11 @@ export function useLeaveRequests() {
         'Failed to load leave requests.';
       items.value = [];
     } finally {
-      if (seq === requestSeq) loading.value = false;
+      if (seq === requestSeq) {
+        loading.value = false;
+        searching.value = false;
+        hasLoadedOnce = true;
+      }
     }
   }
 
@@ -274,6 +287,7 @@ export function useLeaveRequests() {
     items,
     leaveTypes,
     loading,
+    searching,
     errMsg,
     requestsAvailable: LEAVE_REQUESTS_API_AVAILABLE,
     page,

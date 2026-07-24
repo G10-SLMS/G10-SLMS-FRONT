@@ -25,14 +25,15 @@
         @clear-filters="clearAllFilters"
       />
 
-      <LeaveRequestsTable
-        v-else
-        :items="items"
-        :formatDate="formatDate"
-        :viewRequest="viewRequest"
-        :editRequest="editRequest"
-        :confirmCancel="confirmCancel"
-      />
+      <div v-else class="transition-opacity duration-150" :class="{ 'opacity-50': searching }">
+        <LeaveRequestsTable
+          :items="items"
+          :formatDate="formatDate"
+          :viewRequest="viewRequest"
+          :editRequest="editRequest"
+          :confirmCancel="confirmCancel"
+        />
+      </div>
 
       <LeaveRequestsPagination
         v-if="items.length > 0"
@@ -83,6 +84,7 @@ const {
   items,
   leaveTypes,
   loading,
+  searching,
   errMsg,
   page,
   total,
