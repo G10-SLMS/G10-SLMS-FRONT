@@ -85,7 +85,7 @@ import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
 import NotificationItem from '@/components/layout/NotificationItem.vue'
 import ActivityListSkeleton from '@/components/shared/ActivityListSkeleton.vue'
 import type { LeaveNotificationItem } from '@/types/notification'
-import { usePolling } from '@/composables/usePolling'
+import { usePolling } from '@/composables/shared/usePolling'
 
 const router = useRouter()
 const route = useRoute()

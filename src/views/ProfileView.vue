@@ -45,10 +45,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
-import { useDefaultAvatars } from '@/composables/useDefaultAvatars';
-import { useChangePassword } from '@/composables/useChangePassword';
+import { useDefaultAvatars } from '@/composables/user/useDefaultAvatars';
+import { useChangePassword } from '@/composables/user/useChangePassword';
+import { getInitials } from '@/utils/initials';
 import { Pencil, Mail, Phone, User, GraduationCap, MapPin } from 'lucide-vue-next';
 import ProfileBadgeCard from '@/components/user/ProfileBadgeCard.vue';
 import ProfileSecuritySection from '@/components/user/ProfileSecuritySection.vue';
@@ -60,35 +61,18 @@ const user = computed(() => auth.user);
 const { urlFor } = useDefaultAvatars();
 const avatarUrl = computed(() => urlFor(user.value?.avatar_id));
 
-const showPasswordModal = ref(false);
 const {
   form: passwordForm,
   saving: savingPassword,
   error: passwordError,
   success: passwordSuccess,
   submit: submitPassword,
-  reset: resetPasswordForm,
+  isOpen: showPasswordModal,
+  open: openPasswordModal,
+  close: closePasswordModal,
 } = useChangePassword({ autoCloseMs: 1200 });
 
-function openPasswordModal() {
-  resetPasswordForm();
-  showPasswordModal.value = true;
-}
-
-function closePasswordModal() {
-  showPasswordModal.value = false;
-  resetPasswordForm();
-}
-
-const initials = computed(() =>
-  (user.value?.name ?? '')
-    .split(' ')
-    .map((part) => part[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase(),
-);
+const initials = computed(() => getInitials(user.value?.name ?? ''));
 
 const memberId = computed(() => (user.value ? String(user.value.id).padStart(5, '0') : '—'));
 

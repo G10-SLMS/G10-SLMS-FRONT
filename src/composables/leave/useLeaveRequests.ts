@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal';
 import { leaveService, LEAVE_REQUESTS_API_AVAILABLE } from '@/services/leaveService';
+import { usePagination } from '@/composables/shared/usePagination';
 import type { AxiosError } from 'axios';
 import type { LeaveRequestListItem, LeaveType } from '@/types/leave';
 import { AlertOctagon, Ban, CheckCircle, Clock } from 'lucide-vue-next';
@@ -43,8 +44,7 @@ export function useLeaveRequests() {
 
   const totalPages = computed(() => lastPage.value);
 
-  const from = computed(() => (total.value === 0 ? 0 : (page.value - 1) * perPage.value + 1));
-  const to = computed(() => Math.min(page.value * perPage.value, total.value));
+  const { from, to, visiblePages } = usePagination(page, lastPage, perPage, total);
 
   const hasActiveFilters = computed(
     () =>
@@ -95,23 +95,6 @@ export function useLeaveRequests() {
     },
     { icon: Ban, count: statusCounts.cancelled, label: 'Cancelled', bg: '#f1f5f9', fg: '#64748b' },
   ]);
-
-  const visiblePages = computed(() => {
-    const current = page.value;
-    const last = lastPage.value;
-    const delta = 2;
-
-    const range: number[] = [];
-    for (let i = Math.max(2, current - delta); i <= Math.min(last - 1, current + delta); i++)
-      range.push(i);
-
-    const pages: number[] = [1];
-    if (range[0] > 2) pages.push(-1);
-    pages.push(...range);
-    if (range[range.length - 1] < last - 1) pages.push(-1);
-    if (last > 1) pages.push(last);
-    return pages;
-  });
 
   function formatDate(dateStr: string): string {
     if (!dateStr) return '—';
@@ -177,9 +160,6 @@ export function useLeaveRequests() {
 
     const seq = ++requestSeq;
 
-    // Only the very first load blanks the table for the full skeleton.
-    // Later fetches (search, filters, pagination) keep existing rows on
-    // screen — same feel as the Approve page's real-time search.
     if (hasLoadedOnce) {
       searching.value = true;
     } else {
@@ -201,7 +181,7 @@ export function useLeaveRequests() {
       if (filters.date_to) params.date_to = filters.date_to;
 
       const result = await leaveService.getLeaveRequests(params);
-      if (seq !== requestSeq) return; // a newer request has already superseded this one
+      if (seq !== requestSeq) return;
 
       items.value = result.data;
       total.value = result.total;

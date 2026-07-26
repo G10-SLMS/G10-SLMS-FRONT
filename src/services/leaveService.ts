@@ -165,7 +165,6 @@ export const leaveService = {
   ): Promise<CalendarEvent[]> {
     const REQUEST_TIMEOUT = 20000
     let collected: RawLeaveRequest[] = []
-    let page = 1
     let lastPage = 1
     let timeoutId: ReturnType<typeof setTimeout> | undefined
 
@@ -184,17 +183,25 @@ export const leaveService = {
     if (options?.search) requestParams.search = options.search
 
     try {
-      do {
-        const { data } = await api.get<RawApiEnvelope<RawLeaveRequest[]>>('/leave-requests', {
-          params: { ...requestParams, page },
-          signal: options?.controller?.signal,
-        })
-        collected = collected.concat(data.data)
-        const meta = data.meta
-        if (!meta) break
-        lastPage = meta.last_page
-        page++
-      } while (page <= lastPage)
+      const first = await api.get<RawApiEnvelope<RawLeaveRequest[]>>('/leave-requests', {
+        params: { ...requestParams, page: 1 },
+        signal: options?.controller?.signal,
+      })
+      collected = collected.concat(first.data.data)
+      lastPage = first.data.meta?.last_page ?? 1
+
+      if (lastPage > 1) {
+        const remainingPages = Array.from({ length: lastPage - 1 }, (_, i) => i + 2)
+        const rest = await Promise.all(
+          remainingPages.map((p) =>
+            api.get<RawApiEnvelope<RawLeaveRequest[]>>('/leave-requests', {
+              params: { ...requestParams, page: p },
+              signal: options?.controller?.signal,
+            }),
+          ),
+        )
+        for (const { data } of rest) collected = collected.concat(data.data)
+      }
     } finally {
       clearTimeout(timeoutId)
       options?.controller?.signal.removeEventListener('abort', () => {})

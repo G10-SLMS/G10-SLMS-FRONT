@@ -63,14 +63,34 @@ function seeMore() {
   router.push({ name: 'LeaveRequests', query: { status: 'approved' } })
 }
 
+const PAGE_SIZE = 20
+const MAX_PAGES = 5
+
 async function load() {
   loading.value = true
   error.value = ''
   const today = todayKey()
+  const collected: LeaveRequestListItem[] = []
 
   try {
-    const result = await leaveService.getLeaveRequests({ status: 'approved', per_page: 100 })
-    items.value = result.data.filter((item) => (item.reviewed_at ?? '').slice(0, 10) === today)
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const result = await leaveService.getLeaveRequests({ status: 'approved', per_page: PAGE_SIZE, page })
+      if (result.data.length === 0) break
+
+      let hitOlderThanToday = false
+      for (const item of result.data) {
+        const day = (item.reviewed_at ?? '').slice(0, 10)
+        if (day === today) {
+          collected.push(item)
+        } else if (day && day < today) {
+          hitOlderThanToday = true
+        }
+      }
+
+      if (collected.length > MAX_VISIBLE || hitOlderThanToday || page >= result.last_page) break
+    }
+
+    items.value = collected
   } catch {
     error.value = 'Failed to load today\'s approvals.'
   } finally {

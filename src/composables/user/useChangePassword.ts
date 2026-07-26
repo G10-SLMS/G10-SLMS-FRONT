@@ -16,6 +16,7 @@ export function useChangePassword(options: UseChangePasswordOptions = {}) {
   const saving = ref(false)
   const error = ref('')
   const success = ref(false)
+  const isOpen = ref(false)
 
   function reset() {
     form.current = ''
@@ -24,6 +25,16 @@ export function useChangePassword(options: UseChangePasswordOptions = {}) {
     error.value = ''
     success.value = false
     saving.value = false
+  }
+
+  function open() {
+    reset()
+    isOpen.value = true
+  }
+
+  function close() {
+    isOpen.value = false
+    reset()
   }
 
   async function submit(onSuccess?: () => void) {
@@ -56,5 +67,5 @@ export function useChangePassword(options: UseChangePasswordOptions = {}) {
     }
   }
 
-  return { form, saving, error, success, submit, reset }
+  return { form, saving, error, success, submit, reset, isOpen, open, close }
 }
