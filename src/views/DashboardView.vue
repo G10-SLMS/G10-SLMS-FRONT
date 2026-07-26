@@ -93,20 +93,22 @@ const rejectedCount = ref(0)
 async function loadStats() {
   statsLoading.value = true
   try {
-    const [pending, approved, rejected] = await Promise.all([
-      leaveService.getLeaveRequests({ status: 'pending', per_page: 1 }),
-      leaveService.getLeaveRequests({ status: 'approved', per_page: 1 }),
-      leaveService.getLeaveRequests({ status: 'rejected', per_page: 1 }),
+    // Fire both requests together instead of awaiting them one after another —
+    // the students call doesn't depend on the stats result.
+    const [stats, studentsRes] = await Promise.all([
+      leaveService.getLeaveRequestStats(),
+      auth.isEducator
+        ? api.get<{ students: AssignedStudent[]; count: number }>('/educator/students')
+        : Promise.resolve(null),
     ])
 
-    pendingCount.value = pending.total
-    approvedCount.value = approved.total
-    rejectedCount.value = rejected.total
-    totalRequests.value = pending.total + approved.total + rejected.total
+    pendingCount.value = stats.pending
+    approvedCount.value = stats.approved
+    rejectedCount.value = stats.rejected
+    totalRequests.value = stats.pending + stats.approved + stats.rejected
 
-    if (auth.isEducator) {
-      const { data } = await api.get<{ students: AssignedStudent[]; count: number }>('/educator/students')
-      assignedStudents.value = data.count
+    if (studentsRes) {
+      assignedStudents.value = studentsRes.data.count
     }
   } catch {
     // Leave stats at their defaults (0) if the request fails.

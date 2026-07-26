@@ -9,61 +9,20 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-2.5">
-        <select
-          v-model="range"
-          class="w-full rounded-md border border-gray-200 bg-white px-2.5 py-[9px] text-[13px] text-gray-700 sm:w-auto"
-        >
-          <option value="30d">Last 30 days</option>
-          <option value="90d">Last 90 days</option>
-          <option value="ytd">Year to date</option>
-          <option value="custom">Custom range</option>
-        </select>
+        <ReportFiltersBar
+          :range="range"
+          :start-date="startDate"
+          :end-date="endDate"
+          @update:range="range = $event"
+          @update:startDate="startDate = $event"
+          @update:endDate="endDate = $event"
+        />
 
-        <template v-if="range === 'custom'">
-          <input
-            v-model="startDate"
-            type="date"
-            :max="endDate || undefined"
-            class="w-full rounded-md border border-gray-200 bg-white px-2.5 py-[9px] text-[13px] text-gray-700 sm:w-auto"
-          />
-          <span class="text-[13px] text-gray-400">to</span>
-          <input
-            v-model="endDate"
-            type="date"
-            :min="startDate || undefined"
-            class="w-full rounded-md border border-gray-200 bg-white px-2.5 py-[9px] text-[13px] text-gray-700 sm:w-auto"
-          />
-        </template>
-
-        <div class="relative">
-          <button
-            class="inline-flex shrink-0 items-center gap-2 rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-            :disabled="loading || exporting || !hasData"
-            @click="showExportMenu = !showExportMenu"
-          >
-            <Download :size="16" :stroke-width="1.8" />
-            {{ exporting ? 'Exporting…' : 'Export' }}
-          </button>
-
-          <div
-            v-if="showExportMenu"
-            v-click-outside="closeExportMenu"
-            class="absolute right-0 z-10 mt-1.5 w-40 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg"
-          >
-            <button
-              class="block w-full cursor-pointer border-none bg-transparent px-3.5 py-2.5 text-left text-[13px] text-gray-700 hover:bg-gray-50"
-              @click="handleExport('pdf')"
-            >
-              Export as PDF
-            </button>
-            <button
-              class="block w-full cursor-pointer border-none bg-transparent px-3.5 py-2.5 text-left text-[13px] text-gray-700 hover:bg-gray-50"
-              @click="handleExport('excel')"
-            >
-              Export as Excel
-            </button>
-          </div>
-        </div>
+        <ReportExportMenu
+          :disabled="loading || !hasData"
+          :exporting="exporting"
+          @export="handleExport"
+        />
       </div>
     </div>
 
@@ -126,100 +85,54 @@
         <h2 class="m-0 text-base">Monthly Summary</h2>
       </div>
 
-      <TableRowSkeleton v-if="loading" :rows="3" :columns="5" />
-
-      <template v-else>
-        <p v-if="!monthly.length" class="px-5 pb-5 text-[13px] text-gray-400">
-          No data available for this period.
-        </p>
-
-        <template v-else>
-          <!-- Mobile card list -->
-          <ul class="divide-y divide-gray-100 px-5 pb-5 sm:hidden">
-            <li
-              v-for="m in monthly"
-              :key="m.month"
-              class="flex flex-col gap-2 py-3 first:pt-0 last:pb-0"
-            >
-              <p class="m-0 text-sm font-semibold text-gray-900">{{ m.month }}</p>
-              <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px]">
-                <div>
-                  <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400"
-                    >Submitted</span
-                  >
-                  <p class="m-0 text-gray-700">{{ m.submitted }}</p>
-                </div>
-                <div>
-                  <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400"
-                    >Approved</span
-                  >
-                  <p class="m-0 text-gray-700">{{ m.approved }}</p>
-                </div>
-                <div>
-                  <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400"
-                    >Rejected</span
-                  >
-                  <p class="m-0 text-gray-700">{{ m.rejected }}</p>
-                </div>
-                <div>
-                  <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400"
-                    >Approval Rate</span
-                  >
-                  <p class="m-0 text-gray-700">{{ m.approval_rate }}%</p>
-                </div>
-              </div>
-            </li>
-          </ul>
-
-          <!-- Desktop / tablet table -->
-          <div class="hidden w-full overflow-x-auto px-5 pb-5 sm:block">
-            <table class="w-full min-w-[560px] border-collapse text-sm md:min-w-0">
-              <thead>
-                <tr>
-                  <th
-                    class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500"
-                  >
-                    Month
-                  </th>
-                  <th
-                    class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500"
-                  >
-                    Submitted
-                  </th>
-                  <th
-                    class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500"
-                  >
-                    Approved
-                  </th>
-                  <th
-                    class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500"
-                  >
-                    Rejected
-                  </th>
-                  <th
-                    class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500"
-                  >
-                    Approval Rate
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="m in monthly"
-                  :key="m.month"
-                  class="border-b border-gray-100 last:border-none"
+      <ResponsiveDataTable
+        :rows="monthly"
+        :columns="monthlyColumns"
+        :loading="loading"
+        row-key="month"
+        min-width="560px"
+        empty-message="No data available for this period."
+      >
+        <template #mobile-card="{ row }">
+          <div class="flex flex-col gap-2">
+            <p class="m-0 text-sm font-semibold text-gray-900">{{ row.month }}</p>
+            <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px]">
+              <div>
+                <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400"
+                  >Submitted</span
                 >
-                  <td class="px-2 py-3 text-left">{{ m.month }}</td>
-                  <td class="px-2 py-3 text-left">{{ m.submitted }}</td>
-                  <td class="px-2 py-3 text-left">{{ m.approved }}</td>
-                  <td class="px-2 py-3 text-left">{{ m.rejected }}</td>
-                  <td class="px-2 py-3 text-left">{{ m.approval_rate }}%</td>
-                </tr>
-              </tbody>
-            </table>
+                <p class="m-0 text-gray-700">{{ row.submitted }}</p>
+              </div>
+              <div>
+                <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400"
+                  >Approved</span
+                >
+                <p class="m-0 text-gray-700">{{ row.approved }}</p>
+              </div>
+              <div>
+                <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400"
+                  >Rejected</span
+                >
+                <p class="m-0 text-gray-700">{{ row.rejected }}</p>
+              </div>
+              <div>
+                <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400"
+                  >Approval Rate</span
+                >
+                <p class="m-0 text-gray-700">{{ row.approval_rate }}%</p>
+              </div>
+            </div>
           </div>
         </template>
-      </template>
+
+        <template #desktop-row="{ row }">
+          <td class="px-2 py-3 text-left">{{ row.month }}</td>
+          <td class="px-2 py-3 text-left">{{ row.submitted }}</td>
+          <td class="px-2 py-3 text-left">{{ row.approved }}</td>
+          <td class="px-2 py-3 text-left">{{ row.rejected }}</td>
+          <td class="px-2 py-3 text-left">{{ row.approval_rate }}%</td>
+        </template>
+      </ResponsiveDataTable>
     </div>
 
     <div class="mt-5 rounded-[10px] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
@@ -227,180 +140,89 @@
         <h2 class="m-0 text-base">Top 10 Students by Leave Requests</h2>
       </div>
 
-      <TableRowSkeleton v-if="loading" :rows="5" :columns="3" />
-
-      <template v-else>
-        <p v-if="!topStudents.length" class="px-5 pb-5 text-[13px] text-gray-400">
-          No student leave requests in this period.
-        </p>
-
-        <template v-else>
-          <!-- Mobile card list -->
-          <ul class="divide-y divide-gray-100 px-5 pb-5 sm:hidden">
-            <li
-              v-for="(student, index) in topStudents"
-              :key="student.user_id"
-              class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
-            >
-              <div class="min-w-0">
-                <p class="m-0 text-sm font-semibold text-gray-900">
-                  {{ index + 1 }}. {{ student.name }}
-                </p>
-                <p class="m-0 truncate text-[13px] text-gray-500">{{ student.email }}</p>
-              </div>
-              <span class="shrink-0 rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-700">
-                {{ student.total_requests }}
-              </span>
-            </li>
-          </ul>
-
-          <!-- Desktop / tablet table -->
-          <div class="hidden w-full overflow-x-auto px-5 pb-5 sm:block">
-            <table class="w-full min-w-[420px] border-collapse text-sm md:min-w-0">
-              <thead>
-                <tr>
-                  <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">
-                    #
-                  </th>
-                  <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">
-                    Student
-                  </th>
-                  <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">
-                    Email
-                  </th>
-                  <th class="border-b border-gray-200 px-2 py-3 text-right text-[13px] font-medium text-gray-500">
-                    Total Requests
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="(student, index) in topStudents"
-                  :key="student.user_id"
-                  class="border-b border-gray-100 last:border-none"
-                >
-                  <td class="px-2 py-3 text-left text-gray-500">{{ index + 1 }}</td>
-                  <td class="px-2 py-3 text-left font-medium text-gray-900">{{ student.name }}</td>
-                  <td class="px-2 py-3 text-left text-gray-600">{{ student.email }}</td>
-                  <td class="px-2 py-3 text-right">{{ student.total_requests }}</td>
-                </tr>
-              </tbody>
-            </table>
+      <ResponsiveDataTable
+        :rows="topStudents"
+        :columns="topStudentColumns"
+        :loading="loading"
+        row-key="user_id"
+        min-width="420px"
+        empty-message="No student leave requests in this period."
+      >
+        <template #mobile-card="{ row, index }">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="m-0 text-sm font-semibold text-gray-900">
+                {{ index + 1 }}. {{ row.name }}
+              </p>
+              <p class="m-0 truncate text-[13px] text-gray-500">{{ row.email }}</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-700">
+              {{ row.total_requests }}
+            </span>
           </div>
         </template>
-      </template>
+
+        <template #desktop-row="{ row, index }">
+          <td class="px-2 py-3 text-left text-gray-500">{{ index + 1 }}</td>
+          <td class="px-2 py-3 text-left font-medium text-gray-900">{{ row.name }}</td>
+          <td class="px-2 py-3 text-left text-gray-600">{{ row.email }}</td>
+          <td class="px-2 py-3 text-right">{{ row.total_requests }}</td>
+        </template>
+      </ResponsiveDataTable>
     </div>
   </div>
 </template>
 
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import { Download, FileText, CheckCircle, Clock, XCircle } from 'lucide-vue-next'
+import { ref } from 'vue'
+import { FileText, CheckCircle, Clock, XCircle } from 'lucide-vue-next'
 import StatCard from '@/components/ui/StatCard.vue'
 import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
-import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
+import ResponsiveDataTable from '@/components/shared/ResponsiveDataTable.vue'
+import type { ResponsiveDataTableColumn } from '@/components/shared/ResponsiveDataTable.vue'
 import ReportBarRow from '@/components/reports/ReportBarRow.vue'
-import { reportService } from '@/services/reportService'
+import ReportFiltersBar from '@/components/reports/ReportFiltersBar.vue'
+import ReportExportMenu from '@/components/reports/ReportExportMenu.vue'
+import { useReportData } from '@/composables/reports/useReportData'
 import { exportReportToExcel, exportReportToPdf } from '@/utils/reportExport'
-import type {
-  ReportRange,
-  ReportSummary,
-  ReportByLeaveType,
-  ReportMonthly,
-  ReportTopStudent,
-} from '@/types/stats'
 
-const RANGE_LABELS: Record<Exclude<ReportRange, 'custom'>, string> = {
-  '30d': 'Last 30 days',
-  '90d': 'Last 90 days',
-  ytd: 'Year to date',
-}
+const monthlyColumns: ResponsiveDataTableColumn[] = [
+  { label: 'Month' },
+  { label: 'Submitted' },
+  { label: 'Approved' },
+  { label: 'Rejected' },
+  { label: 'Approval Rate' },
+]
 
-const range = ref<ReportRange>('30d')
-const startDate = ref('')
-const endDate = ref('')
+const topStudentColumns: ResponsiveDataTableColumn[] = [
+  { label: '#' },
+  { label: 'Student' },
+  { label: 'Email' },
+  { label: 'Total Requests', align: 'right' },
+]
 
-const loading = ref(false)
-const error = ref('')
+const {
+  range,
+  startDate,
+  endDate,
+  loading,
+  error,
+  summary,
+  byType,
+  monthly,
+  topStudents,
+  hasData,
+  dateRangeInvalid,
+  rangeLabel,
+  barWidth,
+  loadReport,
+} = useReportData()
 
 const exporting = ref(false)
 const exportError = ref('')
-const showExportMenu = ref(false)
-
-const summary = ref<ReportSummary>({ total: 0, approved: 0, pending: 0, rejected: 0 })
-const byType = ref<ReportByLeaveType[]>([])
-const monthly = ref<ReportMonthly[]>([])
-const topStudents = ref<ReportTopStudent[]>([])
-const resolvedStartDate = ref('')
-const resolvedEndDate = ref('')
-
-const maxCount = computed(() => Math.max(...byType.value.map((r) => r.count), 1))
-
-const hasData = computed(
-  () =>
-    summary.value.total > 0 ||
-    byType.value.length > 0 ||
-    monthly.value.length > 0 ||
-    topStudents.value.length > 0,
-)
-
-const dateRangeInvalid = computed(() => {
-  if (range.value !== 'custom') return false
-  if (!startDate.value || !endDate.value) return true
-  return new Date(startDate.value) > new Date(endDate.value)
-})
-
-const rangeLabel = computed(() => {
-  if (range.value === 'custom') {
-    if (resolvedStartDate.value && resolvedEndDate.value) {
-      return `${resolvedStartDate.value} to ${resolvedEndDate.value}`
-    }
-    return 'Custom range'
-  }
-  return RANGE_LABELS[range.value]
-})
-
-function barWidth(count: number) {
-  return `${Math.round((count / maxCount.value) * 100)}%`
-}
-
-async function loadReport() {
-  if (range.value === 'custom' && dateRangeInvalid.value) {
-    // Wait for the user to finish picking a valid custom range before calling the API.
-    return
-  }
-
-  loading.value = true
-  error.value = ''
-
-  try {
-    const data = await reportService.getDashboard({
-      range: range.value,
-      startDate: startDate.value,
-      endDate: endDate.value,
-    })
-    summary.value = data.summary
-    byType.value = data.by_leave_type
-    monthly.value = data.monthly
-    topStudents.value = data.top_students
-    resolvedStartDate.value = data.start_date
-    resolvedEndDate.value = data.end_date
-  } catch (err) {
-    error.value = 'Failed to load report data. Please try again.'
-    console.error('[ReportsView] Failed to load report data:', err)
-    topStudents.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-function closeExportMenu() {
-  showExportMenu.value = false
-}
 
 async function handleExport(format: 'pdf' | 'excel') {
-  showExportMenu.value = false
   exportError.value = ''
   exporting.value = true
 
@@ -425,39 +247,4 @@ async function handleExport(format: 'pdf' | 'excel') {
     exporting.value = false
   }
 }
-
-// Simple click-outside directive scoped to this component (no external deps required).
-const vClickOutside = {
-  mounted(el: HTMLElement & { __clickOutsideHandler__?: (e: MouseEvent) => void }, binding: { value: () => void }) {
-    el.__clickOutsideHandler__ = (event: MouseEvent) => {
-      if (!(el === event.target || el.contains(event.target as Node))) {
-        binding.value()
-      }
-    }
-    document.addEventListener('click', el.__clickOutsideHandler__, true)
-  },
-  unmounted(el: HTMLElement & { __clickOutsideHandler__?: (e: MouseEvent) => void }) {
-    if (el.__clickOutsideHandler__) {
-      document.removeEventListener('click', el.__clickOutsideHandler__, true)
-    }
-  },
-}
-
-watch(range, (newRange, oldRange) => {
-  if (newRange !== 'custom') {
-    startDate.value = ''
-    endDate.value = ''
-  }
-  if (newRange !== oldRange) {
-    loadReport()
-  }
-})
-
-watch([startDate, endDate], () => {
-  if (range.value === 'custom' && !dateRangeInvalid.value) {
-    loadReport()
-  }
-})
-
-onMounted(loadReport)
 </script>

@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useLeaveRequests } from '@/composables/useLeaveRequests';
+import { useLeaveRequests } from '@/composables/leave/useLeaveRequests';
 
 import LeaveRequestsHero from '@/components/leave-request/LeaveRequestsHero.vue';
 import LeaveStatsRow from '@/components/leave-request/LeaveStatsRow.vue';

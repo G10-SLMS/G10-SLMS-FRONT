@@ -29,6 +29,7 @@ import { leaveService } from '@/services/leaveService'
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
 import CalendarPanel from '@/components/calendar/CalendarPanel.vue'
 import type { LeaveType } from '@/types/leave'
+import { viewDateRange } from '@/utils/calendarDate'
 
 const auth = useAuthStore()
 const leaveModal = useLeaveFormModalStore()
@@ -161,38 +162,4 @@ function onCurrentDateChange(date: Date) {
   currentDate.value = date
 }
 
-function addDaysSingle(date: Date, n: number) {
-  const d = new Date(date)
-  d.setDate(d.getDate() + n)
-  return d
-}
-
-function formatDateKey(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function viewDateRange(current: Date, v: 'Day' | 'Week' | 'Month') {
-  if (v === 'Day') {
-    const key = formatDateKey(current)
-    return { start: key, end: key }
-  }
-  if (v === 'Week') {
-    const d = new Date(current)
-    const day = d.getDay()
-    const diff = day === 0 ? -6 : 1 - day
-    d.setDate(d.getDate() + diff)
-    d.setHours(0, 0, 0, 0)
-    const start = d
-    const end = addDaysSingle(start, 6)
-    return { start: formatDateKey(start), end: formatDateKey(end) }
-  }
-  const year = current.getFullYear()
-  const month = current.getMonth()
-  const first = new Date(year, month, 1)
-  const last = new Date(year, month + 1, 0)
-  return { start: formatDateKey(first), end: formatDateKey(last) }
-}
 </script>

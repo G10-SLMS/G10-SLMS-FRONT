@@ -70,97 +70,13 @@
         </div>
       </div>
 
-      <!-- Desktop / tablet: table -->
-      <div class="hidden md:block">
-        <table class="w-full border-collapse text-sm">
-          <thead>
-            <tr>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">User</th>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Email</th>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Role</th>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Joined</th>
-              <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <TableRowSkeleton v-if="loading" :rows="5" :columns="5" />
-            <template v-else>
-              <tr v-for="u in users" :key="u.id" class="border-b border-gray-100 last:border-none">
-              <td class="px-2 py-3 text-left">
-                <div class="flex items-center gap-2.5">
-                  <span class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white">
-                    <img
-                      v-if="avatarSrc(u)"
-                      :src="avatarSrc(u)!"
-                      alt=""
-                      class="h-full w-full object-cover"
-                    />
-                    <template v-else>{{ initials(u.name) }}</template>
-                  </span>
-                  <p class="m-0 font-medium">{{ u.name }}</p>
-                </div>
-              </td>
-              <td class="px-2 py-3 text-left">{{ u.email }}</td>
-              <td class="px-2 py-3 text-left">
-                <span
-                  class="rounded-full px-2.5 py-1 text-xs font-medium capitalize"
-                  :class="{
-                    'bg-blue-600/20 text-[#0a1628]': u.role === 'admin',
-                    'bg-green-100 text-green-700': u.role === 'educator',
-                    'bg-amber-100 text-amber-700': u.role === 'student',
-                  }"
-                >{{ roleLabel(u.role) }}</span>
-              </td>
-              <td class="px-2 py-3 text-left">{{ u.joined }}</td>
-              <td class="px-2 py-3 text-left">
-                <div class="flex gap-1.5">
-                  <button
-                    class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 text-gray-700 cursor-pointer hover:bg-gray-200"
-                    aria-label="Edit user"
-                    @click="openEditModal(u)"
-                  >
-                    <Pencil :size="15" :stroke-width="1.8" />
-                  </button>
-                  <button
-                    class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 text-gray-700 cursor-pointer hover:bg-red-100 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="Remove user"
-                    :disabled="deletingId === u.id"
-                    @click="requestRemoveUser(u)"
-                  >
-                    <Trash2 :size="15" :stroke-width="1.8" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr v-if="users.length === 0">
-              <td colspan="5" class="px-2 py-6 text-center text-gray-400">No users match your search.</td>
-            </tr>
-            </template>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Mobile: stacked cards -->
-      <div class="divide-y divide-gray-100 md:hidden">
-        <template v-if="loading">
-          <div v-for="n in 3" :key="n" class="animate-pulse space-y-3 px-4 py-4" aria-hidden="true">
-            <div class="h-4 w-2/3 rounded bg-gray-200"></div>
-            <div class="h-3 w-1/3 rounded bg-gray-200"></div>
-          </div>
-        </template>
-        <template v-else>
-          <UserCard
-            v-for="u in users"
-            :key="u.id"
-            :user="u"
-            :avatar-src="avatarSrc(u)"
-            :deleting="deletingId === u.id"
-            @edit="openEditModal(u)"
-            @remove="requestRemoveUser(u)"
-          />
-          <p v-if="users.length === 0" class="px-4 py-6 text-center text-gray-400">No users match your search.</p>
-        </template>
-      </div>
+      <UsersTable
+        :users="users"
+        :loading="loading"
+        :deleting-id="deletingId"
+        @edit="openEditModal"
+        @remove="requestRemoveUser"
+      />
 
       <UsersPagination
         v-if="!loading && total > 0"
@@ -176,69 +92,15 @@
       />
     </div>
 
-    <Teleport to="body">
-      <div v-if="modalOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-white/45 p-4" @click.self="closeModal">
-        <div class="w-full max-w-[420px] rounded-xl bg-white p-6 shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
-          <h2 class="mb-4 text-lg">{{ editingUser ? 'Edit User' : 'Add User' }}</h2>
-
-          <div v-if="formError" class="mb-3.5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">
-            {{ formError }}
-          </div>
-
-          <label class="mb-3.5 flex flex-col gap-1.5 text-[13px] text-gray-700">
-            <span>Full Name</span>
-            <input
-              v-model="form.name"
-              type="text"
-              placeholder="e.g. Sokha Chan"
-              class="rounded-md border border-gray-200 px-2.5 py-[9px] text-sm text-gray-900 focus:border-blue-600 focus:outline-none"
-            />
-          </label>
-
-          <label class="mb-3.5 flex flex-col gap-1.5 text-[13px] text-gray-700">
-            <span>Email</span>
-            <input
-              v-model="form.email"
-              type="email"
-              placeholder="name@example.com"
-              class="rounded-md border border-gray-200 px-2.5 py-[9px] text-sm text-gray-900 focus:border-blue-600 focus:outline-none"
-            />
-          </label>
-
-          <label class="mb-3.5 flex flex-col gap-1.5 text-[13px] text-gray-700">
-            <span>Role</span>
-            <select
-              v-model="form.role"
-              class="rounded-md border border-gray-200 px-2.5 py-[9px] text-sm text-gray-900 focus:border-blue-600 focus:outline-none"
-            >
-              <option value="student">Student</option>
-              <option value="educator">Educator</option>
-              <option value="admin">Admin</option>
-            </select>
-          </label>
-
-          <p v-if="!editingUser" class="mb-3.5 rounded-md bg-blue-50 px-3 py-2 text-[12.5px] text-blue-700">
-            New users are created with the default password
-            <strong>{{ defaultPasswordHint }}</strong>. Share it with them so they can log in and change it.
-          </p>
-
-          <div class="mt-5 flex justify-end gap-2.5">
-            <button
-              class="rounded-md border-none bg-gray-100 px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-gray-200"
-              :disabled="saving"
-              @click="closeModal"
-            >Cancel</button>
-            <button
-              class="rounded-md border-none bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white cursor-pointer hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-              :disabled="saving"
-              @click="saveUser"
-            >
-              {{ saving ? 'Saving…' : editingUser ? 'Save Changes' : 'Add User' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <UserFormModal
+      :open="modalOpen"
+      :user="editingUser"
+      :saving="saving"
+      :server-error="formError"
+      :default-password-hint="defaultPasswordHint"
+      @close="closeModal"
+      @submit="saveUser"
+    />
 
     <ConfirmDialog
       :open="confirmOpen"
@@ -259,7 +121,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, watch } from 'vue'
 import {
   UserPlus,
   Users,
@@ -267,221 +128,50 @@ import {
   UserCheck,
   ShieldCheck,
   Search,
-  Pencil,
-  Trash2,
   FileSpreadsheet,
 } from 'lucide-vue-next'
-import type { UserRole, ManagedUser, UserRoleCounts, ImportUsersResult } from '@/types/user'
 import StatCard from '@/components/ui/StatCard.vue'
-import UserCard from '@/components/user/UserCard.vue'
-import ImportUsersModal from '@/components/user/ImportUsersModal.vue'
 import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
-import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import UsersPagination from '@/components/leave-request/LeaveRequestsPagination.vue'
-import { userService } from '@/services/userService'
-import { extractErrorMessage } from '@/utils/errors'
-import { useDefaultAvatars } from '@/composables/useDefaultAvatars'
+import UsersTable from '@/components/user/UsersTable.vue'
+import UserFormModal from '@/components/user/UserFormModal.vue'
+import ImportUsersModal from '@/components/user/ImportUsersModal.vue'
+import { useUserManagement } from '@/composables/user/useUserManagement'
 
-const { urlFor } = useDefaultAvatars()
-
-function avatarSrc(u: ManagedUser): string | null {
-  return u.avatar_url || urlFor(u.avatar_id)
-}
-
-const users = ref<ManagedUser[]>([])
-const loading = ref(true)
-const errorMsg = ref('')
-const successMsg = ref('')
-const defaultPasswordHint = '12345678'
-
-const search = ref('')
-const roleFilter = ref<'all' | UserRole>('all')
-
-const page = ref(1)
-const perPage = ref(10)
-const total = ref(0)
-const lastPage = ref(1)
-
-const counts = ref<UserRoleCounts>({ total: 0, student: 0, educator: 0, admin: 0 })
-
-const totalPages = computed(() => lastPage.value)
-const from = computed(() => (total.value === 0 ? 0 : (page.value - 1) * perPage.value + 1))
-const to = computed(() => Math.min(page.value * perPage.value, total.value))
-
-const visiblePages = computed(() => {
-  const current = page.value
-  const last = lastPage.value
-  const delta = 2
-
-  const range: number[] = []
-  for (let i = Math.max(2, current - delta); i <= Math.min(last - 1, current + delta); i++) range.push(i)
-
-  const pages: number[] = [1]
-  if (range[0] > 2) pages.push(-1)
-  pages.push(...range)
-  if (range[range.length - 1] < last - 1) pages.push(-1)
-  if (last > 1) pages.push(last)
-  return pages
-})
-
-let searchTimeout: ReturnType<typeof setTimeout> | undefined
-
-function onSearchDebounced() {
-  if (searchTimeout) clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => fetchUsers(1), 400)
-}
-
-async function fetchUsers(p: number = 1) {
-  loading.value = true
-  errorMsg.value = ''
-  page.value = p
-
-  try {
-    const result = await userService.getUsers({
-      search: search.value.trim() || undefined,
-      role: roleFilter.value === 'all' ? undefined : roleFilter.value,
-      page: p,
-      per_page: perPage.value,
-    })
-    users.value = result.data
-    total.value = result.meta.total
-    lastPage.value = result.meta.last_page
-    counts.value = result.counts
-    // TEMP DEBUG — remove once avatars are confirmed working.
-    // Check DevTools > Console for this after loading the page.
-    console.log('[UserManagement] first user from API:', users.value[0])
-  } catch (err) {
-    errorMsg.value = extractErrorMessage(err, 'Failed to load users.')
-    users.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => fetchUsers(1))
-
-watch(perPage, () => fetchUsers(1))
-
-function initials(name: string) {
-  return name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
-}
-
-function roleLabel(role: UserRole) {
-  return role.charAt(0).toUpperCase() + role.slice(1)
-}
-
-const modalOpen = ref(false)
-const editingUser = ref<ManagedUser | null>(null)
-const form = reactive({ name: '', email: '', role: 'student' as UserRole })
-const saving = ref(false)
-const formError = ref('')
-const deletingId = ref<number | null>(null)
-
-function openAddModal() {
-  editingUser.value = null
-  form.name = ''
-  form.email = ''
-  form.role = 'student'
-  formError.value = ''
-  modalOpen.value = true
-}
-
-function openEditModal(u: ManagedUser) {
-  editingUser.value = u
-  form.name = u.name
-  form.email = u.email
-  form.role = u.role
-  formError.value = ''
-  modalOpen.value = true
-}
-
-function closeModal() {
-  if (saving.value) return
-  modalOpen.value = false
-}
-
-async function saveUser() {
-  const name = form.name.trim()
-  const email = form.email.trim()
-  if (!name || !email) {
-    formError.value = 'Name and email are required.'
-    return
-  }
-
-  saving.value = true
-  formError.value = ''
-  errorMsg.value = ''
-  successMsg.value = ''
-
-  try {
-    if (editingUser.value) {
-      await userService.updateUser(editingUser.value.id, { name, email, role: form.role })
-      successMsg.value = 'User updated successfully.'
-      await fetchUsers(page.value)
-    } else {
-      const { defaultPassword } = await userService.createUser({ name, email, role: form.role })
-      successMsg.value = `User created. They can log in with the default password: ${defaultPassword}`
-      await fetchUsers(1)
-    }
-
-    modalOpen.value = false
-  } catch (err) {
-    formError.value = extractErrorMessage(err, 'Failed to save user.')
-  } finally {
-    saving.value = false
-  }
-}
-
-const confirmOpen = ref(false)
-const pendingDeleteUser = ref<ManagedUser | null>(null)
-const confirmMessage = computed(() =>
-  pendingDeleteUser.value
-    ? `Are you sure you want to remove ${pendingDeleteUser.value.name}? This cannot be undone.`
-    : 'Are you sure you want to remove this user? This cannot be undone.'
-)
-
-function requestRemoveUser(u: ManagedUser) {
-  pendingDeleteUser.value = u
-  confirmOpen.value = true
-}
-
-function cancelRemoveUser() {
-  if (deletingId.value) return
-  confirmOpen.value = false
-  pendingDeleteUser.value = null
-}
-
-async function confirmRemoveUser() {
-  if (!pendingDeleteUser.value) return
-  await removeUser(pendingDeleteUser.value.id)
-  confirmOpen.value = false
-  pendingDeleteUser.value = null
-}
-
-async function removeUser(id: number) {
-  deletingId.value = id
-  errorMsg.value = ''
-  successMsg.value = ''
-
-  try {
-    await userService.deleteUser(id)
-    successMsg.value = 'User removed successfully.'
-    const nextPage = users.value.length === 1 && page.value > 1 ? page.value - 1 : page.value
-    await fetchUsers(nextPage)
-  } catch (err) {
-    errorMsg.value = extractErrorMessage(err, 'Failed to remove user.')
-  } finally {
-    deletingId.value = null
-  }
-}
-
-const importModalOpen = ref(false)
-
-async function onUsersImported(result: ImportUsersResult) {
-  errorMsg.value = ''
-  successMsg.value = `Import completed: ${result.summary.successful} created, ${result.summary.skipped} skipped, ${result.summary.failed} failed.`
-  await fetchUsers(1)
-}
-
+const {
+  users,
+  loading,
+  errorMsg,
+  successMsg,
+  defaultPasswordHint,
+  search,
+  roleFilter,
+  page,
+  perPage,
+  total,
+  totalPages,
+  from,
+  to,
+  visiblePages,
+  onSearchDebounced,
+  fetchUsers,
+  modalOpen,
+  editingUser,
+  saving,
+  formError,
+  openAddModal,
+  openEditModal,
+  closeModal,
+  saveUser,
+  deletingId,
+  confirmOpen,
+  confirmMessage,
+  requestRemoveUser,
+  cancelRemoveUser,
+  confirmRemoveUser,
+  counts,
+  importModalOpen,
+  onUsersImported,
+} = useUserManagement()
 </script>
