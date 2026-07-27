@@ -25,6 +25,7 @@ function toManagedUser(raw: RawUser): ManagedUser {
     joined: formatJoined(raw.created_at),
     avatar_id: raw.avatar_id,
     avatar_url: raw.avatar_url,
+    gender: raw.gender ?? null,
   }
 }
 

@@ -113,9 +113,9 @@ export function useEditProfileForm() {
         email: form.email,
         phone: form.phone,
         avatar_id: form.avatar_id,
+        gender: form.gender || undefined,
         ...(isStudent.value
           ? {
-              gender: form.gender || undefined,
               student_id: form.student_id,
               class_name: form.class_name,
               generation: form.generation,

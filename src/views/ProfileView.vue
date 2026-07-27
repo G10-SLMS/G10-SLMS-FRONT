@@ -118,7 +118,7 @@ const profileFields = computed(() =>
       key: 'gender',
       label: 'Gender',
       icon: User,
-      value: user.value?.gender,
+      value: user.value?.gender ?? 'Not specified',
       valueClass: 'capitalize',
     },
     {

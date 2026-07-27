@@ -1,5 +1,5 @@
 import { ref, computed, reactive, onMounted, watch } from 'vue'
-import type { UserRole, ManagedUser, UserRoleCounts, ImportUsersResult } from '@/types/user'
+import type { Gender, UserRole, ManagedUser, UserRoleCounts, ImportUsersResult } from '@/types/user'
 import { userService } from '@/services/userService'
 import { extractErrorMessage } from '@/utils/errors'
 import { usePagination } from '@/composables/shared/usePagination'
@@ -83,7 +83,7 @@ export function useUserManagement() {
     modalOpen.value = false
   }
 
-  async function saveUser(payload: { name: string; email: string; role: UserRole }) {
+  async function saveUser(payload: { name: string; email: string; role: UserRole; gender?: Gender | null }) {
     saving.value = true
     formError.value = ''
     errorMsg.value = ''

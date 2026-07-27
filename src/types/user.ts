@@ -92,6 +92,7 @@ export interface ManagedUser {
   joined: string
   avatar_id: number | null
   avatar_url: string | null
+  gender: Gender | null
 }
 
 export interface RawUser {
@@ -102,12 +103,14 @@ export interface RawUser {
   created_at: string
   avatar_id: number | null
   avatar_url: string | null
+  gender: Gender | null
 }
 
 export interface UserPayload {
   name: string
   email: string
   role: UserRole
+  gender?: Gender | null
 }
 
 export interface UserListMeta {

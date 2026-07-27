@@ -39,6 +39,10 @@
             <dd class="m-0 truncate text-[13px] font-medium text-slate-900">{{ student.phone || '—' }}</dd>
           </div>
           <div class="flex items-center justify-between px-3.5 py-2.5">
+            <dt class="text-xs font-medium text-slate-500">Gender</dt>
+            <dd class="m-0 truncate text-[13px] font-medium text-slate-900 capitalize">{{ student.gender || '—' }}</dd>
+          </div>
+          <div class="flex items-center justify-between px-3.5 py-2.5">
             <dt class="text-xs font-medium text-slate-500">Student ID</dt>
             <dd class="m-0 truncate text-[13px] font-medium text-slate-900">{{ formatStudentId(student.student_id) || '—' }}</dd>
           </div>

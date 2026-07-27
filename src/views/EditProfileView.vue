@@ -69,7 +69,7 @@
               />
             </ProfileFormField>
 
-            <ProfileFormField v-if="isStudent" id="gender" label="Gender">
+            <ProfileFormField id="gender" label="Gender">
               <select
                 id="gender"
                 v-model="form.gender"
