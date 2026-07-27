@@ -50,14 +50,14 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-white">
+  <div class="flex min-h-screen bg-white dark:bg-surface-darker">
     <AuthPanelLeft
       :logo-url="logoUrl"
       title="Manage your academic life with ease."
       description="The professional centralized portal for leave requests, attendance management, and institutional transparency."
     />
 
-    <main class="flex flex-1 basis-[55%] items-center justify-center bg-white px-8 py-10">
+    <main class="flex flex-1 basis-[55%] items-center justify-center bg-white px-8 py-10 dark:bg-surface-darker">
       <div class="w-full max-w-[420px]">
         <AuthTabs active="login" />
 

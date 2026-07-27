@@ -1,6 +1,6 @@
-import { reactive, ref } from 'vue'
-import { authService } from '../services/authService'
-import { extractErrorMessage } from '../utils/errors'
+import { reactive, ref } from "vue";
+import { authService } from "../../services/authService";
+import { extractErrorMessage } from "../../utils/errors";
 
 interface UseChangePasswordOptions {
   autoCloseMs?: number

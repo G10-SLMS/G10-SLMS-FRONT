@@ -30,6 +30,13 @@ const DEFAULT_PALETTE = ['#2563eb', '#f59e0b', '#16a34a', '#dc2626', '#06b6d4', 
 
 const FONT = "11px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
+// Canvas pixels aren't reachable by CSS, so grid/axis/text colors are picked
+// here based on the current theme rather than left hardcoded to light mode.
+const THEME_COLORS = {
+  light: { grid: '#f1f5f9', axisText: '#9ca3af', emptyText: '#9ca3af', donutTotal: '#374151' },
+  dark: { grid: '#334155', axisText: '#64748b', emptyText: '#64748b', donutTotal: '#f1f5f9' },
+}
+
 export class ChartRenderer {
   private canvas: HTMLCanvasElement
   private ctx: CanvasRenderingContext2D
@@ -38,6 +45,7 @@ export class ChartRenderer {
   private onHover?: (info: ChartHoverInfo | null) => void
   private points: Array<{ x: number; y: number; info: ChartHoverInfo }> = []
   private raf: number | null = null
+  private themeObserver: MutationObserver
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -58,7 +66,21 @@ export class ChartRenderer {
     this.resizeObserver = new ResizeObserver(() => this.scheduleDraw())
     this.resizeObserver.observe(this.canvas)
 
+    // Re-paint whenever the `dark` class toggles on <html>, since the canvas
+    // grid/axis colors are baked into pixels and can't respond to CSS alone.
+    this.themeObserver = new MutationObserver(() => this.scheduleDraw())
+    this.themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+
     this.scheduleDraw()
+  }
+
+  private themeColors() {
+    return document.documentElement.classList.contains('dark')
+      ? THEME_COLORS.dark
+      : THEME_COLORS.light
   }
 
   update(config: ChartConfig) {
@@ -68,6 +90,7 @@ export class ChartRenderer {
 
   destroy() {
     this.resizeObserver.disconnect()
+    this.themeObserver.disconnect()
     this.canvas.removeEventListener('mousemove', this.handlePointerMove)
     this.canvas.removeEventListener('mouseleave', this.handlePointerLeave)
     if (this.raf !== null) cancelAnimationFrame(this.raf)
@@ -115,7 +138,7 @@ export class ChartRenderer {
 
   private drawEmpty(width: number, height: number) {
     const ctx = this.ctx
-    ctx.fillStyle = '#9ca3af'
+    ctx.fillStyle = this.themeColors().emptyText
     ctx.font = FONT
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
@@ -143,8 +166,9 @@ export class ChartRenderer {
     const stepValue = maxValue / steps
 
     // Gridlines + y-axis labels
-    ctx.strokeStyle = '#f1f5f9'
-    ctx.fillStyle = '#9ca3af'
+    const theme = this.themeColors()
+    ctx.strokeStyle = theme.grid
+    ctx.fillStyle = theme.axisText
     ctx.font = FONT
     ctx.textAlign = 'right'
     ctx.textBaseline = 'middle'
@@ -275,13 +299,14 @@ export class ChartRenderer {
       startAngle = endAngle
     })
 
-    ctx.fillStyle = '#374151'
+    const theme = this.themeColors()
+    ctx.fillStyle = theme.donutTotal
     ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(String(total), cx, cy - 6)
     ctx.font = FONT
-    ctx.fillStyle = '#9ca3af'
+    ctx.fillStyle = theme.axisText
     ctx.fillText('total', cx, cy + 10)
   }
 

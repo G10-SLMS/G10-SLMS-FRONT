@@ -9,7 +9,7 @@
           {{ isEditing ? 'Edit Leave Type' : 'Add Leave Type' }}
         </h2>
 
-        <p v-if="error" class="mb-3.5 rounded-md px-3 py-2 text-xs" style="background-color: #fef8ec; color: #f5a623;">{{ error }}</p>
+        <p v-if="error" class="mb-3.5 rounded-md bg-amber-50 px-3 py-2 text-xs text-[#e09510] dark:bg-amber-500/15 dark:text-amber-400">{{ error }}</p>
 
         <label class="mb-3.5 flex flex-col gap-1.5 text-xs text-gray-700">
           <span>Name <span class="text-red-500">*</span></span>

@@ -16,7 +16,7 @@
     </Transition>
 
     <aside
-      class="sticky top-0 z-50 flex h-screen flex-col overflow-y-auto border-r border-slate-200 bg-white pb-4 text-slate-700 shadow-sm transition-[width] duration-250 max-md:fixed max-md:left-0 max-md:top-16 max-md:h-[calc(100vh-64px)] max-md:-translate-x-full max-md:shadow-md max-md:transition-transform"
+      class="sticky top-0 z-50 flex h-screen flex-col overflow-y-auto border-r border-slate-200 bg-white pb-4 text-slate-700 shadow-sm transition-[width] duration-250 max-md:fixed max-md:left-0 max-md:top-16 max-md:h-[calc(100vh-64px)] max-md:-translate-x-full max-md:shadow-md max-md:transition-transform dark:border-slate-700 dark:bg-surface-dark dark:text-slate-300"
       :class="[
         collapsed ? 'w-[72px] max-md:w-[220px]' : 'w-[220px]',
         isOpen ? 'max-md:translate-x-0' : '',
@@ -30,8 +30,11 @@
         <img
           :src="logoUrl"
           alt="SLMS logo"
-          class="block h-8 w-auto shrink-0 transition-[height] duration-250"
-          :class="{ 'h-8 w-8 rounded-md object-cover object-left max-md:h-8 max-md:w-auto max-md:rounded-none max-md:object-fill': collapsed }"
+          class="block h-8 w-auto shrink-0 rounded-md transition-[height] duration-250 dark:bg-white dark:p-0.5"
+          :class="{
+            'h-8 w-8 rounded-md object-cover object-left max-md:h-8 max-md:w-auto max-md:rounded-none max-md:object-fill':
+              collapsed,
+          }"
         />
 
         <button
@@ -56,7 +59,7 @@
           @mouseleave="hideTooltip"
         >
           <Plus :size="16" />
-          <span :class="{ 'hidden': collapsed }">New Request</span>
+          <span :class="{ hidden: collapsed }">New Request</span>
         </button>
       </div>
 
@@ -130,7 +133,7 @@
             :size="18"
             :stroke-width="1.8"
           />
-          <span class="whitespace-nowrap" :class="{ 'hidden': collapsed }">Collapse</span>
+          <span class="whitespace-nowrap" :class="{ hidden: collapsed }">Collapse</span>
         </button>
       </div>
     </aside>
@@ -148,12 +151,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
-import logoUrl from '@/assets/image/logo.png'
-import SidebarNavLink from '@/components/layout/SidebarNavLink.vue'
-import SidebarNavGroup from '@/components/layout/SidebarNavGroup.vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import { useLeaveFormModalStore } from '@/stores/leaveFormModal';
+import logoUrl from '@/assets/image/logo.png';
+import SidebarNavLink from '@/components/layout/SidebarNavLink.vue';
+import SidebarNavGroup from '@/components/layout/SidebarNavGroup.vue';
 import {
   LayoutDashboard,
   FileText,
@@ -166,24 +169,24 @@ import {
   X,
   PanelLeftClose,
   Plus,
-} from 'lucide-vue-next'
+} from 'lucide-vue-next';
 
 const props = defineProps<{
-  isOpen?: boolean
-}>()
+  isOpen?: boolean;
+}>();
 
 const emit = defineEmits<{
-  (e: 'close'): void
-}>()
+  (e: 'close'): void;
+}>();
 
-const auth = useAuthStore()
-const leaveModal = useLeaveFormModalStore()
-const collapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true')
-const hoveredLabel = ref<string | null>(null)
-const tooltipStyle = ref({ top: '0px', left: '0px' })
+const auth = useAuthStore();
+const leaveModal = useLeaveFormModalStore();
+const collapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true');
+const hoveredLabel = ref<string | null>(null);
+const tooltipStyle = ref({ top: '0px', left: '0px' });
 
-const canApprove = computed(() => auth.isEducator || auth.isAdmin)
-const isAdmin = computed(() => auth.isAdmin)
+const canApprove = computed(() => auth.isEducator || auth.isAdmin);
+const isAdmin = computed(() => auth.isAdmin);
 
 const navGroups = computed(() => [
   {
@@ -211,52 +214,51 @@ const navGroups = computed(() => [
       { to: '/reports', label: 'Reports', icon: BarChart3, show: isAdmin.value },
     ],
   },
-])
+]);
 
 const visibleNavGroups = computed(() =>
   navGroups.value
     .map((group) => ({ ...group, items: group.items.filter((item) => item.show) }))
-    .filter((group) => group.items.length > 0)
-)
+    .filter((group) => group.items.length > 0),
+);
 
 watch(collapsed, (value) => {
-  localStorage.setItem('sidebar-collapsed', String(value))
-  if (!value) hideTooltip()
-})
+  localStorage.setItem('sidebar-collapsed', String(value));
+  if (!value) hideTooltip();
+});
 
 watch(
   () => props.isOpen,
   (open) => {
-    document.body.style.overflow = open ? 'hidden' : ''
-  }
-)
+    document.body.style.overflow = open ? 'hidden' : '';
+  },
+);
 
 function close() {
-  emit('close')
+  emit('close');
 }
 
 function showTooltip(event: MouseEvent, label: string) {
-  if (!collapsed.value) return
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  if (!collapsed.value) return;
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
   tooltipStyle.value = {
     top: `${rect.top + rect.height / 2}px`,
     left: `${rect.right + 10}px`,
-  }
-  hoveredLabel.value = label
+  };
+  hoveredLabel.value = label;
 }
 
 function hideTooltip() {
-  hoveredLabel.value = null
+  hoveredLabel.value = null;
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && props.isOpen) close()
+  if (event.key === 'Escape' && props.isOpen) close();
 }
 
-onMounted(() => window.addEventListener('keydown', handleKeydown))
+onMounted(() => window.addEventListener('keydown', handleKeydown));
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown)
-  document.body.style.overflow = ''
-})
-
+  window.removeEventListener('keydown', handleKeydown);
+  document.body.style.overflow = '';
+});
 </script>

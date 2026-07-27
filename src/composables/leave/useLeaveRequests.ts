@@ -78,22 +78,34 @@ export function useLeaveRequests() {
   }
 
   const stats = computed(() => [
-    { icon: Clock, count: statusCounts.pending, label: 'Pending', bg: '#fef3c7', fg: '#d97706' },
+    {
+      icon: Clock,
+      count: statusCounts.pending,
+      label: 'Pending',
+      bg: 'var(--stat-pending-bg, #fef3c7)',
+      fg: 'var(--stat-pending-fg, #d97706)',
+    },
     {
       icon: CheckCircle,
       count: statusCounts.approved,
       label: 'Approved',
-      bg: '#dcfce7',
-      fg: '#16a34a',
+      bg: 'var(--stat-approved-bg, #dcfce7)',
+      fg: 'var(--stat-approved-fg, #16a34a)',
     },
     {
       icon: AlertOctagon,
       count: statusCounts.rejected,
       label: 'Rejected',
-      bg: '#fee2e2',
-      fg: '#dc2626',
+      bg: 'var(--stat-rejected-bg, #fee2e2)',
+      fg: 'var(--stat-rejected-fg, #dc2626)',
     },
-    { icon: Ban, count: statusCounts.cancelled, label: 'Cancelled', bg: '#f1f5f9', fg: '#64748b' },
+    {
+      icon: Ban,
+      count: statusCounts.cancelled,
+      label: 'Cancelled',
+      bg: 'var(--stat-cancelled-bg, #f1f5f9)',
+      fg: 'var(--stat-cancelled-fg, #64748b)',
+    },
   ]);
 
   function formatDate(dateStr: string): string {

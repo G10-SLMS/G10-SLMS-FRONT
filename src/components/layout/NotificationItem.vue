@@ -2,7 +2,7 @@
   <button
     type="button"
     class="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50"
-    :class="notification.read ? 'bg-white' : 'bg-cyan-50/60'"
+    :class="notification.read ? 'bg-white dark:bg-surface-dark' : 'bg-cyan-50/60 dark:bg-cyan-950/30'"
     @click="$emit('open', notification)"
   >
     <span

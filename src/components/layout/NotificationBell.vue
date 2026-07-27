@@ -19,7 +19,7 @@
 
     <div
       v-if="open"
-      class="fixed inset-x-3 top-[4.25rem] z-40 flex max-h-[70vh] flex-col overflow-hidden rounded-lg border border-gray-100 bg-white text-gray-800 shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:z-10 sm:mt-1 sm:max-h-[28rem] sm:w-96"
+      class="fixed inset-x-3 top-[4.25rem] z-40 flex max-h-[70vh] flex-col overflow-hidden rounded-lg border border-gray-100 bg-white text-gray-800 shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:z-10 sm:mt-1 sm:max-h-[28rem] sm:w-96 dark:border-slate-700 dark:bg-surface-dark dark:text-slate-300"
     >
       <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
         <h3 class="text-sm font-semibold text-slate-900">Notifications</h3>

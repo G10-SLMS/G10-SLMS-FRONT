@@ -36,6 +36,7 @@
                 id="new-password"
                 :value="next"
                 type="password"
+                placeholder="Enter your new password"
                 required
                 minlength="8"
                 autofocus
@@ -49,6 +50,7 @@
                 id="confirm-password"
                 :value="confirm"
                 type="password"
+                placeholder="Confirm your new password"
                 required
                 minlength="8"
                 class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-4 focus:ring-cyan-500/10"
