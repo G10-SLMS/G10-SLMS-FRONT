@@ -9,11 +9,13 @@ import type {
   ImportUsersResult,
 } from '@/types/user'
 
+// ── Internal Helpers ─────────────────────────────────────
 function formatJoined(dateStr: string): string {
   if (!dateStr) return '—'
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+// Maps the raw API user shape into what the User Management table renders.
 function toManagedUser(raw: RawUser): ManagedUser {
   return {
     id: raw.id,
@@ -27,6 +29,7 @@ function toManagedUser(raw: RawUser): ManagedUser {
 }
 
 export const userService = {
+  // ── List (admin table) ──────────────────────────────
   async getUsers(params: UserListParams = {}): Promise<{ data: ManagedUser[]; meta: UserListMeta; counts: UserRoleCounts }> {
     const { data } = await api.get<{ users: RawUser[]; meta?: UserListMeta; counts?: UserRoleCounts }>('/users', {
       params: {
@@ -39,6 +42,7 @@ export const userService = {
 
     const mapped = data.users.map(toManagedUser)
 
+    // Older backend responses may not include meta/counts — derive them client-side as a fallback.
     const meta: UserListMeta = data.meta ?? {
       current_page: params.page ?? 1,
       last_page: 1,
@@ -55,6 +59,7 @@ export const userService = {
     return { data: mapped, meta, counts }
   },
 
+  // ── Create / Update / Delete ─────────────────────────
   async createUser(payload: UserPayload): Promise<{ user: ManagedUser; defaultPassword: string }> {
     const { data } = await api.post<{ user: RawUser; default_password: string }>('/users', payload)
     return { user: toManagedUser(data.user), defaultPassword: data.default_password }
@@ -69,6 +74,7 @@ export const userService = {
     await api.delete(`/users/${id}`)
   },
 
+  // ── Excel Import ─────────────────────────────────────
   async importUsers(file: File): Promise<ImportUsersResult> {
     const formData = new FormData()
     formData.append('file', file)
@@ -77,6 +83,7 @@ export const userService = {
     return data
   },
 
+  // Downloads the blob response as a file by creating and clicking a throwaway <a> tag.
   async downloadImportTemplate(): Promise<void> {
     const response = await api.get('/users/import/template', { responseType: 'blob' })
     const url = window.URL.createObjectURL(new Blob([response.data]))

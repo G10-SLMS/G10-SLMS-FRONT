@@ -20,6 +20,7 @@ export interface ResolvedDateRange {
   endDate: string
 }
 
+// ── Internal Helpers ─────────────────────────────────────
 function toKey(date: Date): string {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -33,6 +34,7 @@ function daysAgo(days: number): Date {
   return date
 }
 
+// ── Resolve a Preset into Concrete Start/End Dates ──────
 export function resolveDateRange(
   preset: DateRangePreset,
   customStart?: string,

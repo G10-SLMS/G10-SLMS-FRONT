@@ -2,6 +2,7 @@ import { todayKey } from './date'
 
 export type CalendarViewMode = 'Day' | 'Week' | 'Month'
 
+// ── Date Key Helpers ─────────────────────────────────────
 export function formatDateKey(date: Date): string {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -29,6 +30,7 @@ export function isToday(dateKey: string | undefined): boolean {
   return dateKey === todayKey()
 }
 
+// ── View Range (Day/Week/Month) ─────────────────────────
 export function viewDateRange(current: Date, view: CalendarViewMode): { start: string; end: string } {
   if (view === 'Day') {
     const key = formatDateKey(current)
@@ -46,6 +48,7 @@ export function viewDateRange(current: Date, view: CalendarViewMode): { start: s
   return { start: formatDateKey(first), end: formatDateKey(last) }
 }
 
+// ── Time Formatting ──────────────────────────────────────
 export function formatHour(hour: number): string {
   const ampm = hour >= 12 ? 'PM' : 'AM'
   const h = hour % 12 || 12

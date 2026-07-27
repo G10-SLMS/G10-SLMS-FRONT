@@ -5,6 +5,7 @@ export type StudentColorEntry = {
   hoverBackground: string
 }
 
+// ── Color Palette ─────────────────────────────────────────
 const PALETTE: StudentColorEntry[] = [
   { background: '#dbeafe', color: '#1e40af', border: '#3b82f6', hoverBackground: '#bfdbfe' }, // blue
   { background: '#ede9fe', color: '#6d28d9', border: '#8b5cf6', hoverBackground: '#ddd6fe' }, // purple
@@ -22,6 +23,7 @@ const PALETTE: StudentColorEntry[] = [
   { background: '#f3e8ff', color: '#7e22ce', border: '#a855f7', hoverBackground: '#e9d5ff' }, // violet
 ]
 
+// ── Deterministic Color Assignment ──────────────────────
 function paletteIndex(studentId: number | string): number {
   const n = typeof studentId === 'number' ? studentId : Number(studentId) || 0
   const hashed = Math.imul(n, 2654435761) >>> 0

@@ -28,7 +28,7 @@
             aria-modal="true"
             :aria-label="title"
           >
-            <!-- Header -->
+            <!-- ── Header ───────────────────────────────────────── -->
             <div class="flex items-start gap-3.5 p-6 pb-0">
               <div
                 class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
@@ -52,7 +52,7 @@
               </button>
             </div>
 
-            <!-- Body -->
+            <!-- ── Body ─────────────────────────────────────────── -->
             <div class="p-6">
               <p v-if="studentName" class="mb-4 text-sm text-slate-600">
                 {{ mode === 'approve' ? 'Approving' : 'Rejecting' }} request from
@@ -81,7 +81,7 @@
                 @input="touched = true"
               ></textarea>
 
-              <!-- Footer row -->
+              <!-- ── Footer Row: error/hint + char count ─────────── -->
               <div class="mt-2 flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
                   <p v-if="showError" class="m-0 text-xs font-medium text-red-600">
@@ -101,7 +101,7 @@
               </div>
             </div>
 
-            <!-- Footer -->
+            <!-- ── Footer: Cancel / Approve-Reject Buttons ─────── -->
             <div class="flex items-center justify-end gap-2.5 px-6 pb-6">
               <button
                 class="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
@@ -159,8 +159,7 @@ const note = ref('')
 const touched = ref(false)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
-// --------------- Computed ---------------
-
+// ── Computed ─────────────────────────────────────────────
 const iconComponent = computed(() => (props.mode === 'approve' ? CheckCircle2 : XCircle))
 
 const title = computed(() =>
@@ -205,8 +204,7 @@ const textareaClasses = computed(() => {
   return 'border-red-400 ring-2 ring-red-100'
 })
 
-// --------------- Lifecycle ---------------
-
+// ── Lifecycle ────────────────────────────────────────────
 watch(
   () => props.open,
   async (isOpen) => {
@@ -219,8 +217,7 @@ watch(
   }
 )
 
-// --------------- Handlers ---------------
-
+// ── Handlers ─────────────────────────────────────────────
 function handleClose() {
   if (props.submitting) return
   emit('close')

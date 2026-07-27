@@ -8,6 +8,7 @@ import type {
   ReportTopStudent,
 } from '@/types/stats'
 
+// ── Range Labels ──────────────────────────────────────────
 const RANGE_LABELS: Record<Exclude<ReportRange, 'custom'>, string> = {
   '30d': 'Last 30 days',
   '90d': 'Last 90 days',
@@ -15,6 +16,7 @@ const RANGE_LABELS: Record<Exclude<ReportRange, 'custom'>, string> = {
 }
 
 export function useReportData() {
+  // ── State ────────────────────────────────────────────
   const range = ref<ReportRange>('30d')
   const startDate = ref('')
   const endDate = ref('')
@@ -29,6 +31,7 @@ export function useReportData() {
   const resolvedStartDate = ref('')
   const resolvedEndDate = ref('')
 
+  // ── Derived Values ────────────────────────────────────
   const maxCount = computed(() => Math.max(...byType.value.map((r) => r.count), 1))
 
   const hasData = computed(
@@ -59,6 +62,7 @@ export function useReportData() {
     return `${Math.round((count / maxCount.value) * 100)}%`
   }
 
+  // ── Loading ──────────────────────────────────────────
   async function loadReport() {
     if (range.value === 'custom' && dateRangeInvalid.value) {
       // Wait for the user to finish picking a valid custom range before calling the API.
@@ -89,6 +93,7 @@ export function useReportData() {
     }
   }
 
+  // ── Reload When Range/Custom Dates Change ────────────
   watch(range, (newRange, oldRange) => {
     if (newRange !== 'custom') {
       startDate.value = ''

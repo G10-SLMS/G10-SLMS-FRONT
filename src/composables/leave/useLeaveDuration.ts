@@ -12,6 +12,7 @@ export interface LeaveDurationFormFields {
 
 export const todayStr = new Date().toISOString().slice(0, 10);
 
+// ── Internal Helpers ─────────────────────────────────────
 function parseTimeToMinutes(value: string): number | null {
   if (!value) return null;
   const [h, m] = value.split(':').map(Number);
@@ -38,6 +39,7 @@ export function formatTimeLabel(value: string): string {
 }
 
 export function useLeaveDuration(form: LeaveDurationFormFields) {
+  // ── Duration Type / Date Change Handlers ─────────────
   function setDurationType(type: LeaveDurationType) {
     form.durationType = type;
     if (type === 'hourly') {
@@ -60,6 +62,7 @@ export function useLeaveDuration(form: LeaveDurationFormFields) {
     if (form.endDate && form.endDate < form.startDate) form.endDate = '';
   }
 
+  // ── Validation & Summary ──────────────────────────────
   const dateRangeError = computed(() => {
     if (!form.startDate || !form.endDate) return '';
     return form.endDate < form.startDate ? 'End date cannot be before start date.' : '';

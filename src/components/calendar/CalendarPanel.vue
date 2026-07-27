@@ -118,7 +118,7 @@ const emit = defineEmits<{
   retry: []
 }>()
 
-// -- Event detail modal --------------------------------------------------
+// ── Event Detail Modal ───────────────────────────────────
 const selectedEventId = ref<number | null>(null)
 const selectedEvent = ref<CalendarEvent | null>(null)
 const isDetailModalOpen = ref(false)
@@ -133,7 +133,7 @@ function closeDetailModal() {
   isDetailModalOpen.value = false
 }
 
-// -- Business logic, delegated to composables ----------------------------
+// ── Business Logic (delegated to composables) ────────────
 const { CELL_HEIGHT, START_HOUR, hours, weekDays, monthDays, isTodayView, rangeLabel, prevLabel, nextLabel, prev, next, goToday } =
   useCalendarNavigation(
     () => props.currentDate,

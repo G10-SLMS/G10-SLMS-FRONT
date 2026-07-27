@@ -7,6 +7,7 @@ import { getInitials } from '@/utils/initials';
 import { extractErrorMessage } from '@/utils/errors';
 import type { Gender } from '@/types/user';
 
+// ── Static Form Data ──────────────────────────────────────
 export const CAMBODIA_PROVINCES = [
   'Banteay Meanchey',
   'Battambang',
@@ -41,7 +42,6 @@ interface EditProfileFormState {
   name: string;
   email: string;
   phone: string;
-  // '' represents "not selected yet" in the <select>; narrowed to Gender on submit.
   gender: Gender | '';
   student_id: string;
   class_name: string;
@@ -50,6 +50,7 @@ interface EditProfileFormState {
   avatar_id: number | null;
 }
 
+// ── Internal Helpers ─────────────────────────────────────
 function padStudentId(value: unknown): string {
   if (value === null || value === undefined || value === '') return '';
   return String(value).padStart(3, '0');
@@ -65,6 +66,7 @@ function splitClass(value: string): { prefix: string; suffix: string } {
 }
 
 export function useEditProfileForm() {
+  // ── Current User / Derived Info ──────────────────────
   const auth = useAuthStore();
   const router = useRouter();
 
@@ -74,6 +76,7 @@ export function useEditProfileForm() {
 
   const { avatars: defaultAvatars, loading: loadingAvatars, urlFor } = useDefaultAvatars();
 
+  // ── Profile Form State ────────────────────────────────
   const form = reactive<EditProfileFormState>({
     name: user.value?.name ?? '',
     email: user.value?.email ?? '',
@@ -91,7 +94,6 @@ export function useEditProfileForm() {
   const savingProfile = ref(false);
   const profileError = ref('');
   const profileSuccess = ref(false);
-
   const initialClassParts = splitClass(form.class_name);
   const classPrefix = ref(initialClassParts.prefix);
   const classSuffix = ref(initialClassParts.suffix);
@@ -100,6 +102,7 @@ export function useEditProfileForm() {
     form.class_name = `${prefix} - ${suffix.trim()}`;
   });
 
+  // ── Submit Profile ───────────────────────────────────
   async function submitProfile() {
     savingProfile.value = true;
     profileError.value = '';
@@ -131,6 +134,7 @@ export function useEditProfileForm() {
     }
   }
 
+  // ── Change Password (embedded sub-composable) ────────
   const {
     form: passwordForm,
     saving: savingPassword,
@@ -142,6 +146,7 @@ export function useEditProfileForm() {
     close: closePasswordModal,
   } = useChangePassword({ autoCloseMs: 1200 });
 
+  // Auto-opens the change-password modal when arriving via a #security link.
   onMounted(() => {
     if (window.location.hash === '#security') {
       openPasswordModal();

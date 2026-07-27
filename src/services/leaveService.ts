@@ -11,6 +11,7 @@ import type {
   RawLeaveRequest,
 } from '@/types/leave'
 
+// ── Internal Helpers: normalize raw API payloads ────────
 function toDurationHours(value: string | number | null | undefined): number | null {
   if (value === null || value === undefined || value === '') return null
   const parsed = typeof value === 'number' ? value : parseFloat(value)
@@ -37,6 +38,7 @@ function totalDaysBetween(start: string, end: string): number {
   return Math.max(diff + 1, 0)
 }
 
+// Maps a raw leave request (as returned by the API) into the shape used by list views.
 function toListItem(raw: RawLeaveRequest): LeaveRequestListItem {
   return {
     id: raw.id,
@@ -61,11 +63,13 @@ function toListItem(raw: RawLeaveRequest): LeaveRequestListItem {
   }
 }
 
+// A leave request can have multiple attachments over its edit history; only the newest matters.
 function latestAttachment(raw: RawLeaveRequest) {
   const attachments = raw.attachments ?? []
   return attachments.length > 0 ? attachments[attachments.length - 1] : null
 }
 
+// Maps a raw leave request into the fuller shape used by detail/review views.
 function toRequestResponse(raw: RawLeaveRequest): LeaveRequestResponse {
   const attachment = latestAttachment(raw)
   return {
@@ -97,6 +101,7 @@ function toRequestResponse(raw: RawLeaveRequest): LeaveRequestResponse {
 }
 
 export const leaveService = {
+  // ── Leave Types (CRUD) ─────────────────────────────
   async getLeaveTypes(): Promise<LeaveType[]> {
     const { data } = await api.get<{ success: boolean; message: string; data: LeaveType[] }>('/leave-types')
     return data.data
@@ -116,6 +121,7 @@ export const leaveService = {
     await api.delete(`/leave-types/${id}`)
   },
 
+  // ── Leave Requests: list, stats, calendar ──────────
   async getLeaveRequests(params?: {
     search?: string
     leave_type_id?: number | string
@@ -125,7 +131,6 @@ export const leaveService = {
     page?: number
     per_page?: number
   }) {
-
     const { date_from, date_to, ...rest } = params ?? {}
     const requestParams = {
       ...rest,
@@ -163,6 +168,7 @@ export const leaveService = {
       view?: 'Day' | 'Week' | 'Month'
     },
   ): Promise<CalendarEvent[]> {
+
     const REQUEST_TIMEOUT = 20000
     let collected: RawLeaveRequest[] = []
     let lastPage = 1
@@ -228,6 +234,7 @@ export const leaveService = {
     })
   },
 
+  // ── Leave Requests: single-record read/write ───────
   async getLeaveRequest(id: number): Promise<LeaveRequestResponse> {
     const { data } = await api.get<RawApiEnvelope<RawLeaveRequest>>(`/leave-requests/${id}`)
     return toRequestResponse(data.data)
@@ -280,7 +287,7 @@ export const leaveService = {
     if (payload.supporting_document) {
       formData.append('supporting_document', payload.supporting_document)
     } else if (payload.supporting_document === null) {
- 
+      // Explicit null means the user removed the existing attachment without picking a new one.
       formData.append('remove_attachment', '1')
     }
     formData.append('_method', 'PUT')
@@ -293,6 +300,7 @@ export const leaveService = {
     await api.put(`/leave-requests/${id}`, { status: 'cancelled' })
   },
 
+  // ── Approval Workflow ────────────────────────────────
   async approveLeaveRequest(id: number, reviewNote: string): Promise<LeaveRequestResponse> {
     const { data } = await api.put<RawApiEnvelope<RawLeaveRequest>>(`/leave-requests/${id}`, {
       status: 'approved',

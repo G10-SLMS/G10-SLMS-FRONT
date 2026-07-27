@@ -15,6 +15,7 @@ if (!configuredBaseURL) {
   )
 }
 
+// ── Axios Instance ───────────────────────────────────────
 const api: AxiosInstance = axios.create({
   baseURL: configuredBaseURL || FALLBACK_DEV_BASE_URL,
   headers: {
@@ -22,8 +23,7 @@ const api: AxiosInstance = axios.create({
   },
 })
 
-// let isLoggingOut = false
-
+// ── Request Interceptor: attach auth token ──────────────
 api.interceptors.request.use((config) => {
   const authStore = useAuthStore()
   if (authStore.token) {
@@ -37,6 +37,7 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// ── Response Interceptor: handle auth errors + missing base URL ──
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -44,11 +45,11 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !isLogoutRequest) {
       const authStore = useAuthStore()
-      authStore.clearSession() // clears local state only — does NOT call the API again
+      authStore.clearSession()
     }
 
     if (!error.response && !configuredBaseURL) {
-      // eslint-disable-next-line no-console
+
       console.error(
         '[api] Request failed with no response, and VITE_API_BASE_URL was never set. ' +
           'This is almost certainly the cause — the app is trying to reach ' +

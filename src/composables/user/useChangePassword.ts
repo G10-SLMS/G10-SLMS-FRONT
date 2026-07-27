@@ -7,6 +7,7 @@ interface UseChangePasswordOptions {
 }
 
 export function useChangePassword(options: UseChangePasswordOptions = {}) {
+  // ── State ────────────────────────────────────────────
   const form = reactive({
     current: '',
     next: '',
@@ -18,6 +19,7 @@ export function useChangePassword(options: UseChangePasswordOptions = {}) {
   const success = ref(false)
   const isOpen = ref(false)
 
+  // ── Reset / Open / Close ─────────────────────────────
   function reset() {
     form.current = ''
     form.next = ''
@@ -37,6 +39,7 @@ export function useChangePassword(options: UseChangePasswordOptions = {}) {
     reset()
   }
 
+  // ── Submit ───────────────────────────────────────────
   async function submit(onSuccess?: () => void) {
     error.value = ''
     success.value = false

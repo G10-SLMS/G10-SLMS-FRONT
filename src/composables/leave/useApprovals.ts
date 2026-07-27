@@ -23,6 +23,7 @@ export interface LeaveRequest {
   processing?: boolean;
 }
 
+// ── Status Mapping ────────────────────────────────────────
 const STATUS_MAP: Record<string, LeaveRequest['status']> = {
   approved: 'Approved',
   rejected: 'Rejected',
@@ -35,6 +36,7 @@ function statusToTab(status: string): LeaveRequest['status'] {
 }
 
 export function useApprovals() {
+  // ── Stores & Routing ─────────────────────────────────
   const leaveFormModal = useLeaveFormModalStore();
   const notificationStore = useNotificationStore();
   const route = useRoute();
@@ -42,6 +44,7 @@ export function useApprovals() {
 
   const STATUS_FILTER = 'pending';
 
+  // ── Filters & Pagination State ───────────────────────
   const searchQuery = ref('');
   const typeFilter = ref('All');
 
@@ -52,13 +55,16 @@ export function useApprovals() {
 
   const { from, to, visiblePages } = usePagination(page, lastPage, perPage, total);
 
+  // ── Request List State ───────────────────────────────
   const requests = ref<LeaveRequest[]>([]);
   const loading = ref(true);
   const errorMsg = ref('');
 
+  // ── Review Modal State ───────────────────────────────
   const reviewTarget = ref<{ request: LeaveRequest; mode: 'approve' | 'reject' } | null>(null);
   const reviewSubmitting = ref(false);
 
+  // ── Fetching ─────────────────────────────────────────
   function toRow(raw: RawLeaveRequest): LeaveRequest {
     return {
       id: raw.id,
@@ -98,6 +104,7 @@ export function useApprovals() {
     }
   }
 
+  // ── Focus/Highlight a Specific Row ───────────────────
   const highlightedId = ref<number | null>(null);
   const rowRefs = new Map<number, { $el?: HTMLElement } | HTMLElement>();
 
@@ -119,6 +126,7 @@ export function useApprovals() {
     }, 3000);
   }
 
+  // ── Client-Side Filtering ────────────────────────────
   const leaveTypes = computed(() => {
     const types = new Set<string>();
     for (const r of requests.value) types.add(r.type);
@@ -152,6 +160,7 @@ export function useApprovals() {
     fetchRequests(1);
   }
 
+  // ── Approve/Reject Workflow ──────────────────────────
   function friendlyErrorMessage(err: unknown): string {
     const status = (err as AxiosError)?.response?.status;
     if (status === 403) {
@@ -198,6 +207,7 @@ export function useApprovals() {
     }
   }
 
+  // ── Lifecycle: initial load + deep-link focus ────────
   onMounted(async () => {
     await fetchRequests();
 

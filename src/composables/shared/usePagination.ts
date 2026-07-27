@@ -9,6 +9,7 @@ export function usePagination(
   const from = computed(() => (total.value === 0 ? 0 : (page.value - 1) * perPage.value + 1))
   const to = computed(() => Math.min(page.value * perPage.value, total.value))
 
+  // Builds a compact page list like [1, -1, 4, 5, 6, -1, 20], where -1 renders as "…".
   const visiblePages = computed(() => {
     const current = page.value
     const last = lastPage.value

@@ -1,4 +1,6 @@
 import { STATUS_COLORS } from './leaveStatusConfig'
+
+// ── Vue-Calendar Event Classes/Styles ────────────────────
 export function statusEventClass(status: string): string {
   const s = status.toLowerCase()
   if (s === 'approved') return 'vc-approved'
@@ -30,6 +32,7 @@ export function miniDotStyle(status: string): Record<string, string> {
   return { background: STATUS_COLORS[key]?.css.background ?? STATUS_COLORS.pending.css.background }
 }
 
+// ── CSS Custom Properties (for the calendar theme) ──────
 export function statusColorVars(): Record<string, string> {
   const vars: Record<string, string> = {}
   for (const [status, cfg] of Object.entries(STATUS_COLORS)) {

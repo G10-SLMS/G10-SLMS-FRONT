@@ -57,7 +57,7 @@ const emit = defineEmits<{
 
 const visible = ref(false)
 
-// Clean writable computed for clean state synchronization
+// Two-way binding through the v-model prop/emit pair, so the input can use v-model locally.
 const inputValue = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)

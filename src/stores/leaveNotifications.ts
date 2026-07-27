@@ -4,13 +4,16 @@ import { notificationService } from '@/services/notificationService'
 import type { LeaveNotificationItem } from '@/types/notification'
 
 export const useLeaveNotificationsStore = defineStore('leaveNotifications', () => {
+  // ── State ────────────────────────────────────────────
   const items = ref<LeaveNotificationItem[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
   const loaded = ref(false)
 
+  // ── Getters ──────────────────────────────────────────
   const unreadCount = computed(() => items.value.filter((n) => !n.read).length)
 
+  // ── Fetching ─────────────────────────────────────────
   async function fetchNotifications() {
     loading.value = true
     error.value = null
@@ -26,6 +29,7 @@ export const useLeaveNotificationsStore = defineStore('leaveNotifications', () =
     }
   }
 
+  // ── Marking as Read (optimistic) ─────────────────────
   async function markAsRead(id: number) {
     const notif = items.value.find((n) => n.id === id)
     if (!notif || notif.read) return
@@ -50,6 +54,7 @@ export const useLeaveNotificationsStore = defineStore('leaveNotifications', () =
     }
   }
 
+  // ── Realtime Push ────────────────────────────────────
   function receiveRealtime(notification: LeaveNotificationItem) {
     if (items.value.some((n) => n.id === notification.id)) return
     items.value.unshift(notification)

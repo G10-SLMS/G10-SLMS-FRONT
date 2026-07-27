@@ -15,6 +15,7 @@ export interface LeaveFormFields {
   attachment: File | null;
 }
 
+// ── Form Defaults ────────────────────────────────────────
 function createEmptyForm(): LeaveFormFields {
   return {
     leaveTypeId: '',
@@ -38,11 +39,11 @@ interface UseLeaveRequestFormOptions {
   attachment: ReturnType<typeof useExistingAttachment>;
   ensureLeaveTypes: () => void;
   onLoadedForView: () => void;
-  /** Called whenever the form is reset (e.g. so the submit composable can clear its own error state). */
   onReset?: () => void;
 }
 
 export function useLeaveRequestForm(options: UseLeaveRequestFormOptions) {
+  // ── State ────────────────────────────────────────────
   const form = reactive<LeaveFormFields>(createEmptyForm());
 
   const loadError = ref('');
@@ -53,9 +54,9 @@ export function useLeaveRequestForm(options: UseLeaveRequestFormOptions) {
   const reviewer = ref<{ id: number; name: string } | null>(null);
   const reviewedAt = ref<string | null>(null);
   const reviewNote = ref<string | null>(null);
-
   let loadToken = 0;
 
+  // ── Reset ────────────────────────────────────────────
   function resetForm() {
     Object.assign(form, createEmptyForm());
     loadError.value = '';
@@ -70,6 +71,7 @@ export function useLeaveRequestForm(options: UseLeaveRequestFormOptions) {
     options.onReset?.();
   }
 
+  // ── Load (edit/view modes) ───────────────────────────
   async function loadRequest() {
     const token = ++loadToken;
     resetForm();

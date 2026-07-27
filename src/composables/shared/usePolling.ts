@@ -18,6 +18,7 @@ export function usePolling(callback: () => void | Promise<void>, options: Pollin
     }
   }
 
+  // ── Start / Stop the Interval ─────────────────────────
   function start() {
     stop()
     if (!skipImmediate) tick()
@@ -31,6 +32,7 @@ export function usePolling(callback: () => void | Promise<void>, options: Pollin
     }
   }
 
+  // ── Pause / Resume (without tearing down the timer) ───
   function pause() {
     isActive.value = false
   }
@@ -39,10 +41,12 @@ export function usePolling(callback: () => void | Promise<void>, options: Pollin
     isActive.value = true
   }
 
+  // Also fire immediately when the tab becomes visible again, so data isn't stale.
   function handleVisibilityChange() {
     if (pauseWhenHidden && !document.hidden) tick()
   }
 
+  // ── Lifecycle ─────────────────────────────────────────
   onMounted(() => {
     start()
     if (pauseWhenHidden) document.addEventListener('visibilitychange', handleVisibilityChange)

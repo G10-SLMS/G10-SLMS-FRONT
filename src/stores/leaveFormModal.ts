@@ -5,11 +5,13 @@ import { useAuthStore } from '@/stores/auth'
 export type LeaveFormMode = 'create' | 'edit' | 'view'
 
 export const useLeaveFormModalStore = defineStore('leaveFormModal', () => {
+  // ── State ────────────────────────────────────────────
   const isOpen = ref(false)
   const editingId = ref<string | number | null>(null)
   const mode = ref<LeaveFormMode>('create')
   const refreshToken = ref(0)
 
+  // ── Open/Close Actions ───────────────────────────────
   function openCreate() {
     const auth = useAuthStore()
     if (!auth.isStudent) return
@@ -39,6 +41,7 @@ export const useLeaveFormModalStore = defineStore('leaveFormModal', () => {
     editingId.value = null
   }
 
+  // ── Cross-Component Refresh Signal ──────────────────
   function notifySubmitted() {
     refreshToken.value++
   }

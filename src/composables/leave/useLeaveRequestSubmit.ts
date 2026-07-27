@@ -18,6 +18,8 @@ interface UseLeaveRequestSubmitOptions {
 
 export function useLeaveRequestSubmit(options: UseLeaveRequestSubmitOptions) {
   const { form } = options;
+
+  // ── State ────────────────────────────────────────────
   const submitting = ref(false);
   const submitError = ref('');
 
@@ -25,6 +27,7 @@ export function useLeaveRequestSubmit(options: UseLeaveRequestSubmitOptions) {
     submitError.value = '';
   }
 
+  // ── Validation ───────────────────────────────────────
   const canSubmit = computed(
     () =>
       !submitting.value &&
@@ -38,6 +41,7 @@ export function useLeaveRequestSubmit(options: UseLeaveRequestSubmitOptions) {
       !options.attachmentMissing.value,
   );
 
+  // ── Submit ───────────────────────────────────────────
   async function handleSubmit() {
     if (!canSubmit.value) return;
 
@@ -45,6 +49,7 @@ export function useLeaveRequestSubmit(options: UseLeaveRequestSubmitOptions) {
     submitError.value = '';
 
     try {
+
       const payload: LeaveRequestPayload = {
         leave_type_id: form.leaveTypeId === 'other' ? null : Number(form.leaveTypeId),
         custom_leave_type: form.leaveTypeId === 'other' ? form.customType : null,

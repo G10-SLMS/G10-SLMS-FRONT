@@ -1,12 +1,14 @@
 import { computed, ref } from 'vue';
 
 export function useExistingAttachment(hasNewAttachment: () => boolean) {
+  // ── State ────────────────────────────────────────────
   const existingAttachmentUrl = ref<string | null>(null);
   const existingAttachmentName = ref<string | null>(null);
   const existingAttachmentSize = ref<number | null>(null);
   const hasExistingAttachment = ref(false);
   const removeExistingAttachment = ref(false);
 
+  // ── Reset / Load From Server ─────────────────────────
   function reset() {
     existingAttachmentUrl.value = null;
     existingAttachmentName.value = null;
@@ -30,6 +32,7 @@ export function useExistingAttachment(hasNewAttachment: () => boolean) {
     removeExistingAttachment.value = false;
   }
 
+  // ── Combined "does the form have an attachment" state ─
   const hasAttachment = computed(
     () => hasNewAttachment() || (hasExistingAttachment.value && !removeExistingAttachment.value),
   );

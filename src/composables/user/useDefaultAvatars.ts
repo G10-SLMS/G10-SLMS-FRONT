@@ -5,6 +5,7 @@ import type { DefaultAvatar, Gender } from '@/types/user'
 
 type GenderArg = Gender | '' | null | undefined
 
+// ── Module-Level Cache ────────────────────────────────────
 const cache = reactive(new Map<string, DefaultAvatar[]>())
 const loadingKeys = reactive(new Set<string>())
 const errorKeys = reactive(new Map<string, string>())
@@ -42,6 +43,7 @@ function load(gender: GenderArg): Promise<void> {
   return promise
 }
 
+// ── Public Composable ─────────────────────────────────────
 export function useDefaultAvatars(gender?: GenderArg | Ref<GenderArg>) {
   const genderValue = computed(() => unref(gender) ?? null)
   const key = computed(() => keyFor(genderValue.value))

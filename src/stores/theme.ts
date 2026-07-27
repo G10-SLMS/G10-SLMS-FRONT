@@ -39,7 +39,7 @@ export const useThemeStore = defineStore('theme', () => {
     applyTheme(isDark.value)
   }
 
-  // Watch for mode changes and apply theme
+  // Keep the <html> class/color-scheme in sync whenever the mode changes.
   watch(isDark, (val) => {
     applyTheme(val)
   })

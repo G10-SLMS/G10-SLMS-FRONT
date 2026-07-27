@@ -5,5 +5,5 @@
 </template>
 
 <script setup lang="ts">
-// LeaveCard component
+// Plain card shell used to wrap leave-related content with consistent padding/border.
 </script>

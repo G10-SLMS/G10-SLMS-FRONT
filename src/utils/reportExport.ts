@@ -18,6 +18,7 @@ function fileTimestamp(): string {
 export function exportReportToPdf({ rangeLabel, summary, byType, monthly, topStudents }: ReportExportPayload): void {
   const doc = new jsPDF()
 
+  // ── Title & Period ───────────────────────────────────
   doc.setFontSize(16)
   doc.text('Leave Reports', 14, 18)
 
@@ -26,6 +27,7 @@ export function exportReportToPdf({ rangeLabel, summary, byType, monthly, topStu
   doc.text(`Period: ${rangeLabel}`, 14, 25)
   doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30)
 
+  // ── Summary Table ────────────────────────────────────
   autoTable(doc, {
     startY: 36,
     head: [['Metric', 'Value']],
@@ -39,7 +41,7 @@ export function exportReportToPdf({ rangeLabel, summary, byType, monthly, topStu
     headStyles: { fillColor: [37, 99, 235] },
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // ── By Leave Type Table ──────────────────────────────
   const afterSummaryY = (doc as any).lastAutoTable.finalY + 10
   doc.setFontSize(12)
   doc.setTextColor(30)
@@ -53,7 +55,7 @@ export function exportReportToPdf({ rangeLabel, summary, byType, monthly, topStu
     headStyles: { fillColor: [37, 99, 235] },
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // ── Monthly Summary Table ────────────────────────────
   const afterTypeY = (doc as any).lastAutoTable.finalY + 10
   doc.setFontSize(12)
   doc.text('Monthly Summary', 14, afterTypeY)
@@ -74,7 +76,7 @@ export function exportReportToPdf({ rangeLabel, summary, byType, monthly, topStu
     headStyles: { fillColor: [37, 99, 235] },
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // ── Top Students Table ───────────────────────────────
   const afterMonthlyY = (doc as any).lastAutoTable.finalY + 10
   doc.setFontSize(12)
   doc.text('Top 10 Students by Leave Requests', 14, afterMonthlyY)
@@ -95,6 +97,7 @@ export function exportReportToPdf({ rangeLabel, summary, byType, monthly, topStu
 export function exportReportToExcel({ rangeLabel, summary, byType, monthly, topStudents }: ReportExportPayload): void {
   const workbook = XLSX.utils.book_new()
 
+  // ── Summary Sheet ────────────────────────────────────
   const summarySheet = XLSX.utils.aoa_to_sheet([
     ['Leave Report Summary'],
     ['Period', rangeLabel],
@@ -108,11 +111,13 @@ export function exportReportToExcel({ rangeLabel, summary, byType, monthly, topS
   ])
   XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary')
 
+  // ── By Leave Type Sheet ──────────────────────────────
   const byTypeSheet = XLSX.utils.json_to_sheet(
     byType.length ? byType.map((row) => ({ 'Leave Type': row.name, Count: row.count })) : [{ 'Leave Type': 'No data', Count: 0 }],
   )
   XLSX.utils.book_append_sheet(workbook, byTypeSheet, 'By Leave Type')
 
+  // ── Monthly Summary Sheet ────────────────────────────
   const monthlySheet = XLSX.utils.json_to_sheet(
     monthly.length
       ? monthly.map((m) => ({
@@ -126,6 +131,7 @@ export function exportReportToExcel({ rangeLabel, summary, byType, monthly, topS
   )
   XLSX.utils.book_append_sheet(workbook, monthlySheet, 'Monthly Summary')
 
+  // ── Top Students Sheet ───────────────────────────────
   const topStudentsSheet = XLSX.utils.json_to_sheet(
     topStudents.length
       ? topStudents.map((s, i) => ({

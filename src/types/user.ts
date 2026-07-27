@@ -1,7 +1,9 @@
+// ── Core User ───────────────────────────────────────────
 export type UserRole = 'admin' | 'educator' | 'student'
 
 // Matches the `gender` enum defined on the users table migration.
 export type Gender = 'male' | 'female'
+
 export interface User {
   id: number
   name: string
@@ -25,6 +27,7 @@ export interface User {
   updated_at: string
 }
 
+// ── Auth Payloads & Responses ───────────────────────────
 export interface AuthResponse {
   user: User
   token: string
@@ -52,6 +55,13 @@ export interface ResetPasswordPayload {
   password_confirmation: string
 }
 
+export interface ChangePasswordPayload {
+  current_password: string
+  new_password: string
+  new_password_confirmation: string
+}
+
+// ── Profile ──────────────────────────────────────────────
 export interface UpdateProfilePayload {
   name?: string
   email?: string
@@ -73,13 +83,7 @@ export interface DefaultAvatar {
   gender: Gender | null
 }
 
-export interface ChangePasswordPayload {
-  current_password: string
-  new_password: string
-  new_password_confirmation: string
-}
-
-// Used by the User Management screen (admin CRUD)
+// ── User Management (admin CRUD) ────────────────────────
 export interface ManagedUser {
   id: number
   name: string
@@ -127,7 +131,7 @@ export interface UserListParams {
   per_page?: number
 }
 
-// Used by the Import Users from Excel feature
+// ── Import Users from Excel ─────────────────────────────
 export interface ImportSuccessRow {
   row: number
   id: number

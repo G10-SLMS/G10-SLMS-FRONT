@@ -101,7 +101,8 @@ async function logout() {
   try {
     await auth.logout()
   } catch {
-    // Silent catch if API fails
+    // The user is logged out locally regardless of whether the server call
+    // succeeds (session is cleared below), so a failed request here is harmless.
   }
 
   auth.clearSession()

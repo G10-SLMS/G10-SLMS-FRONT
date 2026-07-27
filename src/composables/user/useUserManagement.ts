@@ -5,6 +5,7 @@ import { extractErrorMessage } from '@/utils/errors'
 import { usePagination } from '@/composables/shared/usePagination'
 
 export function useUserManagement() {
+  // ── List State ───────────────────────────────────────
   const users = ref<ManagedUser[]>([])
   const loading = ref(true)
   const errorMsg = ref('')
@@ -24,6 +25,7 @@ export function useUserManagement() {
   const totalPages = computed(() => lastPage.value)
   const { from, to, visiblePages } = usePagination(page, lastPage, perPage, total)
 
+  // ── Search & Fetch ───────────────────────────────────
   let searchTimeout: ReturnType<typeof setTimeout> | undefined
 
   function onSearchDebounced() {
@@ -58,8 +60,7 @@ export function useUserManagement() {
   onMounted(() => fetchUsers(1))
   watch(perPage, () => fetchUsers(1))
 
-  // --- Add / edit form ---
-
+  // ── Add / Edit Form ──────────────────────────────────
   const modalOpen = ref(false)
   const editingUser = ref<ManagedUser | null>(null)
   const saving = ref(false)
@@ -107,8 +108,7 @@ export function useUserManagement() {
     }
   }
 
-  // --- Delete confirmation ---
-
+  // ── Delete Confirmation ──────────────────────────────
   const deletingId = ref<number | null>(null)
   const confirmOpen = ref(false)
   const pendingDeleteUser = ref<ManagedUser | null>(null)
@@ -153,8 +153,7 @@ export function useUserManagement() {
     }
   }
 
-  // --- Excel import ---
-
+  // ── Excel Import ─────────────────────────────────────
   const importModalOpen = ref(false)
 
   async function onUsersImported(result: ImportUsersResult) {
@@ -164,7 +163,7 @@ export function useUserManagement() {
   }
 
   return {
-    // list state
+    // ── list state ──
     users,
     loading,
     errorMsg,
@@ -183,7 +182,7 @@ export function useUserManagement() {
     visiblePages,
     onSearchDebounced,
     fetchUsers,
-    // add/edit form
+    // ── add/edit form ──
     modalOpen,
     editingUser,
     saving,
@@ -192,14 +191,14 @@ export function useUserManagement() {
     openEditModal,
     closeModal,
     saveUser,
-    // delete confirmation
+    // ── delete confirmation ──
     deletingId,
     confirmOpen,
     confirmMessage,
     requestRemoveUser,
     cancelRemoveUser,
     confirmRemoveUser,
-    // import
+    // ── import ──
     importModalOpen,
     onUsersImported,
   }

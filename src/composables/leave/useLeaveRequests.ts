@@ -10,12 +10,14 @@ import type { LeaveRequestListItem, LeaveType } from '@/types/leave';
 import { AlertOctagon, Ban, CheckCircle, Clock } from 'lucide-vue-next';
 
 export function useLeaveRequests() {
+  // ── Stores & Routing ─────────────────────────────────
   const authStore = useAuthStore();
   const notificationStore = useNotificationStore();
   const leaveModal = useLeaveFormModalStore();
   const route = useRoute();
   const router = useRouter();
 
+  // ── List & Pagination State ──────────────────────────
   const items = ref<LeaveRequestListItem[]>([]);
   const leaveTypes = ref<LeaveType[]>([]);
   const loading = ref(true);
@@ -27,6 +29,7 @@ export function useLeaveRequests() {
   const lastPage = ref(1);
   const perPage = ref(10);
 
+  // ── Cancel Modal State ───────────────────────────────
   const cancelTarget = ref<LeaveRequestListItem | null>(null);
   const cancelling = ref(false);
 
@@ -34,6 +37,7 @@ export function useLeaveRequests() {
   let requestSeq = 0;
   let hasLoadedOnce = false;
 
+  // ── Filters ──────────────────────────────────────────
   const filters = reactive({
     search: '',
     leave_type_id: '' as string | number,
@@ -55,6 +59,7 @@ export function useLeaveRequests() {
       !!filters.date_to,
   );
 
+  // ── Status Stats (cards above the table) ─────────────
   const statusCounts = reactive({ pending: 0, approved: 0, rejected: 0, cancelled: 0 });
   const statsLoading = ref(false);
 
@@ -65,8 +70,6 @@ export function useLeaveRequests() {
 
     try {
       const counts = await leaveService.getLeaveRequestStats();
-
-      console.log('Stats:', counts);
 
       statusCounts.pending = counts.pending;
       statusCounts.approved = counts.approved;
@@ -108,6 +111,7 @@ export function useLeaveRequests() {
     },
   ]);
 
+  // ── Display Formatting ───────────────────────────────
   function formatDate(dateStr: string): string {
     if (!dateStr) return '—';
 
@@ -120,6 +124,7 @@ export function useLeaveRequests() {
     return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown';
   }
 
+  // ── Filters ↔ URL Query Sync ──────────────────────────
   function syncFiltersFromQuery() {
     const q = route.query;
     filters.search = typeof q.q === 'string' ? q.q : '';
@@ -142,6 +147,7 @@ export function useLeaveRequests() {
     router.replace({ query }).catch(() => {});
   }
 
+  // ── Search & Filter Actions ───────────────────────────
   function onSearchDebounced() {
     if (searchTimeout) clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => fetchRequests(1), 400);
@@ -161,6 +167,7 @@ export function useLeaveRequests() {
     fetchRequests(1);
   }
 
+  // ── Fetching ─────────────────────────────────────────
   async function fetchRequests(p: number = 1) {
     if (!LEAVE_REQUESTS_API_AVAILABLE) {
       errMsg.value =
@@ -214,6 +221,7 @@ export function useLeaveRequests() {
     }
   }
 
+  // ── Row Actions: View / Edit / Cancel ─────────────────
   function viewRequest(id: number) {
     leaveModal.openView(id);
   }
@@ -248,6 +256,7 @@ export function useLeaveRequests() {
     }
   }
 
+  // ── Lifecycle: initial load ───────────────────────────
   onMounted(async () => {
     if (!LEAVE_REQUESTS_API_AVAILABLE) {
       loading.value = false;
@@ -266,6 +275,7 @@ export function useLeaveRequests() {
     ]);
   });
 
+  // Refetch whenever the leave form modal signals a successful submit.
   watch(
     () => leaveModal.refreshToken,
     () => {

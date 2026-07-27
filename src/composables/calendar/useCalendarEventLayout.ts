@@ -17,6 +17,7 @@ interface UseCalendarEventLayoutOptions {
   cellHeight: number
 }
 
+// ── Time Math Helpers ─────────────────────────────────────
 function parseTime(time: string | undefined) {
   if (!time) return null
   const parts = time.split(':').map(Number)
@@ -37,6 +38,7 @@ function eventsOverlap(a: CalendarEvent, b: CalendarEvent): boolean {
   return aStart < bEnd && bStart < aEnd
 }
 
+// ── Column Assignment (side-by-side overlapping events) ──
 function assignEventColumns(events: CalendarEvent[]): Map<number, ColumnAssignment> {
   if (events.length === 0) return new Map()
 
@@ -87,6 +89,7 @@ function assignEventColumns(events: CalendarEvent[]): Map<number, ColumnAssignme
   return result
 }
 
+// All-day events don't overlap by time, so they just get one column each, in order.
 function assignFullDayColumns(events: CalendarEvent[]): Map<number, ColumnAssignment> {
   const result = new Map<number, ColumnAssignment>()
   const totalColumns = events.length
@@ -96,6 +99,7 @@ function assignFullDayColumns(events: CalendarEvent[]): Map<number, ColumnAssign
   return result
 }
 
+// ── CSS Positioning ───────────────────────────────────────
 function columnStyle(assignment: ColumnAssignment | undefined): Record<string, string> {
   if (!assignment || assignment.totalColumns <= 1) return {}
   const { column, totalColumns } = assignment
@@ -107,6 +111,7 @@ function columnStyle(assignment: ColumnAssignment | undefined): Record<string, s
   return { left: `${left}%`, width: `${width}%` }
 }
 
+// An event with no explicit times, or duration_type 'full_day', spans the whole day.
 function isFullDayEvent(ev: CalendarEvent): boolean {
   const type = String(ev.duration_type ?? '').toLowerCase().replace(/[-\s]/g, '_')
   if (type === 'full_day') return true
@@ -118,6 +123,7 @@ function isFullDayEvent(ev: CalendarEvent): boolean {
 export function useCalendarEventLayout(options: UseCalendarEventLayoutOptions) {
   const { auth, weekDays, startHour, cellHeight } = options
 
+  // ── Visibility: permissions + active filters ─────────
   const filteredByPermission = computed(() => {
     const approvedOnly = options.events().filter((r) => r.status.toLowerCase() === 'approved')
     if (auth.isAdmin || auth.isEducator) return approvedOnly
@@ -146,6 +152,7 @@ export function useCalendarEventLayout(options: UseCalendarEventLayoutOptions) {
     })
   })
 
+  // ── Split: All-Day vs Timed Events ────────────────────
   const allDayEvents = computed(() => filteredEvents.value.filter((ev) => isFullDayEvent(ev)))
   const timedEvents = computed(() =>
     filteredEvents.value.filter((ev) => !isFullDayEvent(ev) && ev.startTime && ev.endTime),
@@ -164,6 +171,7 @@ export function useCalendarEventLayout(options: UseCalendarEventLayoutOptions) {
     return filteredEvents.value.filter((ev) => ev.startDate <= dateKey && ev.endDate >= dateKey)
   }
 
+  // ── Per-Day Column Layout (cached per day's event set) ──
   const columnCache = new Map<string, { idsKey: string; result: Map<number, ColumnAssignment> }>()
 
   const dayEventColumns = computed(() => {
@@ -210,6 +218,7 @@ export function useCalendarEventLayout(options: UseCalendarEventLayoutOptions) {
     return map
   })
 
+  // ── Public Accessors: style + pixel positioning ───────
   function getEventColumnStyle(ev: CalendarEvent, dateKey: string): Record<string, string> {
     return columnStyle(dayEventColumns.value.get(dateKey)?.get(ev.id))
   }

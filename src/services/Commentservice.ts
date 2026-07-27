@@ -3,7 +3,6 @@ import type { Comment, CommentPayload } from '@/types/comment'
 import type { RawApiEnvelope } from '@/types/leave'
 
 export const commentService = {
-
   async getComments(leaveRequestId: number): Promise<Comment[]> {
     const { data } = await api.get<RawApiEnvelope<Comment[]>>('/comments', {
       params: { leave_request_id: leaveRequestId },

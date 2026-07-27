@@ -20,19 +20,19 @@ function extractErrorMessage(err: unknown, fallback: string): string {
 }
 
 export const useAuthStore = defineStore('auth', () => {
-  // --- state ---
+  // ── State ────────────────────────────────────────────
   const user = ref<User | null>(getStoredUser())
   const token = ref<string | null>(localStorage.getItem('auth_token'))
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  // --- getters ---
+  // ── Getters ──────────────────────────────────────────
   const isAuthenticated = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
   const isEducator = computed(() => user.value?.role === 'educator')
   const isStudent = computed(() => user.value?.role === 'student')
 
-  // --- internal helper ---
+  // ── Session Helpers ──────────────────────────────────
   function setSession(userData: User, authToken: string): void {
     user.value = userData
     token.value = authToken
@@ -47,7 +47,7 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('auth_token')
   }
 
-  // --- actions ---
+  // ── Email/Password Auth ──────────────────────────────
   async function register(payload: RegisterPayload) {
     loading.value = true
     error.value = null
@@ -85,6 +85,8 @@ export const useAuthStore = defineStore('auth', () => {
       // Server unreachable or token already expired — safe to ignore.
     }
   }
+
+  // ── Social/OAuth Auth ────────────────────────────────
   function socialLogin(provider: 'google' | 'office365' | 'github'): void {
     if (provider === 'office365') {
       error.value = `${provider} sign-in isn't connected yet.`
@@ -98,6 +100,7 @@ export const useAuthStore = defineStore('auth', () => {
     window.location.href = url.toString()
   }
 
+  // Called from the OAuth callback route with the code/state the provider returned.
   async function exchangeSocialCode(provider: 'google' | 'github', code: string, state: string): Promise<boolean> {
     loading.value = true
     error.value = null
@@ -117,6 +120,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // ── Current User / Profile ──────────────────────────
   async function fetchCurrentUser(): Promise<User | null> {
     if (!token.value) return null
 
@@ -164,6 +168,5 @@ export const useAuthStore = defineStore('auth', () => {
     fetchCurrentUser,
     updateProfile,
     clearSession,
-
   }
 })

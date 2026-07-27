@@ -13,6 +13,7 @@ import type {
 } from '@/types/user'
 
 export const authService = {
+  // ── Register / Login ─────────────────────────────────
   register(payload: RegisterPayload): Promise<AxiosResponse<AuthResponse>> {
     return api.post('/register', payload)
   },
@@ -21,6 +22,7 @@ export const authService = {
     return api.post('/login', payload)
   },
 
+  // ── Social/OAuth ─────────────────────────────────────
   googleLogin(code: string, redirectUri: string, state: string): Promise<AxiosResponse<AuthResponse>> {
     return api.post('/auth/google', { code, redirect_uri: redirectUri, state })
   },
@@ -33,6 +35,7 @@ export const authService = {
     return api.post('/logout')
   },
 
+  // ── Password Reset ───────────────────────────────────
   forgotPassword(email: string): Promise<AxiosResponse<{ message: string }>> {
     return api.post('/forgot-password', { email })
   },
@@ -41,6 +44,7 @@ export const authService = {
     return api.post('/reset-password', payload)
   },
 
+  // ── Current User / Profile ───────────────────────────
   getCurrentUser(): Promise<AxiosResponse<User>> {
     return api.get('/user')
   },
@@ -54,7 +58,7 @@ export const authService = {
   ): Promise<AxiosResponse<{ message: string; user: User }>> {
     return api.put('/profile', payload)
   },
-  
+
   changePassword(
     payload: ChangePasswordPayload,
   ): Promise<AxiosResponse<{ message: string; user: User }>> {
@@ -64,6 +68,7 @@ export const authService = {
     })
   },
 
+  // ── Avatars ──────────────────────────────────────────
   getDefaultAvatars(
     gender?: Gender,
   ): Promise<AxiosResponse<{ avatars: DefaultAvatar[]; count: number }>> {

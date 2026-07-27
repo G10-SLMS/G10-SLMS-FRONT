@@ -3,6 +3,7 @@ import { commentService } from '@/services/commentService';
 import type { Comment } from '@/types/comment';
 
 export function useLeaveComments(getLeaveRequestId: () => number | null | undefined) {
+  // ── State ────────────────────────────────────────────
   const comments = ref<Comment[]>([]);
   const commentsLoading = ref(false);
 
@@ -11,6 +12,7 @@ export function useLeaveComments(getLeaveRequestId: () => number | null | undefi
     commentsLoading.value = false;
   }
 
+  // ── Loading ──────────────────────────────────────────
   async function loadComments() {
     const leaveRequestId = getLeaveRequestId();
     if (!leaveRequestId || !Number.isFinite(leaveRequestId)) return;
@@ -26,6 +28,7 @@ export function useLeaveComments(getLeaveRequestId: () => number | null | undefi
     }
   }
 
+  // ── Add / Reply / Edit / Delete ──────────────────────
   async function handleAddComment(body: string) {
     const leaveRequestId = getLeaveRequestId();
     if (!leaveRequestId || !Number.isFinite(leaveRequestId)) return;

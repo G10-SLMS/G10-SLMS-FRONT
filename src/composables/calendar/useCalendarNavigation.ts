@@ -16,6 +16,7 @@ export interface MonthDayCell extends CalendarDayCell {
   isCurrentMonth: boolean
 }
 
+// ── Config Constants ──────────────────────────────────────
 export const CALENDAR_START_HOUR = 7
 export const CALENDAR_END_HOUR = 23
 export const CALENDAR_CELL_HEIGHT = 56
@@ -23,6 +24,7 @@ export const CALENDAR_CELL_HEIGHT = 56
 const DAY_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 const DAY_NAMES_PREV_WEEK = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
 
+// ── Internal Helper ───────────────────────────────────────
 function createDayCell(date: Date, dayNames: string[] = DAY_NAMES): CalendarDayCell {
   return {
     date,
@@ -38,6 +40,7 @@ export function useCalendarNavigation(
   getView: () => CalendarViewMode,
   onNavigate: (date: Date) => void,
 ) {
+  // ── Grid Cells: hours / week / month ─────────────────
   const hours = computed(() => {
     const h: number[] = []
     for (let i = CALENDAR_START_HOUR; i < CALENDAR_END_HOUR; i++) h.push(i)
@@ -58,6 +61,7 @@ export function useCalendarNavigation(
   })
 
   const monthDays = computed<MonthDayCell[]>(() => {
+
     const current = getCurrentDate()
     const y = current.getFullYear()
     const m = current.getMonth()
@@ -87,6 +91,7 @@ export function useCalendarNavigation(
     return days
   })
 
+  // ── Display Labels ────────────────────────────────────
   const isTodayView = computed(() => {
     const view = getView()
     const current = getCurrentDate()
@@ -131,6 +136,7 @@ export function useCalendarNavigation(
     return 'Next month'
   })
 
+  // ── Navigation Actions ────────────────────────────────
   function prev() {
     const d = new Date(getCurrentDate())
     const view = getView()
