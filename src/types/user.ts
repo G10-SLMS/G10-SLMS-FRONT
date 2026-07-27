@@ -134,6 +134,38 @@ export interface UserListParams {
   per_page?: number
 }
 
+// ── Student Directory (grouped by generation & class) ───
+export interface DirectoryStudent {
+  id: number
+  name: string
+  email: string
+  avatar_id: number | null
+  avatar_url: string | null
+  phone: string | null
+  gender: Gender | null
+  student_id: string | null
+  class_name: string | null
+  generation: string | null
+  province: string | null
+}
+
+export interface DirectoryClassGroup {
+  class_name: string | null
+  student_count: number
+  students: DirectoryStudent[]
+}
+
+export interface DirectoryGenerationGroup {
+  generation: string | null
+  student_count: number
+  classes: DirectoryClassGroup[]
+}
+
+export interface StudentDirectoryResponse {
+  generations: DirectoryGenerationGroup[]
+  total_students: number
+}
+
 // ── Import Users from Excel ─────────────────────────────
 export interface ImportSuccessRow {
   row: number

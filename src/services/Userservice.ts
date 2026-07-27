@@ -7,6 +7,7 @@ import type {
   UserRoleCounts,
   UserListParams,
   ImportUsersResult,
+  StudentDirectoryResponse,
 } from '@/types/user'
 
 // ── Internal Helpers ─────────────────────────────────────
@@ -73,6 +74,14 @@ export const userService = {
 
   async deleteUser(id: number): Promise<void> {
     await api.delete(`/users/${id}`)
+  },
+
+  // ── Student Directory (grouped by generation & class) ──
+  async getStudentDirectory(search?: string): Promise<StudentDirectoryResponse> {
+    const { data } = await api.get<StudentDirectoryResponse>('/students/directory', {
+      params: { search: search || undefined },
+    })
+    return data
   },
 
   // ── Excel Import ─────────────────────────────────────

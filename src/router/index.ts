@@ -101,6 +101,24 @@ export const router = createRouter({
           meta: { title: 'Leave Types Management', requiresAuth: true, roles: ['admin'] },
         },
         {
+          path: '/student-directory',
+          name: 'StudentDirectory',
+          component: () => import('../views/StudentDirectoryView.vue'),
+          meta: { title: 'Student Directory', requiresAuth: true, roles: ['admin', 'educator'] },
+        },
+        {
+          path: '/student-directory/:generation',
+          name: 'StudentDirectoryGeneration',
+          component: () => import('../views/GenerationDirectoryView.vue'),
+          meta: { title: 'Student Directory', requiresAuth: true, roles: ['admin', 'educator'] },
+        },
+        {
+          path: '/student-directory/:generation/:className',
+          name: 'StudentDirectoryClass',
+          component: () => import('../views/ClassDirectoryView.vue'),
+          meta: { title: 'Student Directory', requiresAuth: true, roles: ['admin', 'educator'] },
+        },
+        {
           path: '/profile',
           name: 'Profile',
           component: () => import('../views/ProfileView.vue'),

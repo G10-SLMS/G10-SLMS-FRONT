@@ -3,8 +3,12 @@ import type { Gender, UserRole, ManagedUser, UserRoleCounts, ImportUsersResult }
 import { userService } from '@/services/userService'
 import { extractErrorMessage } from '@/utils/errors'
 import { usePagination } from '@/composables/shared/usePagination'
+import { useStudentDirectoryStore } from '@/stores/studentDirectory'
 
 export function useUserManagement() {
+  // Any create/update/delete/import below can change generations, classes, or
+  // student counts — the cached Student Directory snapshot must not outlive that.
+  const studentDirectoryStore = useStudentDirectoryStore()
   // ── List State ───────────────────────────────────────
   const users = ref<ManagedUser[]>([])
   const loading = ref(true)
@@ -100,6 +104,7 @@ export function useUserManagement() {
         await fetchUsers(1)
       }
 
+      await studentDirectoryStore.fetchDirectory(true)
       modalOpen.value = false
     } catch (err) {
       formError.value = extractErrorMessage(err, 'Failed to save user.')
@@ -146,6 +151,7 @@ export function useUserManagement() {
       successMsg.value = 'User removed successfully.'
       const nextPage = users.value.length === 1 && page.value > 1 ? page.value - 1 : page.value
       await fetchUsers(nextPage)
+      await studentDirectoryStore.fetchDirectory(true)
     } catch (err) {
       errorMsg.value = extractErrorMessage(err, 'Failed to remove user.')
     } finally {
@@ -160,6 +166,7 @@ export function useUserManagement() {
     errorMsg.value = ''
     successMsg.value = `Import completed: ${result.summary.successful} created, ${result.summary.skipped} skipped, ${result.summary.failed} failed.`
     await fetchUsers(1)
+    await studentDirectoryStore.fetchDirectory(true)
   }
 
   return {

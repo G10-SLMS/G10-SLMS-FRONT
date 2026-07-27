@@ -166,6 +166,7 @@ import {
   ClipboardList,
   Settings,
   BarChart3,
+  BookUser,
   X,
   PanelLeftClose,
   Plus,
@@ -187,6 +188,7 @@ const tooltipStyle = ref({ top: '0px', left: '0px' });
 
 const canApprove = computed(() => auth.isEducator || auth.isAdmin);
 const isAdmin = computed(() => auth.isAdmin);
+const canViewDirectory = computed(() => auth.isEducator || auth.isAdmin);
 
 const navGroups = computed(() => [
   {
@@ -211,6 +213,7 @@ const navGroups = computed(() => [
           { to: '/users', label: 'User Management', icon: Users },
         ],
       },
+      { to: '/student-directory', label: 'Student Directory', icon: BookUser, show: canViewDirectory.value },
       { to: '/reports', label: 'Reports', icon: BarChart3, show: isAdmin.value },
     ],
   },
