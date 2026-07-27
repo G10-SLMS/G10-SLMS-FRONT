@@ -4,6 +4,7 @@ import { authService } from '@/services/authService'
 import type {
   LoginPayload,
   RegisterPayload,
+  ResetPasswordPayload,
   UpdateProfilePayload,
   User,
 } from '@/types/user'
@@ -86,6 +87,38 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // ── Password Reset ───────────────────────────────────
+  async function forgotPassword(email: string): Promise<boolean> {
+    loading.value = true
+    error.value = null
+    try {
+      const { data } = await authService.forgotPassword(email)
+      return !!data.message
+    } catch (err) {
+      error.value = extractErrorMessage(err, 'Could not send the reset link. Please try again.')
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function resetPassword(payload: ResetPasswordPayload): Promise<boolean> {
+    loading.value = true
+    error.value = null
+    try {
+      const { data } = await authService.resetPassword(payload)
+      return !!data.message
+    } catch (err) {
+      error.value = extractErrorMessage(
+        err,
+        'This reset link is invalid or has expired. Please request a new one.',
+      )
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   // ── Social/OAuth Auth ────────────────────────────────
   function socialLogin(provider: 'google' | 'office365' | 'github'): void {
     if (provider === 'office365') {
@@ -163,6 +196,8 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     login,
     logout,
+    forgotPassword,
+    resetPassword,
     socialLogin,
     exchangeSocialCode,
     fetchCurrentUser,
