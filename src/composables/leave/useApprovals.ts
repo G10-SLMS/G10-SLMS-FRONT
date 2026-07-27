@@ -244,5 +244,6 @@ export function useApprovals() {
     clearFilters,
     handleDecision,
     handleReviewConfirm,
+    focusRequest,
   };
 }

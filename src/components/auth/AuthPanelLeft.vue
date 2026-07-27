@@ -7,7 +7,8 @@
       <img
         :src="logoUrl"
         :alt="logoAlt"
-        class="h-[72px] w-auto rounded-[10px] bg-white px-3.5 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
+        class="h-[72px] w-auto rounded-[10px] px-3.5 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
+        style="background-color: #fff;"
       />
     </div>
 

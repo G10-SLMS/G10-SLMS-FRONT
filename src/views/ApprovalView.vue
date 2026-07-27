@@ -204,6 +204,8 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { CheckCircle2, Search, SearchX, ChevronDown, X } from 'lucide-vue-next';
 import ApprovalRow from '@/components/approval/ApprovalRow.vue';
 import ApprovalCard from '@/components/approval/ApprovalCard.vue';
@@ -211,6 +213,9 @@ import ApprovalLoadingSkeleton from '@/components/approval/ApprovalLoadingSkelet
 import ReviewCommentModal from '@/components/approval/ReviewCommentModal.vue';
 import LeaveRequestsPagination from '@/components/leave-request/LeaveRequestsPagination.vue';
 import { useApprovals } from '@/composables/leave/useApprovals';
+
+const route = useRoute();
+const router = useRouter();
 
 const {
   leaveFormModal,
@@ -236,5 +241,15 @@ const {
   clearFilters,
   handleDecision,
   handleReviewConfirm,
+  focusRequest,
 } = useApprovals();
+
+onMounted(() => {
+  const idParam = route.query.request;
+  if (!idParam) return;
+
+  const numericId = Number(idParam);
+  if (Number.isFinite(numericId)) focusRequest(numericId);
+  router.replace({ query: { ...route.query, request: undefined } });
+});
 </script>
