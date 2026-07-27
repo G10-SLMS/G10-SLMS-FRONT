@@ -20,7 +20,7 @@
 
     <div
       v-if="menuOpen"
-      class="absolute right-0 top-full z-10 mt-1 min-w-[170px] overflow-hidden rounded-lg bg-white text-gray-800 shadow-md border border-gray-100"
+      class="absolute right-0 top-full z-10 mt-1 min-w-[170px] overflow-hidden rounded-lg bg-white text-gray-800 shadow-md border border-gray-100 dark:border-slate-700 dark:bg-surface-dark dark:text-slate-300"
     >
       <RouterLink
         to="/profile"

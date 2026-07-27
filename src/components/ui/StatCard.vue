@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-xl bg-white p-4 shadow-sm sm:p-5">
+  <div class="rounded-xl bg-white p-4 shadow-sm sm:p-5 dark:bg-surface-card">
     <span
       class="mb-2.5 inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors sm:mb-3 sm:h-9 sm:w-9"
       :class="colorClasses"
