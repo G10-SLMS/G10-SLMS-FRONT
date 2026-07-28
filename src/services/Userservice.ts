@@ -7,6 +7,9 @@ import type {
   UserRoleCounts,
   UserListParams,
   ImportUsersResult,
+  StudentDirectoryResponse,
+  ScopeStatusPayload,
+  ScopeStatusResult,
 } from '@/types/user'
 
 // ── Internal Helpers ─────────────────────────────────────
@@ -23,9 +26,13 @@ function toManagedUser(raw: RawUser): ManagedUser {
     email: raw.email,
     role: raw.role,
     joined: formatJoined(raw.created_at),
+    is_active: raw.is_active ?? true,
     avatar_id: raw.avatar_id,
     avatar_url: raw.avatar_url,
     gender: raw.gender ?? null,
+    student_id: raw.student_id ?? null,
+    class_name: raw.class_name ?? null,
+    generation: raw.generation ?? null,
   }
 }
 
@@ -36,6 +43,8 @@ export const userService = {
       params: {
         search: params.search || undefined,
         role: params.role || undefined,
+        generation: params.generation || undefined,
+        class_name: params.class_name || undefined,
         page: params.page ?? 1,
         per_page: params.per_page ?? 10,
       },
@@ -73,6 +82,48 @@ export const userService = {
 
   async deleteUser(id: number): Promise<void> {
     await api.delete(`/users/${id}`)
+  },
+
+  async toggleUserStatus(id: number): Promise<ManagedUser> {
+    const { data } = await api.patch<{ user: RawUser }>(`/users/${id}/status`)
+    return toManagedUser(data.user)
+  },
+
+  async bulkDeleteUsers(ids: number[]): Promise<{ deletedCount: number; skippedSelf: boolean }> {
+    const { data } = await api.post<{ deleted_count: number; skipped_self: boolean }>('/users/bulk-delete', { ids })
+    return { deletedCount: data.deleted_count, skippedSelf: data.skipped_self }
+  },
+
+  async bulkToggleStatus(
+    ids: number[],
+    isActive: boolean,
+  ): Promise<{ users: ManagedUser[]; updatedCount: number; skippedSelf: boolean }> {
+    const { data } = await api.patch<{ users: RawUser[]; updated_count: number; skipped_self: boolean }>(
+      '/users/bulk-status',
+      { ids, is_active: isActive },
+    )
+    return {
+      users: data.users.map(toManagedUser),
+      updatedCount: data.updated_count,
+      skippedSelf: data.skipped_self,
+    }
+  },
+
+  async toggleStatusByScope(payload: ScopeStatusPayload): Promise<ScopeStatusResult> {
+    const { data } = await api.patch<{ message: string; updated_count: number }>('/users/scope-status', {
+      generation: payload.generation,
+      class_name: payload.class_name ?? undefined,
+      is_active: payload.is_active,
+    })
+    return { message: data.message, updatedCount: data.updated_count }
+  },
+
+  // ── Student Directory (grouped by generation & class) ──
+  async getStudentDirectory(search?: string): Promise<StudentDirectoryResponse> {
+    const { data } = await api.get<StudentDirectoryResponse>('/students/directory', {
+      params: { search: search || undefined },
+    })
+    return data
   },
 
   // ── Excel Import ─────────────────────────────────────

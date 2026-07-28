@@ -32,11 +32,15 @@ export interface ReportMonthly {
   approval_rate: number
 }
 
-export interface ReportTopStudent {
+export interface ReportFrequentStudent {
   user_id: number
   name: string
   email: string
-  total_requests: number
+  /** e.g. "2026-07" */
+  period: string
+  /** e.g. "July 2026" */
+  month_label: string
+  request_count: number
 }
 
 export interface ReportDashboardData {
@@ -46,7 +50,7 @@ export interface ReportDashboardData {
   summary: ReportSummary
   by_leave_type: ReportByLeaveType[]
   monthly: ReportMonthly[]
-  top_students: ReportTopStudent[]
+  frequent_students: ReportFrequentStudent[]
 }
 
 export interface ReportQueryParams {

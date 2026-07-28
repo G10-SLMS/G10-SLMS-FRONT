@@ -90,9 +90,13 @@ export interface ManagedUser {
   email: string
   role: UserRole
   joined: string
+  is_active: boolean
   avatar_id: number | null
   avatar_url: string | null
   gender: Gender | null
+  student_id: string | null
+  class_name: string | null
+  generation: string | null
 }
 
 export interface RawUser {
@@ -101,9 +105,13 @@ export interface RawUser {
   email: string
   role: UserRole
   created_at: string
+  is_active: boolean
   avatar_id: number | null
   avatar_url: string | null
   gender: Gender | null
+  student_id: string | null
+  class_name: string | null
+  generation: string | null
 }
 
 export interface UserPayload {
@@ -111,6 +119,9 @@ export interface UserPayload {
   email: string
   role: UserRole
   gender?: Gender | null
+  student_id?: string | null
+  class_name?: string | null
+  generation?: string | null
 }
 
 export interface UserListMeta {
@@ -130,8 +141,55 @@ export interface UserRoleCounts {
 export interface UserListParams {
   search?: string
   role?: UserRole | ''
+  generation?: string
+  class_name?: string
   page?: number
   per_page?: number
+}
+
+// ── Scope-based Enable / Disable (by generation / class) ─
+export interface ScopeStatusPayload {
+  generation: string
+  class_name?: string | null
+  is_active: boolean
+}
+
+export interface ScopeStatusResult {
+  message: string
+  updatedCount: number
+}
+
+// ── Student Directory (grouped by generation & class) ───
+export interface DirectoryStudent {
+  id: number
+  name: string
+  email: string
+  avatar_id: number | null
+  avatar_url: string | null
+  phone: string | null
+  gender: Gender | null
+  student_id: string | null
+  class_name: string | null
+  generation: string | null
+  province: string | null
+  is_active: boolean
+}
+
+export interface DirectoryClassGroup {
+  class_name: string | null
+  student_count: number
+  students: DirectoryStudent[]
+}
+
+export interface DirectoryGenerationGroup {
+  generation: string | null
+  student_count: number
+  classes: DirectoryClassGroup[]
+}
+
+export interface StudentDirectoryResponse {
+  generations: DirectoryGenerationGroup[]
+  total_students: number
 }
 
 // ── Import Users from Excel ─────────────────────────────

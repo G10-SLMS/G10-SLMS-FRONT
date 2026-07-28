@@ -1,21 +1,21 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
-import type { ReportByLeaveType, ReportMonthly, ReportSummary, ReportTopStudent } from '@/types/stats'
+import type { ReportByLeaveType, ReportMonthly, ReportSummary, ReportFrequentStudent } from '@/types/stats'
 
 export interface ReportExportPayload {
   rangeLabel: string
   summary: ReportSummary
   byType: ReportByLeaveType[]
   monthly: ReportMonthly[]
-  topStudents: ReportTopStudent[]
+  frequentStudents: ReportFrequentStudent[]
 }
 
 function fileTimestamp(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-export function exportReportToPdf({ rangeLabel, summary, byType, monthly, topStudents }: ReportExportPayload): void {
+export function exportReportToPdf({ rangeLabel, summary, byType, monthly, frequentStudents }: ReportExportPayload): void {
   const doc = new jsPDF()
 
   // ── Title & Period ───────────────────────────────────
@@ -76,17 +76,17 @@ export function exportReportToPdf({ rangeLabel, summary, byType, monthly, topStu
     headStyles: { fillColor: [37, 99, 235] },
   })
 
-  // ── Top Students Table ───────────────────────────────
+  // ── Frequent Students Table ───────────────────────────
   const afterMonthlyY = (doc as any).lastAutoTable.finalY + 10
   doc.setFontSize(12)
-  doc.text('Top 10 Students by Leave Requests', 14, afterMonthlyY)
+  doc.text('Students with More Than 3 Leave Requests in a Month', 14, afterMonthlyY)
 
   autoTable(doc, {
     startY: afterMonthlyY + 4,
-    head: [['#', 'Student', 'Email', 'Total Requests']],
-    body: topStudents.length
-      ? topStudents.map((s, i) => [String(i + 1), s.name, s.email, String(s.total_requests)])
-      : [['-', 'No data', '-', '-']],
+    head: [['#', 'Student', 'Email', 'Month', 'Requests']],
+    body: frequentStudents.length
+      ? frequentStudents.map((s, i) => [String(i + 1), s.name, s.email, s.month_label, String(s.request_count)])
+      : [['-', 'No data', '-', '-', '-']],
     theme: 'grid',
     headStyles: { fillColor: [37, 99, 235] },
   })
@@ -94,7 +94,7 @@ export function exportReportToPdf({ rangeLabel, summary, byType, monthly, topStu
   doc.save(`leave-report-${fileTimestamp()}.pdf`)
 }
 
-export function exportReportToExcel({ rangeLabel, summary, byType, monthly, topStudents }: ReportExportPayload): void {
+export function exportReportToExcel({ rangeLabel, summary, byType, monthly, frequentStudents }: ReportExportPayload): void {
   const workbook = XLSX.utils.book_new()
 
   // ── Summary Sheet ────────────────────────────────────
@@ -131,18 +131,19 @@ export function exportReportToExcel({ rangeLabel, summary, byType, monthly, topS
   )
   XLSX.utils.book_append_sheet(workbook, monthlySheet, 'Monthly Summary')
 
-  // ── Top Students Sheet ───────────────────────────────
-  const topStudentsSheet = XLSX.utils.json_to_sheet(
-    topStudents.length
-      ? topStudents.map((s, i) => ({
+  // ── Frequent Students Sheet ───────────────────────────
+  const frequentStudentsSheet = XLSX.utils.json_to_sheet(
+    frequentStudents.length
+      ? frequentStudents.map((s, i) => ({
           '#': i + 1,
           Student: s.name,
           Email: s.email,
-          'Total Requests': s.total_requests,
+          Month: s.month_label,
+          Requests: s.request_count,
         }))
-      : [{ '#': '-', Student: 'No data', Email: '-', 'Total Requests': 0 }],
+      : [{ '#': '-', Student: 'No data', Email: '-', Month: '-', Requests: 0 }],
   )
-  XLSX.utils.book_append_sheet(workbook, topStudentsSheet, 'Top Students')
+  XLSX.utils.book_append_sheet(workbook, frequentStudentsSheet, 'Frequent Students')
 
   XLSX.writeFile(workbook, `leave-report-${fileTimestamp()}.xlsx`)
 }

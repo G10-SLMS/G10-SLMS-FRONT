@@ -137,16 +137,21 @@
 
     <div class="mt-5 rounded-[10px] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
       <div class="flex items-center justify-between p-5 pb-4">
-        <h2 class="m-0 text-base">Top 10 Students by Leave Requests</h2>
+        <div>
+          <h2 class="m-0 text-base">Students with More Than 3 Leave Requests in a Month</h2>
+          <p class="m-0 mt-1 text-[13px] text-gray-500">
+            Flags any student who submitted more than 3 requests in a single calendar month within this period.
+          </p>
+        </div>
       </div>
 
       <ResponsiveDataTable
-        :rows="topStudents"
-        :columns="topStudentColumns"
+        :rows="frequentStudents"
+        :columns="frequentStudentColumns"
         :loading="loading"
         row-key="user_id"
-        min-width="420px"
-        empty-message="No student leave requests in this period."
+        min-width="480px"
+        empty-message="No student exceeded 3 leave requests in any month of this period."
       >
         <template #mobile-card="{ row, index }">
           <div class="flex items-center justify-between gap-3">
@@ -155,9 +160,10 @@
                 {{ index + 1 }}. {{ row.name }}
               </p>
               <p class="m-0 truncate text-[13px] text-gray-500">{{ row.email }}</p>
+              <p class="m-0 text-[12px] text-gray-400">{{ row.month_label }}</p>
             </div>
             <span class="shrink-0 rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-700">
-              {{ row.total_requests }}
+              {{ row.request_count }}
             </span>
           </div>
         </template>
@@ -166,7 +172,8 @@
           <td class="px-2 py-3 text-left text-gray-500">{{ index + 1 }}</td>
           <td class="px-2 py-3 text-left font-medium text-gray-900">{{ row.name }}</td>
           <td class="px-2 py-3 text-left text-gray-600">{{ row.email }}</td>
-          <td class="px-2 py-3 text-right">{{ row.total_requests }}</td>
+          <td class="px-2 py-3 text-left text-gray-600">{{ row.month_label }}</td>
+          <td class="px-2 py-3 text-right">{{ row.request_count }}</td>
         </template>
       </ResponsiveDataTable>
     </div>
@@ -195,11 +202,12 @@ const monthlyColumns: ResponsiveDataTableColumn[] = [
   { label: 'Approval Rate' },
 ]
 
-const topStudentColumns: ResponsiveDataTableColumn[] = [
+const frequentStudentColumns: ResponsiveDataTableColumn[] = [
   { label: '#' },
   { label: 'Student' },
   { label: 'Email' },
-  { label: 'Total Requests', align: 'right' },
+  { label: 'Month' },
+  { label: 'Requests', align: 'right' },
 ]
 
 const {
@@ -211,7 +219,7 @@ const {
   summary,
   byType,
   monthly,
-  topStudents,
+  frequentStudents,
   hasData,
   dateRangeInvalid,
   rangeLabel,
@@ -232,7 +240,7 @@ async function handleExport(format: 'pdf' | 'excel') {
       summary: summary.value,
       byType: byType.value,
       monthly: monthly.value,
-      topStudents: topStudents.value,
+      frequentStudents: frequentStudents.value,
     }
 
     if (format === 'pdf') {

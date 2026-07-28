@@ -29,7 +29,7 @@
             :disabled="loading"
             @click="emit('confirm')"
           >
-            {{ loading ? 'Deleting…' : confirmLabel }}
+            {{ loading ? (loadingLabel ?? `${confirmLabel}…`) : confirmLabel }}
           </button>
         </div>
       </div>
@@ -46,6 +46,7 @@ withDefaults(
     title?: string
     message?: string
     confirmLabel?: string
+    loadingLabel?: string
     cancelLabel?: string
     loading?: boolean
   }>(),
@@ -53,6 +54,7 @@ withDefaults(
     title: 'Are you sure?',
     message: 'This action cannot be undone.',
     confirmLabel: 'Delete',
+    loadingLabel: undefined,
     cancelLabel: 'Cancel',
     loading: false,
   },

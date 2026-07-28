@@ -41,14 +41,16 @@
       </button>
       <button
         type="button"
-        class="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full border border-slate-200 text-xs font-medium text-slate-600 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
+        class="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full border border-slate-200 text-xs font-medium transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
+        :class="leaveType.is_active ? 'text-green-600' : 'text-red-600'"
         @click="emit('toggle')"
       >
         <Power :size="14" :stroke-width="2" /> {{ leaveType.is_active ? 'Deactivate' : 'Activate' }}
       </button>
       <button
+        v-if="canDelete"
         type="button"
-        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-red-600 transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
         aria-label="Remove leave type"
         @click="emit('remove')"
       >
@@ -62,9 +64,13 @@
 import { FileText, Pencil, Power, Trash2 } from 'lucide-vue-next'
 import type { LeaveType } from '@/types/leave'
 
-defineProps<{
-  leaveType: LeaveType
-}>()
+withDefaults(
+  defineProps<{
+    leaveType: LeaveType
+    canDelete?: boolean
+  }>(),
+  { canDelete: false },
+)
 
 const emit = defineEmits<{
   (e: 'edit'): void
