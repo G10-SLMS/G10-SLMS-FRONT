@@ -67,15 +67,15 @@ import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useLeaveRequests } from '@/composables/leave/useLeaveRequests';
 
-import LeaveRequestsHero from '@/components/leave-request/LeaveRequestsHero.vue';
-import LeaveStatsRow from '@/components/leave-request/LeaveStatsRow.vue';
-import LeaveFiltersBar from '@/components/leave-request/LeaveFiltersBar.vue';
-import LeaveErrorBanner from '@/components/leave-request/LeaveErrorBanner.vue';
-import LeaveLoadingSkeleton from '@/components/leave-request/LeaveLoadingSkeleton.vue';
-import LeaveEmptyState from '@/components/leave-request/LeaveEmptyState.vue';
-import LeaveRequestsTable from '@/components/leave-request/LeaveRequestsTable.vue';
-import LeaveRequestsPagination from '@/components/leave-request/LeaveRequestsPagination.vue';
-import CancelLeaveModal from '@/components/leave-request/CancelLeaveModal.vue';
+import LeaveRequestsHero from '@/components/leave-request/page/LeaveRequestsHero.vue';
+import LeaveStatsRow from '@/components/leave-request/page/LeaveStatsRow.vue';
+import LeaveFiltersBar from '@/components/leave-request/page/LeaveFiltersBar.vue';
+import LeaveErrorBanner from '@/components/leave-request/states/LeaveErrorBanner.vue';
+import LeaveLoadingSkeleton from '@/components/leave-request/states/LeaveLoadingSkeleton.vue';
+import LeaveEmptyState from '@/components/leave-request/states/LeaveEmptyState.vue';
+import LeaveRequestsTable from '@/components/leave-request/page/LeaveRequestsTable.vue';
+import LeaveRequestsPagination from '@/components/leave-request/page/LeaveRequestsPagination.vue';
+import CancelLeaveModal from '@/components/leave-request/modal/CancelLeaveModal.vue';
 
 const route = useRoute();
 const router = useRouter();

@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import { Menu } from 'lucide-vue-next';
 import ThemeToggle from '@/components/ui/ThemeToggle.vue';
-import UserMenu from '@/components/user/UserMenu.vue';
+import UserMenu from '@/components/user/menu/UserMenu.vue';
 import NotificationBell from '@/components/layout/NotificationBell.vue';
 
 const emit = defineEmits<{

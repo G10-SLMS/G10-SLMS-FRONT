@@ -141,8 +141,22 @@ export interface UserRoleCounts {
 export interface UserListParams {
   search?: string
   role?: UserRole | ''
+  generation?: string
+  class_name?: string
   page?: number
   per_page?: number
+}
+
+// ── Scope-based Enable / Disable (by generation / class) ─
+export interface ScopeStatusPayload {
+  generation: string
+  class_name?: string | null
+  is_active: boolean
+}
+
+export interface ScopeStatusResult {
+  message: string
+  updatedCount: number
 }
 
 // ── Student Directory (grouped by generation & class) ───
@@ -158,6 +172,7 @@ export interface DirectoryStudent {
   class_name: string | null
   generation: string | null
   province: string | null
+  is_active: boolean
 }
 
 export interface DirectoryClassGroup {

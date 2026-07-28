@@ -1,6 +1,6 @@
 import { ref, computed, reactive, onMounted, watch } from 'vue'
 import type { Gender, UserRole, ManagedUser, UserRoleCounts, ImportUsersResult } from '@/types/user'
-import { userService } from '@/services/userService'
+import { userService } from '@/services/Userservice'
 import { extractErrorMessage } from '@/utils/errors'
 import { usePagination } from '@/composables/shared/usePagination'
 import { useStudentDirectoryStore } from '@/stores/studentDirectory'
@@ -20,6 +20,28 @@ export function useUserManagement() {
 
   const search = ref('')
   const roleFilter = ref<'all' | UserRole>('all')
+  const generationFilter = ref('')
+  const classFilter = ref('')
+
+  // Generation/class options come from the (already-cached) Student Directory —
+  // avoids a second endpoint just to list distinct values.
+  const generationOptions = computed(() =>
+    studentDirectoryStore.generations
+      .map((g) => g.generation)
+      .filter((g): g is string => g !== null),
+  )
+  const classOptions = computed(() => {
+    if (!generationFilter.value) return []
+    const group = studentDirectoryStore.generations.find((g) => g.generation === generationFilter.value)
+    return (group?.classes ?? [])
+      .map((c) => c.class_name)
+      .filter((c): c is string => c !== null)
+  })
+
+  function onGenerationFilterChange() {
+    classFilter.value = ''
+    fetchUsers(1)
+  }
 
   const page = ref(1)
   const perPage = ref(10)
@@ -84,6 +106,8 @@ export function useUserManagement() {
       const result = await userService.getUsers({
         search: search.value.trim() || undefined,
         role: roleFilter.value === 'all' ? undefined : roleFilter.value,
+        generation: generationFilter.value || undefined,
+        class_name: classFilter.value || undefined,
         page: p,
         per_page: perPage.value,
       })
@@ -99,7 +123,10 @@ export function useUserManagement() {
     }
   }
 
-  onMounted(() => fetchUsers(1))
+  onMounted(() => {
+    fetchUsers(1)
+    studentDirectoryStore.fetchDirectory()
+  })
   watch(perPage, () => fetchUsers(1))
 
   // ── Add / Edit Form ──────────────────────────────────
@@ -337,6 +364,58 @@ export function useUserManagement() {
     }
   }
 
+  // ── Scope Enable / Disable (whole generation or class) ──
+  const scopeToggling = ref(false)
+  const scopeToggleConfirmOpen = ref(false)
+  const pendingScopeAction = ref<'enable' | 'disable' | null>(null)
+
+  // Only meaningful once a generation is selected; class is optional narrowing.
+  const scopeDescription = computed(() =>
+    classFilter.value ? `class "${classFilter.value}" (${generationFilter.value})` : `generation "${generationFilter.value}"`,
+  )
+  const canScopeToggle = computed(() => !!generationFilter.value)
+  const scopeToggleMessage = computed(() =>
+    pendingScopeAction.value === 'enable'
+      ? `Are you sure you want to enable every student in ${scopeDescription.value}? They will be able to log in again.`
+      : `Are you sure you want to disable every student in ${scopeDescription.value}? They will be signed out and won't be able to log in until re-enabled.`,
+  )
+
+  function requestScopeToggle(action: 'enable' | 'disable') {
+    if (!canScopeToggle.value) return
+    pendingScopeAction.value = action
+    scopeToggleConfirmOpen.value = true
+  }
+
+  function cancelScopeToggle() {
+    if (scopeToggling.value) return
+    scopeToggleConfirmOpen.value = false
+    pendingScopeAction.value = null
+  }
+
+  async function confirmScopeToggle() {
+    if (!pendingScopeAction.value || !generationFilter.value) return
+    scopeToggling.value = true
+    errorMsg.value = ''
+    successMsg.value = ''
+
+    try {
+      const { message } = await userService.toggleStatusByScope({
+        generation: generationFilter.value,
+        class_name: classFilter.value || null,
+        is_active: pendingScopeAction.value === 'enable',
+      })
+      successMsg.value = message
+      scopeToggleConfirmOpen.value = false
+      pendingScopeAction.value = null
+      await fetchUsers(1)
+      await studentDirectoryStore.fetchDirectory(true)
+    } catch (err) {
+      errorMsg.value = extractErrorMessage(err, 'Failed to update students for that scope.')
+    } finally {
+      scopeToggling.value = false
+    }
+  }
+
   // ── Excel Import ─────────────────────────────────────
   const importModalOpen = ref(false)
 
@@ -356,6 +435,11 @@ export function useUserManagement() {
     defaultPasswordHint,
     search,
     roleFilter,
+    generationFilter,
+    classFilter,
+    generationOptions,
+    classOptions,
+    onGenerationFilterChange,
     page,
     perPage,
     total,
@@ -414,6 +498,16 @@ export function useUserManagement() {
     requestBulkToggle,
     cancelBulkToggle,
     confirmBulkToggle,
+    // ── scope enable/disable (by generation/class) ──
+    scopeToggling,
+    scopeToggleConfirmOpen,
+    pendingScopeAction,
+    canScopeToggle,
+    scopeDescription,
+    scopeToggleMessage,
+    requestScopeToggle,
+    cancelScopeToggle,
+    confirmScopeToggle,
     // ── import ──
     importModalOpen,
     onUsersImported,

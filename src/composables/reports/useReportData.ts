@@ -1,11 +1,11 @@
 import { computed, onMounted, ref, watch } from 'vue'
-import { reportService } from '@/services/reportService'
+import { reportService } from '@/services/Reportservice'
 import type {
   ReportRange,
   ReportSummary,
   ReportByLeaveType,
   ReportMonthly,
-  ReportTopStudent,
+  ReportFrequentStudent,
 } from '@/types/stats'
 
 // ── Range Labels ──────────────────────────────────────────
@@ -27,7 +27,7 @@ export function useReportData() {
   const summary = ref<ReportSummary>({ total: 0, approved: 0, pending: 0, rejected: 0 })
   const byType = ref<ReportByLeaveType[]>([])
   const monthly = ref<ReportMonthly[]>([])
-  const topStudents = ref<ReportTopStudent[]>([])
+  const frequentStudents = ref<ReportFrequentStudent[]>([])
   const resolvedStartDate = ref('')
   const resolvedEndDate = ref('')
 
@@ -39,7 +39,7 @@ export function useReportData() {
       summary.value.total > 0 ||
       byType.value.length > 0 ||
       monthly.value.length > 0 ||
-      topStudents.value.length > 0,
+      frequentStudents.value.length > 0,
   )
 
   const dateRangeInvalid = computed(() => {
@@ -81,13 +81,13 @@ export function useReportData() {
       summary.value = data.summary
       byType.value = data.by_leave_type
       monthly.value = data.monthly
-      topStudents.value = data.top_students
+      frequentStudents.value = data.frequent_students
       resolvedStartDate.value = data.start_date
       resolvedEndDate.value = data.end_date
     } catch (err) {
       error.value = 'Failed to load report data. Please try again.'
       console.error('[useReportData] Failed to load report data:', err)
-      topStudents.value = []
+      frequentStudents.value = []
     } finally {
       loading.value = false
     }
@@ -121,7 +121,7 @@ export function useReportData() {
     summary,
     byType,
     monthly,
-    topStudents,
+    frequentStudents,
     hasData,
     dateRangeInvalid,
     rangeLabel,

@@ -8,6 +8,8 @@ import type {
   UserListParams,
   ImportUsersResult,
   StudentDirectoryResponse,
+  ScopeStatusPayload,
+  ScopeStatusResult,
 } from '@/types/user'
 
 // ── Internal Helpers ─────────────────────────────────────
@@ -41,6 +43,8 @@ export const userService = {
       params: {
         search: params.search || undefined,
         role: params.role || undefined,
+        generation: params.generation || undefined,
+        class_name: params.class_name || undefined,
         page: params.page ?? 1,
         per_page: params.per_page ?? 10,
       },
@@ -103,6 +107,15 @@ export const userService = {
       updatedCount: data.updated_count,
       skippedSelf: data.skipped_self,
     }
+  },
+
+  async toggleStatusByScope(payload: ScopeStatusPayload): Promise<ScopeStatusResult> {
+    const { data } = await api.patch<{ message: string; updated_count: number }>('/users/scope-status', {
+      generation: payload.generation,
+      class_name: payload.class_name ?? undefined,
+      is_active: payload.is_active,
+    })
+    return { message: data.message, updatedCount: data.updated_count }
   },
 
   // ── Student Directory (grouped by generation & class) ──

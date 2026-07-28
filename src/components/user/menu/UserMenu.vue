@@ -55,7 +55,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useDefaultAvatars } from '@/composables/user/useDefaultAvatars'
-import LogoutConfirmModal from '@/components/user/LogoutConfirmModal.vue'
+import LogoutConfirmModal from '@/components/user/menu/LogoutConfirmModal.vue'
 import { User, ChevronDown, UserCircle, LogOut } from 'lucide-vue-next'
 
 const router = useRouter()

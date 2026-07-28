@@ -175,7 +175,7 @@ import { computed, ref, watch } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal';
 import { X } from 'lucide-vue-next';
-import StudentProfileModal from '@/components/leave-request/StudentProfileModal.vue';
+import StudentProfileModal from '@/components/leave-request/modal/StudentProfileModal.vue';
 import CommentSection from '@/components/ui/CommentSection.vue';
 import LeaveRequesterCard from '@/components/leave-request/form/LeaveRequesterCard.vue';
 import LeaveTypeField from '@/components/leave-request/form/LeaveTypeField.vue';

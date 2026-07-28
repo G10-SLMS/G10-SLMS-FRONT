@@ -275,7 +275,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue';
-import StudentProfileModal from '@/components/leave-request/StudentProfileModal.vue';
+import StudentProfileModal from '@/components/leave-request/modal/StudentProfileModal.vue';
 import type { LeaveRequestListItem, LeaveRequestUser } from '@/types/leave';
 import { Eye, Edit, XCircle, UserRound } from 'lucide-vue-next';
 import { useAuthStore } from '@/stores/auth';

@@ -85,18 +85,18 @@
                   </button>
                   <button
                     v-if="canToggleStatus && u.id !== currentUserId"
-                    class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 text-gray-700 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-                    :class="u.is_active ? 'hover:bg-amber-100 hover:text-amber-700' : 'hover:bg-green-100 hover:text-green-700'"
+                    class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                    :class="u.is_active ? 'text-green-600 hover:bg-green-100' : 'text-red-600 hover:bg-red-100'"
                     :aria-label="u.is_active ? 'Disable user' : 'Enable user'"
                     :disabled="togglingId === u.id"
                     @click="emit('toggle-status', u)"
                   >
-                    <Ban v-if="u.is_active" :size="15" :stroke-width="1.8" />
-                    <CircleCheck v-else :size="15" :stroke-width="1.8" />
+                    <CircleCheck v-if="u.is_active" :size="15" :stroke-width="1.8" />
+                    <Ban v-else :size="15" :stroke-width="1.8" />
                   </button>
                   <button
                     v-if="canDelete"
-                    class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 text-gray-700 cursor-pointer hover:bg-red-100 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 text-red-600 cursor-pointer hover:bg-red-100 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Remove user"
                     :disabled="deletingId === u.id"
                     @click="emit('remove', u)"
@@ -148,7 +148,7 @@
 <script setup lang="ts">
 import { Pencil, Trash2, Ban, CircleCheck } from 'lucide-vue-next'
 import type { ManagedUser, UserRole } from '@/types/user'
-import UserCard from '@/components/user/UserCard.vue'
+import UserCard from '@/components/user/management/Usercard.vue'
 import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
 import { useDefaultAvatars } from '@/composables/user/useDefaultAvatars'
 

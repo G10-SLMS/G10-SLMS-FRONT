@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { ChevronDown, Layers } from 'lucide-vue-next'
-import StudentDirectoryClassGroup from '@/components/user/StudentDirectoryClassGroup.vue'
+import StudentDirectoryClassGroup from '@/components/user/directory/StudentDirectoryClassGroup.vue'
 import type { DirectoryGenerationGroup, DirectoryStudent } from '@/types/user'
 
 const props = defineProps<{

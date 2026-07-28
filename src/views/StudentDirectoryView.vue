@@ -99,7 +99,7 @@ import { ref, computed, onMounted } from 'vue';
 import { GraduationCap, Layers, BookOpen, Search, Users } from 'lucide-vue-next';
 import StatCard from '@/components/ui/StatCard.vue';
 import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue';
-import DirectoryGenerationCard from '@/components/user/DirectoryGenerationCard.vue';
+import DirectoryGenerationCard from '@/components/user/directory/DirectoryGenerationCard.vue';
 import { useStudentDirectoryStore } from '@/stores/studentDirectory';
 import { filterGenerations } from '@/utils/studentDirectoryFilter';
 

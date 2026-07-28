@@ -67,6 +67,46 @@
             <option value="educator">Educator</option>
             <option value="student">Student</option>
           </select>
+          <select
+            v-model="generationFilter"
+            class="rounded-md border border-gray-200 bg-white px-2.5 py-2 text-[13px] text-gray-700"
+            @change="onGenerationFilterChange"
+          >
+            <option value="">All generations</option>
+            <option v-for="g in generationOptions" :key="g" :value="g">{{ g }}</option>
+          </select>
+          <select
+            v-if="generationFilter"
+            v-model="classFilter"
+            class="rounded-md border border-gray-200 bg-white px-2.5 py-2 text-[13px] text-gray-700"
+            @change="fetchUsers(1)"
+          >
+            <option value="">All classes</option>
+            <option v-for="c in classOptions" :key="c" :value="c">{{ c }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div
+        v-if="auth.isAdmin && canScopeToggle"
+        class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-100 bg-amber-50 px-4 py-2.5"
+      >
+        <p class="m-0 text-sm font-medium text-amber-900">
+          Applies to every student in {{ scopeDescription }}, not just this page
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            class="inline-flex items-center gap-1.5 rounded-md border-none bg-white px-3 py-1.5 text-xs font-medium text-green-700 shadow-sm cursor-pointer hover:bg-green-50"
+            @click="requestScopeToggle('enable')"
+          >
+            <CircleCheck :size="14" :stroke-width="1.8" /> Enable All
+          </button>
+          <button
+            class="inline-flex items-center gap-1.5 rounded-md border-none bg-white px-3 py-1.5 text-xs font-medium text-amber-700 shadow-sm cursor-pointer hover:bg-amber-50"
+            @click="requestScopeToggle('disable')"
+          >
+            <Ban :size="14" :stroke-width="1.8" /> Disable All
+          </button>
         </div>
       </div>
 
@@ -190,6 +230,17 @@
       @cancel="cancelBulkToggle"
     />
 
+    <ConfirmDialog
+      :open="scopeToggleConfirmOpen"
+      :title="pendingScopeAction === 'enable' ? 'Enable all students in scope' : 'Disable all students in scope'"
+      :message="scopeToggleMessage"
+      :confirm-label="pendingScopeAction === 'enable' ? 'Enable All' : 'Disable All'"
+      :loading-label="pendingScopeAction === 'enable' ? 'Enabling…' : 'Disabling…'"
+      :loading="scopeToggling"
+      @confirm="confirmScopeToggle"
+      @cancel="cancelScopeToggle"
+    />
+
     <ImportUsersModal
       :open="importModalOpen"
       @close="importModalOpen = false"
@@ -214,10 +265,10 @@ import {
 import StatCard from '@/components/ui/StatCard.vue'
 import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
-import UsersPagination from '@/components/leave-request/LeaveRequestsPagination.vue'
-import UsersTable from '@/components/user/UsersTable.vue'
-import UserFormModal from '@/components/user/UserFormModal.vue'
-import ImportUsersModal from '@/components/user/ImportUsersModal.vue'
+import UsersPagination from '@/components/leave-request/page/LeaveRequestsPagination.vue'
+import UsersTable from '@/components/user/management/UsersTable.vue'
+import UserFormModal from '@/components/user/management/UserFormModal.vue'
+import ImportUsersModal from '@/components/user/management/ImportUsersModal.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUserManagement } from '@/composables/user/useUserManagement'
 
@@ -231,6 +282,11 @@ const {
   defaultPasswordHint,
   search,
   roleFilter,
+  generationFilter,
+  classFilter,
+  generationOptions,
+  classOptions,
+  onGenerationFilterChange,
   page,
   perPage,
   total,
@@ -281,6 +337,15 @@ const {
   cancelBulkToggle,
   confirmBulkToggle,
   counts,
+  scopeToggling,
+  scopeToggleConfirmOpen,
+  pendingScopeAction,
+  canScopeToggle,
+  scopeDescription,
+  scopeToggleMessage,
+  requestScopeToggle,
+  cancelScopeToggle,
+  confirmScopeToggle,
   importModalOpen,
   onUsersImported,
 } = useUserManagement()

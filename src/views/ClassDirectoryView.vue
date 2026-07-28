@@ -9,10 +9,17 @@
     </RouterLink>
 
     <div
-      v-if="store.errorMsg"
+      v-if="store.errorMsg || actionError"
       class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
     >
-      {{ store.errorMsg }}
+      {{ store.errorMsg || actionError }}
+    </div>
+
+    <div
+      v-if="actionSuccess"
+      class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+    >
+      {{ actionSuccess }}
     </div>
 
     <div
@@ -37,6 +44,23 @@
               {{ classGroup.student_count === 1 ? 'student' : 'students' }}
             </p>
           </div>
+        </div>
+
+        <div v-if="auth.isAdmin && generationParam && classParam" class="flex gap-2">
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-md border-none bg-white px-3 py-2 text-xs font-medium text-green-700 shadow-sm cursor-pointer hover:bg-green-50"
+            @click="requestClassToggle('enable')"
+          >
+            <CircleCheck :size="14" :stroke-width="1.8" /> Enable Class
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-md border-none bg-white px-3 py-2 text-xs font-medium text-amber-700 shadow-sm cursor-pointer hover:bg-amber-50"
+            @click="requestClassToggle('disable')"
+          >
+            <Ban :size="14" :stroke-width="1.8" /> Disable Class
+          </button>
         </div>
       </div>
 
@@ -72,7 +96,10 @@
             v-for="student in filteredStudents"
             :key="student.id"
             :student="student"
+            :can-toggle-status="auth.isAdmin"
+            :toggling="togglingStudentId === student.id"
             @select="selectedStudent = $event"
+            @toggle-status="requestStudentToggle"
           />
         </div>
       </div>
@@ -90,16 +117,42 @@
     </div>
 
     <StudentProfileModal :student="mappedSelectedStudent" @close="selectedStudent = null" />
+
+    <ConfirmDialog
+      :open="classToggleConfirmOpen"
+      :title="pendingClassAction === 'enable' ? 'Enable class' : 'Disable class'"
+      :message="classToggleMessage"
+      :confirm-label="pendingClassAction === 'enable' ? 'Enable Class' : 'Disable Class'"
+      :loading-label="pendingClassAction === 'enable' ? 'Enabling…' : 'Disabling…'"
+      :loading="classToggling"
+      @confirm="confirmClassToggle"
+      @cancel="classToggleConfirmOpen = false"
+    />
+
+    <ConfirmDialog
+      :open="!!pendingStudentToggle"
+      :title="pendingStudentToggle?.is_active ? 'Disable student' : 'Enable student'"
+      :message="studentToggleMessage"
+      :confirm-label="pendingStudentToggle?.is_active ? 'Disable' : 'Enable'"
+      :loading-label="pendingStudentToggle?.is_active ? 'Disabling…' : 'Enabling…'"
+      :loading="!!togglingStudentId"
+      @confirm="confirmStudentToggle"
+      @cancel="pendingStudentToggle = null"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { ArrowLeft, BookOpen, Search, Users } from 'lucide-vue-next';
-import DirectoryStudentCard from '@/components/user/DirectoryStudentCard.vue';
-import StudentProfileModal from '@/components/leave-request/StudentProfileModal.vue';
+import { ArrowLeft, BookOpen, Search, Users, CircleCheck, Ban } from 'lucide-vue-next';
+import DirectoryStudentCard from '@/components/user/directory/DirectoryStudentCard.vue';
+import StudentProfileModal from '@/components/leave-request/modal/StudentProfileModal.vue';
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue';
 import { useStudentDirectoryStore } from '@/stores/studentDirectory';
+import { useAuthStore } from '@/stores/auth';
+import { userService } from '@/services/Userservice';
+import { extractErrorMessage } from '@/utils/errors';
 import { fromSlug, toSlug } from '@/utils/slug';
 import { filterClasses } from '@/utils/studentDirectoryFilter';
 import type { DirectoryStudent } from '@/types/user';
@@ -107,8 +160,11 @@ import type { LeaveRequestUser } from '@/types/leave';
 
 const route = useRoute();
 const store = useStudentDirectoryStore();
+const auth = useAuthStore();
 const search = ref('');
 const selectedStudent = ref<DirectoryStudent | null>(null);
+const actionError = ref('');
+const actionSuccess = ref('');
 
 const generationParam = computed(() => fromSlug(route.params.generation as string));
 const classParam = computed(() => fromSlug(route.params.className as string));
@@ -139,6 +195,81 @@ const mappedSelectedStudent = computed<LeaveRequestUser | null>(() => {
     avatar: student.avatar_url ? { id: student.avatar_id ?? 0, url: student.avatar_url } : null,
   };
 });
+
+// ── Disable / Enable the whole class ──────────────────
+const classToggling = ref(false);
+const classToggleConfirmOpen = ref(false);
+const pendingClassAction = ref<'enable' | 'disable' | null>(null);
+const classToggleMessage = computed(() => {
+  const label = classGroup.value?.class_name ?? 'this class';
+  return pendingClassAction.value === 'enable'
+    ? `Are you sure you want to enable every student in ${label}? They will be able to log in again.`
+    : `Are you sure you want to disable every student in ${label}? They will be signed out and won't be able to log in until re-enabled.`;
+});
+
+function requestClassToggle(action: 'enable' | 'disable') {
+  pendingClassAction.value = action;
+  classToggleConfirmOpen.value = true;
+}
+
+async function confirmClassToggle() {
+  if (!pendingClassAction.value || !generationParam.value) return;
+  classToggling.value = true;
+  actionError.value = '';
+  actionSuccess.value = '';
+
+  try {
+    const { message } = await userService.toggleStatusByScope({
+      generation: generationParam.value,
+      class_name: classParam.value,
+      is_active: pendingClassAction.value === 'enable',
+    });
+    actionSuccess.value = message;
+    classToggleConfirmOpen.value = false;
+    pendingClassAction.value = null;
+    await store.fetchDirectory(true);
+  } catch (err) {
+    actionError.value = extractErrorMessage(err, 'Failed to update students in this class.');
+  } finally {
+    classToggling.value = false;
+  }
+}
+
+// ── Disable / Enable an individual student ────────────
+const togglingStudentId = ref<number | null>(null);
+const pendingStudentToggle = ref<DirectoryStudent | null>(null);
+const studentToggleMessage = computed(() => {
+  const s = pendingStudentToggle.value;
+  if (!s) return '';
+  return s.is_active
+    ? `Are you sure you want to disable ${s.name}? They will be signed out and won't be able to log in until re-enabled.`
+    : `Are you sure you want to enable ${s.name}? They will be able to log in again.`;
+});
+
+function requestStudentToggle(student: DirectoryStudent) {
+  pendingStudentToggle.value = student;
+}
+
+async function confirmStudentToggle() {
+  const student = pendingStudentToggle.value;
+  if (!student) return;
+  togglingStudentId.value = student.id;
+  actionError.value = '';
+  actionSuccess.value = '';
+
+  try {
+    const updated = await userService.toggleUserStatus(student.id);
+    actionSuccess.value = updated.is_active
+      ? `${updated.name} has been enabled.`
+      : `${updated.name} has been disabled.`;
+    pendingStudentToggle.value = null;
+    await store.fetchDirectory(true);
+  } catch (err) {
+    actionError.value = extractErrorMessage(err, 'Failed to update this student.');
+  } finally {
+    togglingStudentId.value = null;
+  }
+}
 
 onMounted(() => store.fetchDirectory(true));
 </script>

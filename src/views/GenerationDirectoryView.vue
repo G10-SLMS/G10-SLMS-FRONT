@@ -9,10 +9,17 @@
     </RouterLink>
 
     <div
-      v-if="store.errorMsg"
+      v-if="store.errorMsg || actionError"
       class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
     >
-      {{ store.errorMsg }}
+      {{ store.errorMsg || actionError }}
+    </div>
+
+    <div
+      v-if="actionSuccess"
+      class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+    >
+      {{ actionSuccess }}
     </div>
 
     <div
@@ -39,6 +46,23 @@
               {{ generationGroup.student_count === 1 ? 'student' : 'students' }}
             </p>
           </div>
+        </div>
+
+        <div v-if="auth.isAdmin && generationParam" class="flex gap-2">
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-md border-none bg-white px-3 py-2 text-xs font-medium text-green-700 shadow-sm cursor-pointer hover:bg-green-50"
+            @click="requestGenerationToggle('enable')"
+          >
+            <CircleCheck :size="14" :stroke-width="1.8" /> Enable Generation
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-md border-none bg-white px-3 py-2 text-xs font-medium text-amber-700 shadow-sm cursor-pointer hover:bg-amber-50"
+            @click="requestGenerationToggle('disable')"
+          >
+            <Ban :size="14" :stroke-width="1.8" /> Disable Generation
+          </button>
         </div>
       </div>
 
@@ -86,20 +110,38 @@
         Back to Student Directory
       </RouterLink>
     </div>
+
+    <ConfirmDialog
+      :open="generationToggleConfirmOpen"
+      :title="pendingGenerationAction === 'enable' ? 'Enable generation' : 'Disable generation'"
+      :message="generationToggleMessage"
+      :confirm-label="pendingGenerationAction === 'enable' ? 'Enable Generation' : 'Disable Generation'"
+      :loading-label="pendingGenerationAction === 'enable' ? 'Enabling…' : 'Disabling…'"
+      :loading="generationToggling"
+      @confirm="confirmGenerationToggle"
+      @cancel="generationToggleConfirmOpen = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { ArrowLeft, Layers, Users } from 'lucide-vue-next';
-import DirectoryClassCard from '@/components/user/DirectoryClassCard.vue';
+import { ArrowLeft, Layers, Users, CircleCheck, Ban } from 'lucide-vue-next';
+import DirectoryClassCard from '@/components/user/directory/DirectoryClassCard.vue';
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue';
 import { useStudentDirectoryStore } from '@/stores/studentDirectory';
+import { useAuthStore } from '@/stores/auth';
+import { userService } from '@/services/Userservice';
+import { extractErrorMessage } from '@/utils/errors';
 import { fromSlug } from '@/utils/slug';
 
 const route = useRoute();
 const store = useStudentDirectoryStore();
+const auth = useAuthStore();
 const selectedClass = ref('');
+const actionError = ref('');
+const actionSuccess = ref('');
 
 const generationParam = computed(() => fromSlug(route.params.generation as string));
 const generationGroup = computed(() => store.findGeneration(generationParam.value));
@@ -123,6 +165,44 @@ const filteredClasses = computed(() => {
     (cls) => cls.class_name !== null && String(cls.class_name) === selectedClass.value,
   );
 });
+
+// ── Disable / Enable the whole generation ─────────────
+const generationToggling = ref(false);
+const generationToggleConfirmOpen = ref(false);
+const pendingGenerationAction = ref<'enable' | 'disable' | null>(null);
+const generationToggleMessage = computed(() => {
+  const label = generationGroup.value?.generation ?? 'this generation';
+  return pendingGenerationAction.value === 'enable'
+    ? `Are you sure you want to enable every student in ${label}? They will be able to log in again.`
+    : `Are you sure you want to disable every student in ${label}? They will be signed out and won't be able to log in until re-enabled.`;
+});
+
+function requestGenerationToggle(action: 'enable' | 'disable') {
+  pendingGenerationAction.value = action;
+  generationToggleConfirmOpen.value = true;
+}
+
+async function confirmGenerationToggle() {
+  if (!pendingGenerationAction.value || !generationParam.value) return;
+  generationToggling.value = true;
+  actionError.value = '';
+  actionSuccess.value = '';
+
+  try {
+    const { message } = await userService.toggleStatusByScope({
+      generation: generationParam.value,
+      is_active: pendingGenerationAction.value === 'enable',
+    });
+    actionSuccess.value = message;
+    generationToggleConfirmOpen.value = false;
+    pendingGenerationAction.value = null;
+    await store.fetchDirectory(true);
+  } catch (err) {
+    actionError.value = extractErrorMessage(err, 'Failed to update students in this generation.');
+  } finally {
+    generationToggling.value = false;
+  }
+}
 
 onMounted(() => store.fetchDirectory(true));
 </script>

@@ -51,14 +51,14 @@
       </button>
       <button
         v-if="canToggleStatus"
-        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border-none bg-gray-100 text-gray-700 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-        :class="user.is_active ? 'hover:bg-amber-100 hover:text-amber-700' : 'hover:bg-green-100 hover:text-green-700'"
+        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border-none bg-gray-100 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+        :class="user.is_active ? 'text-green-600 hover:bg-green-100' : 'text-red-600 hover:bg-red-100'"
         :aria-label="user.is_active ? 'Disable user' : 'Enable user'"
         :disabled="toggling"
         @click="emit('toggle-status')"
       >
-        <Ban v-if="user.is_active" :size="14" :stroke-width="1.8" />
-        <CircleCheck v-else :size="14" :stroke-width="1.8" />
+        <CircleCheck v-if="user.is_active" :size="14" :stroke-width="1.8" />
+        <Ban v-else :size="14" :stroke-width="1.8" />
       </button>
       <button
         v-if="canDelete"

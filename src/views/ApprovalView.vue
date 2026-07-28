@@ -211,7 +211,7 @@ import ApprovalRow from '@/components/approval/ApprovalRow.vue';
 import ApprovalCard from '@/components/approval/ApprovalCard.vue';
 import ApprovalLoadingSkeleton from '@/components/approval/ApprovalLoadingSkeleton.vue';
 import ReviewCommentModal from '@/components/approval/ReviewCommentModal.vue';
-import LeaveRequestsPagination from '@/components/leave-request/LeaveRequestsPagination.vue';
+import LeaveRequestsPagination from '@/components/leave-request/page/LeaveRequestsPagination.vue';
 import { useApprovals } from '@/composables/leave/useApprovals';
 
 const route = useRoute();

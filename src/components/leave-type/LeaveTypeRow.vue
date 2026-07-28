@@ -33,7 +33,8 @@
         </button>
         <button
           type="button"
-          class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
+          :class="leaveType.is_active ? 'text-green-600' : 'text-red-600'"
           aria-label="Toggle status"
           @click="emit('toggle')"
         >
@@ -42,7 +43,7 @@
         <button
           v-if="canDelete"
           type="button"
-          class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-red-600 transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
           aria-label="Remove leave type"
           @click="emit('remove')"
         >

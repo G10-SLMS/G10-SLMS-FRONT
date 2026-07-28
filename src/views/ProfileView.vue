@@ -51,9 +51,9 @@ import { useDefaultAvatars } from '@/composables/user/useDefaultAvatars';
 import { useChangePassword } from '@/composables/user/useChangePassword';
 import { getInitials } from '@/utils/initials';
 import { Pencil, Mail, Phone, User, GraduationCap, MapPin } from 'lucide-vue-next';
-import ProfileBadgeCard from '@/components/user/ProfileBadgeCard.vue';
-import ProfileSecuritySection from '@/components/user/ProfileSecuritySection.vue';
-import ChangePasswordModal from '@/components/user/ChangePasswordModal.vue';
+import ProfileBadgeCard from '@/components/user/profile/ProfileBadgeCard.vue';
+import ProfileSecuritySection from '@/components/user/profile/ProfileSecuritySection.vue';
+import ChangePasswordModal from '@/components/user/profile/ChangePasswordModal.vue';
 
 const auth = useAuthStore();
 const user = computed(() => auth.user);

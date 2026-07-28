@@ -199,10 +199,10 @@
 <script setup lang="ts">
 import { ArrowLeft, Lock } from 'lucide-vue-next';
 import { useEditProfileForm, CAMBODIA_PROVINCES } from '@/composables/user/useEditProfileForm';
-import ProfileSectionCard from '@/components/user/ProfileSectionCard.vue';
-import AvatarPicker from '@/components/user/AvatarPicker.vue';
-import ProfileFormField from '@/components/user/ProfileFormField.vue';
-import ChangePasswordModal from '@/components/user/ChangePasswordModal.vue';
+import ProfileSectionCard from '@/components/user/profile/ProfileSectionCard.vue';
+import AvatarPicker from '@/components/user/profile/AvatarPicker.vue';
+import ProfileFormField from '@/components/user/profile/ProfileFormField.vue';
+import ChangePasswordModal from '@/components/user/profile/ChangePasswordModal.vue';
 
 const {
   isStudent,
