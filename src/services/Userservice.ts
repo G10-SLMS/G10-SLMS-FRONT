@@ -24,9 +24,13 @@ function toManagedUser(raw: RawUser): ManagedUser {
     email: raw.email,
     role: raw.role,
     joined: formatJoined(raw.created_at),
+    is_active: raw.is_active ?? true,
     avatar_id: raw.avatar_id,
     avatar_url: raw.avatar_url,
     gender: raw.gender ?? null,
+    student_id: raw.student_id ?? null,
+    class_name: raw.class_name ?? null,
+    generation: raw.generation ?? null,
   }
 }
 
@@ -74,6 +78,31 @@ export const userService = {
 
   async deleteUser(id: number): Promise<void> {
     await api.delete(`/users/${id}`)
+  },
+
+  async toggleUserStatus(id: number): Promise<ManagedUser> {
+    const { data } = await api.patch<{ user: RawUser }>(`/users/${id}/status`)
+    return toManagedUser(data.user)
+  },
+
+  async bulkDeleteUsers(ids: number[]): Promise<{ deletedCount: number; skippedSelf: boolean }> {
+    const { data } = await api.post<{ deleted_count: number; skipped_self: boolean }>('/users/bulk-delete', { ids })
+    return { deletedCount: data.deleted_count, skippedSelf: data.skipped_self }
+  },
+
+  async bulkToggleStatus(
+    ids: number[],
+    isActive: boolean,
+  ): Promise<{ users: ManagedUser[]; updatedCount: number; skippedSelf: boolean }> {
+    const { data } = await api.patch<{ users: RawUser[]; updated_count: number; skipped_self: boolean }>(
+      '/users/bulk-status',
+      { ids, is_active: isActive },
+    )
+    return {
+      users: data.users.map(toManagedUser),
+      updatedCount: data.updated_count,
+      skippedSelf: data.skipped_self,
+    }
   },
 
   // ── Student Directory (grouped by generation & class) ──

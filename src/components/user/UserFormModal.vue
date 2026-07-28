@@ -40,18 +40,6 @@
           </select>
         </label>
 
-        <label class="mb-3.5 flex flex-col gap-1.5 text-[13px] text-gray-700">
-          <span>Gender</span>
-          <select
-            v-model="form.gender"
-            class="rounded-md border border-gray-200 px-2.5 py-[9px] text-sm text-gray-900 focus:border-blue-600 focus:outline-none"
-          >
-            <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
-        </label>
-
         <p v-if="!user" class="mb-3.5 rounded-md bg-blue-50 px-3 py-2 text-[12.5px] text-blue-700">
           New users are created with the default password
           <strong>{{ defaultPasswordHint }}</strong>. Share it with them so they can log in and change it.
@@ -78,7 +66,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import type { Gender, ManagedUser, UserRole } from '@/types/user'
+import type { ManagedUser, UserRole } from '@/types/user'
 
 const props = defineProps<{
   open: boolean
@@ -90,10 +78,18 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void
-  (e: 'submit', payload: { name: string; email: string; role: UserRole; gender: Gender | null }): void
+  (e: 'submit', payload: {
+    name: string
+    email: string
+    role: UserRole
+  }): void
 }>()
 
-const form = reactive({ name: '', email: '', role: 'student' as UserRole, gender: null as Gender | null })
+const form = reactive({
+  name: '',
+  email: '',
+  role: 'student' as UserRole,
+})
 const localError = ref('')
 
 watch(
@@ -103,7 +99,6 @@ watch(
     form.name = props.user?.name ?? ''
     form.email = props.user?.email ?? ''
     form.role = props.user?.role ?? 'student'
-    form.gender = props.user?.gender ?? null
     localError.value = ''
   },
 )
@@ -118,6 +113,10 @@ function onSubmit() {
     return
   }
   localError.value = ''
-  emit('submit', { name, email, role: form.role, gender: form.gender })
+  emit('submit', {
+    name,
+    email,
+    role: form.role,
+  })
 }
 </script>

@@ -188,6 +188,9 @@ const tooltipStyle = ref({ top: '0px', left: '0px' });
 
 const canApprove = computed(() => auth.isEducator || auth.isAdmin);
 const isAdmin = computed(() => auth.isAdmin);
+// Educators get admin-level access to management screens; destructive actions
+// (e.g. deleting users/leave types) remain gated to admin within those screens.
+const canManage = computed(() => auth.isAdmin || auth.isEducator);
 const canViewDirectory = computed(() => auth.isEducator || auth.isAdmin);
 
 const navGroups = computed(() => [
@@ -202,20 +205,25 @@ const navGroups = computed(() => [
   },
   {
     label: 'Management',
-    items: [
-      {
-        type: 'dropdown',
-        label: 'Administration',
-        icon: Settings,
-        show: isAdmin.value,
-        children: [
-          { to: '/leave-types', label: 'Leave Management', icon: ClipboardList },
-          { to: '/users', label: 'User Management', icon: Users },
-        ],
-      },
-      { to: '/student-directory', label: 'Student Directory', icon: BookUser, show: canViewDirectory.value },
-      { to: '/reports', label: 'Reports', icon: BarChart3, show: isAdmin.value },
-    ],
+    items: (() => {
+      const administrationChildren = [
+        { to: '/leave-types', label: 'Leave Management', icon: ClipboardList, show: canManage.value },
+        { to: '/users', label: 'User Management', icon: Users, show: canManage.value },
+        { to: '/student-directory', label: 'Student Directory', icon: BookUser, show: canViewDirectory.value },
+      ].filter((child) => child.show);
+
+      return [
+        {
+          type: 'dropdown',
+          label: 'Administration',
+          icon: Settings,
+          // Visible as long as at least one child is (e.g. an educator only sees Student Directory).
+          show: administrationChildren.length > 0,
+          children: administrationChildren,
+        },
+        { to: '/reports', label: 'Reports', icon: BarChart3, show: canManage.value },
+      ];
+    })(),
   },
 ]);
 

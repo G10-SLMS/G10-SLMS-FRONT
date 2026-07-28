@@ -90,9 +90,13 @@ export interface ManagedUser {
   email: string
   role: UserRole
   joined: string
+  is_active: boolean
   avatar_id: number | null
   avatar_url: string | null
   gender: Gender | null
+  student_id: string | null
+  class_name: string | null
+  generation: string | null
 }
 
 export interface RawUser {
@@ -101,9 +105,13 @@ export interface RawUser {
   email: string
   role: UserRole
   created_at: string
+  is_active: boolean
   avatar_id: number | null
   avatar_url: string | null
   gender: Gender | null
+  student_id: string | null
+  class_name: string | null
+  generation: string | null
 }
 
 export interface UserPayload {
@@ -111,6 +119,9 @@ export interface UserPayload {
   email: string
   role: UserRole
   gender?: Gender | null
+  student_id?: string | null
+  class_name?: string | null
+  generation?: string | null
 }
 
 export interface UserListMeta {

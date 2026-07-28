@@ -86,19 +86,19 @@ export const router = createRouter({
           path: '/reports',
           name: 'Reports',
           component: () => import('../views/ReportsView.vue'),
-          meta: { title: 'Reports', requiresAuth: true, roles: ['admin'] },
+          meta: { title: 'Reports', requiresAuth: true, roles: ['admin', 'educator'] },
         },
         {
           path: '/users',
           name: 'UserManagement',
           component: () => import('../views/UserManagementView.vue'),
-          meta: { title: 'User Management', requiresAuth: true, roles: ['admin'] },
+          meta: { title: 'User Management', requiresAuth: true, roles: ['admin', 'educator'] },
         },
         {
           path: '/leave-types',
           name: 'LeaveTypesManagement',
           component: () => import('../views/LeaveTypesView.vue'),
-          meta: { title: 'Leave Types Management', requiresAuth: true, roles: ['admin'] },
+          meta: { title: 'Leave Types Management', requiresAuth: true, roles: ['admin', 'educator'] },
         },
         {
           path: '/student-directory',

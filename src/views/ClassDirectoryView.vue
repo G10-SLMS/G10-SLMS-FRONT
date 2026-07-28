@@ -8,16 +8,24 @@
       Back to {{ generationParam ?? 'Unassigned Generation' }}
     </RouterLink>
 
-    <div v-if="store.errorMsg" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    <div
+      v-if="store.errorMsg"
+      class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+    >
       {{ store.errorMsg }}
     </div>
 
-    <div v-if="store.loading && !store.loaded" class="h-8 w-64 animate-pulse rounded bg-slate-100" />
+    <div
+      v-if="store.loading && !store.loaded"
+      class="h-8 w-64 animate-pulse rounded bg-slate-100"
+    />
 
     <template v-else-if="classGroup">
       <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div class="flex items-center gap-3">
-          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+          <span
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600"
+          >
             <BookOpen :size="20" :stroke-width="1.8" />
           </span>
           <div>
@@ -25,8 +33,8 @@
               {{ classGroup.class_name ?? 'Unassigned Class' }}
             </h1>
             <p class="mt-1 text-[13px] text-gray-500">
-              {{ generationParam ?? 'Unassigned Generation' }} ·
-              {{ classGroup.student_count }} {{ classGroup.student_count === 1 ? 'student' : 'students' }}
+              {{ generationParam ?? 'Unassigned Generation' }} · {{ classGroup.student_count }}
+              {{ classGroup.student_count === 1 ? 'student' : 'students' }}
             </p>
           </div>
         </div>
@@ -35,7 +43,9 @@
       <div class="rounded-[10px] bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 class="m-0 text-base">Students</h2>
-          <div class="flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-2 text-gray-500">
+          <div
+            class="flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-2 text-gray-500"
+          >
             <Search :size="15" :stroke-width="1.8" />
             <input
               v-model="search"
@@ -46,7 +56,10 @@
           </div>
         </div>
 
-        <div v-if="filteredStudents.length === 0" class="flex flex-col items-center justify-center gap-2 py-14 text-center">
+        <div
+          v-if="filteredStudents.length === 0"
+          class="flex flex-col items-center justify-center gap-2 py-14 text-center"
+        >
           <Users :size="28" :stroke-width="1.5" class="text-gray-300" />
           <p class="m-0 text-sm font-medium text-gray-600">No students found</p>
           <p class="m-0 text-[13px] text-gray-400">
@@ -68,7 +81,10 @@
     <div v-else class="flex flex-col items-center justify-center gap-2 py-20 text-center">
       <BookOpen :size="28" :stroke-width="1.5" class="text-gray-300" />
       <p class="m-0 text-sm font-medium text-gray-600">Class not found</p>
-      <RouterLink :to="`/student-directory/${toSlug(generationParam)}`" class="text-[13px] font-semibold text-blue-600 no-underline hover:underline">
+      <RouterLink
+        :to="`/student-directory/${toSlug(generationParam)}`"
+        class="text-[13px] font-semibold text-blue-600 no-underline hover:underline"
+      >
         Back to {{ generationParam ?? 'Unassigned Generation' }}
       </RouterLink>
     </div>
@@ -78,39 +94,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { ArrowLeft, BookOpen, Search, Users } from 'lucide-vue-next'
-import DirectoryStudentCard from '@/components/user/DirectoryStudentCard.vue'
-import StudentProfileModal from '@/components/leave-request/StudentProfileModal.vue'
-import { useStudentDirectoryStore } from '@/stores/studentDirectory'
-import { fromSlug, toSlug } from '@/utils/slug'
-import { filterClasses } from '@/utils/studentDirectoryFilter'
-import type { DirectoryStudent } from '@/types/user'
-import type { LeaveRequestUser } from '@/types/leave'
+import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { ArrowLeft, BookOpen, Search, Users } from 'lucide-vue-next';
+import DirectoryStudentCard from '@/components/user/DirectoryStudentCard.vue';
+import StudentProfileModal from '@/components/leave-request/StudentProfileModal.vue';
+import { useStudentDirectoryStore } from '@/stores/studentDirectory';
+import { fromSlug, toSlug } from '@/utils/slug';
+import { filterClasses } from '@/utils/studentDirectoryFilter';
+import type { DirectoryStudent } from '@/types/user';
+import type { LeaveRequestUser } from '@/types/leave';
 
-const route = useRoute()
-const store = useStudentDirectoryStore()
-const search = ref('')
-const selectedStudent = ref<DirectoryStudent | null>(null)
+const route = useRoute();
+const store = useStudentDirectoryStore();
+const search = ref('');
+const selectedStudent = ref<DirectoryStudent | null>(null);
 
-const generationParam = computed(() => fromSlug(route.params.generation as string))
-const classParam = computed(() => fromSlug(route.params.className as string))
-const classGroup = computed(() => store.findClass(generationParam.value, classParam.value))
+const generationParam = computed(() => fromSlug(route.params.generation as string));
+const classParam = computed(() => fromSlug(route.params.className as string));
+const classGroup = computed(() => store.findClass(generationParam.value, classParam.value));
 
 const filteredStudents = computed(() => {
-  if (!classGroup.value) return []
-  const students = classGroup.value.students ?? []
-  if (!search.value.trim()) return students
-  const [filtered] = filterClasses([{ ...classGroup.value, students }], search.value)
-  return filtered ? filtered.students : []
-})
+  if (!classGroup.value) return [];
+  const students = classGroup.value.students ?? [];
+  if (!search.value.trim()) return students;
+  const [filtered] = filterClasses([{ ...classGroup.value, students }], search.value);
+  return filtered ? filtered.students : [];
+});
 
-// StudentProfileModal expects LeaveRequestUser's shape (nested avatar, numeric student_id);
-// the directory API returns a flatter shape, so we adapt it here for display purposes only.
 const mappedSelectedStudent = computed<LeaveRequestUser | null>(() => {
-  const student = selectedStudent.value
-  if (!student) return null
+  const student = selectedStudent.value;
+  if (!student) return null;
   return {
     id: student.id,
     name: student.name,
@@ -123,10 +137,8 @@ const mappedSelectedStudent = computed<LeaveRequestUser | null>(() => {
     province: student.province,
     avatar_id: student.avatar_id,
     avatar: student.avatar_url ? { id: student.avatar_id ?? 0, url: student.avatar_url } : null,
-  }
-})
+  };
+});
 
-// Same reasoning as GenerationDirectoryView: force-refresh so a stale cache
-// can't hide a class/student that was just added.
-onMounted(() => store.fetchDirectory(true))
+onMounted(() => store.fetchDirectory(true));
 </script>

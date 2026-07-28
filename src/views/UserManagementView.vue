@@ -70,12 +70,57 @@
         </div>
       </div>
 
+      <div
+        v-if="selectedCount > 0"
+        class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-100 bg-blue-50 px-4 py-2.5"
+      >
+        <p class="m-0 text-sm font-medium text-blue-900">{{ selectedCount }} selected</p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-if="auth.isAdmin"
+            class="inline-flex items-center gap-1.5 rounded-md border-none bg-white px-3 py-1.5 text-xs font-medium text-green-700 shadow-sm cursor-pointer hover:bg-green-50"
+            @click="requestBulkToggle('enable')"
+          >
+            <CircleCheck :size="14" :stroke-width="1.8" /> Enable
+          </button>
+          <button
+            v-if="auth.isAdmin"
+            class="inline-flex items-center gap-1.5 rounded-md border-none bg-white px-3 py-1.5 text-xs font-medium text-amber-700 shadow-sm cursor-pointer hover:bg-amber-50"
+            @click="requestBulkToggle('disable')"
+          >
+            <Ban :size="14" :stroke-width="1.8" /> Disable
+          </button>
+          <button
+            v-if="auth.isAdmin"
+            class="inline-flex items-center gap-1.5 rounded-md border-none bg-white px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm cursor-pointer hover:bg-red-50"
+            @click="requestBulkDelete"
+          >
+            <Trash2 :size="14" :stroke-width="1.8" /> Delete
+          </button>
+          <button
+            class="inline-flex items-center gap-1.5 rounded-md border-none bg-transparent px-3 py-1.5 text-xs font-medium text-blue-700 cursor-pointer hover:bg-blue-100"
+            @click="clearSelection"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
       <UsersTable
         :users="users"
         :loading="loading"
         :deleting-id="deletingId"
+        :toggling-id="togglingId"
+        :can-delete="auth.isAdmin"
+        :can-toggle-status="auth.isAdmin"
+        :current-user-id="auth.user?.id ?? null"
+        :is-selected="isSelected"
+        :all-selected="allSelected"
         @edit="openEditModal"
         @remove="requestRemoveUser"
+        @toggle-status="requestToggleStatus"
+        @toggle-select="toggleSelect"
+        @toggle-select-all="toggleSelectAll"
       />
 
       <UsersPagination
@@ -112,6 +157,39 @@
       @cancel="cancelRemoveUser"
     />
 
+    <ConfirmDialog
+      :open="confirmToggleOpen"
+      :title="pendingToggleUser?.is_active ? 'Disable user' : 'Enable user'"
+      :message="confirmToggleMessage"
+      :confirm-label="pendingToggleUser?.is_active ? 'Disable' : 'Enable'"
+      :loading-label="pendingToggleUser?.is_active ? 'Disabling…' : 'Enabling…'"
+      :loading="!!togglingId"
+      @confirm="confirmToggleStatus"
+      @cancel="cancelToggleStatus"
+    />
+
+    <ConfirmDialog
+      :open="bulkDeleteConfirmOpen"
+      title="Remove selected users"
+      :message="bulkDeleteMessage"
+      confirm-label="Remove"
+      loading-label="Removing…"
+      :loading="bulkDeleting"
+      @confirm="confirmBulkDelete"
+      @cancel="cancelBulkDelete"
+    />
+
+    <ConfirmDialog
+      :open="bulkToggleConfirmOpen"
+      :title="pendingBulkAction === 'enable' ? 'Enable selected users' : 'Disable selected users'"
+      :message="bulkToggleMessage"
+      :confirm-label="pendingBulkAction === 'enable' ? 'Enable' : 'Disable'"
+      :loading-label="pendingBulkAction === 'enable' ? 'Enabling…' : 'Disabling…'"
+      :loading="bulkToggling"
+      @confirm="confirmBulkToggle"
+      @cancel="cancelBulkToggle"
+    />
+
     <ImportUsersModal
       :open="importModalOpen"
       @close="importModalOpen = false"
@@ -129,6 +207,9 @@ import {
   ShieldCheck,
   Search,
   FileSpreadsheet,
+  Ban,
+  CircleCheck,
+  Trash2,
 } from 'lucide-vue-next'
 import StatCard from '@/components/ui/StatCard.vue'
 import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
@@ -137,7 +218,10 @@ import UsersPagination from '@/components/leave-request/LeaveRequestsPagination.
 import UsersTable from '@/components/user/UsersTable.vue'
 import UserFormModal from '@/components/user/UserFormModal.vue'
 import ImportUsersModal from '@/components/user/ImportUsersModal.vue'
+import { useAuthStore } from '@/stores/auth'
 import { useUserManagement } from '@/composables/user/useUserManagement'
+
+const auth = useAuthStore()
 
 const {
   users,
@@ -156,6 +240,12 @@ const {
   visiblePages,
   onSearchDebounced,
   fetchUsers,
+  selectedCount,
+  allSelected,
+  isSelected,
+  toggleSelect,
+  toggleSelectAll,
+  clearSelection,
   modalOpen,
   editingUser,
   saving,
@@ -170,6 +260,26 @@ const {
   requestRemoveUser,
   cancelRemoveUser,
   confirmRemoveUser,
+  togglingId,
+  confirmToggleOpen,
+  pendingToggleUser,
+  confirmToggleMessage,
+  requestToggleStatus,
+  cancelToggleStatus,
+  confirmToggleStatus,
+  bulkDeleting,
+  bulkDeleteConfirmOpen,
+  bulkDeleteMessage,
+  requestBulkDelete,
+  cancelBulkDelete,
+  confirmBulkDelete,
+  bulkToggling,
+  bulkToggleConfirmOpen,
+  pendingBulkAction,
+  bulkToggleMessage,
+  requestBulkToggle,
+  cancelBulkToggle,
+  confirmBulkToggle,
   counts,
   importModalOpen,
   onUsersImported,

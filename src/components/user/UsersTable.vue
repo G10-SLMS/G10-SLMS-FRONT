@@ -5,17 +5,37 @@
       <table class="w-full border-collapse text-sm">
         <thead>
           <tr>
+            <th class="w-10 border-b border-gray-200 px-2 py-3 text-left">
+              <input
+                type="checkbox"
+                class="h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                :checked="allSelected"
+                :aria-label="allSelected ? 'Deselect all users' : 'Select all users'"
+                @change="emit('toggle-select-all')"
+              />
+            </th>
             <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">User</th>
             <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Email</th>
             <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Role</th>
+            <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Status</th>
             <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500">Joined</th>
             <th class="border-b border-gray-200 px-2 py-3 text-left text-[13px] font-medium text-gray-500"></th>
           </tr>
         </thead>
         <tbody>
-          <TableRowSkeleton v-if="loading" :rows="5" :columns="5" />
+          <TableRowSkeleton v-if="loading" :rows="5" :columns="7" />
           <template v-else>
             <tr v-for="u in users" :key="u.id" class="border-b border-gray-100 last:border-none">
+              <td class="px-2 py-3 text-left">
+                <input
+                  v-if="u.id !== currentUserId"
+                  type="checkbox"
+                  class="h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  :checked="isSelected(u.id)"
+                  :aria-label="`Select ${u.name}`"
+                  @change="emit('toggle-select', u.id)"
+                />
+              </td>
               <td class="px-2 py-3 text-left">
                 <div class="flex items-center gap-2.5">
                   <span class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cyan-400 text-xs font-semibold text-white">
@@ -41,6 +61,18 @@
                   }"
                 >{{ roleLabel(u.role) }}</span>
               </td>
+              <td class="px-2 py-3 text-left">
+                <span
+                  class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+                  :class="u.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
+                >
+                  <span
+                    class="h-1.5 w-1.5 rounded-full"
+                    :class="u.is_active ? 'bg-green-500' : 'bg-gray-400'"
+                  />
+                  {{ u.is_active ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
               <td class="px-2 py-3 text-left">{{ u.joined }}</td>
               <td class="px-2 py-3 text-left">
                 <div class="flex gap-1.5">
@@ -52,6 +84,18 @@
                     <Pencil :size="15" :stroke-width="1.8" />
                   </button>
                   <button
+                    v-if="canToggleStatus && u.id !== currentUserId"
+                    class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 text-gray-700 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                    :class="u.is_active ? 'hover:bg-amber-100 hover:text-amber-700' : 'hover:bg-green-100 hover:text-green-700'"
+                    :aria-label="u.is_active ? 'Disable user' : 'Enable user'"
+                    :disabled="togglingId === u.id"
+                    @click="emit('toggle-status', u)"
+                  >
+                    <Ban v-if="u.is_active" :size="15" :stroke-width="1.8" />
+                    <CircleCheck v-else :size="15" :stroke-width="1.8" />
+                  </button>
+                  <button
+                    v-if="canDelete"
                     class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-gray-100 text-gray-700 cursor-pointer hover:bg-red-100 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Remove user"
                     :disabled="deletingId === u.id"
@@ -63,7 +107,7 @@
               </td>
             </tr>
             <tr v-if="users.length === 0">
-              <td colspan="5" class="px-2 py-6 text-center text-gray-400">No users match your search.</td>
+              <td colspan="7" class="px-2 py-6 text-center text-gray-400">No users match your search.</td>
             </tr>
           </template>
         </tbody>
@@ -85,8 +129,15 @@
           :user="u"
           :avatar-src="avatarSrc(u)"
           :deleting="deletingId === u.id"
+          :toggling="togglingId === u.id"
+          :can-delete="canDelete"
+          :can-toggle-status="canToggleStatus && u.id !== currentUserId"
+          :can-select="u.id !== currentUserId"
+          :selected="isSelected(u.id)"
           @edit="emit('edit', u)"
           @remove="emit('remove', u)"
+          @toggle-status="emit('toggle-status', u)"
+          @toggle-select="emit('toggle-select', u.id)"
         />
         <p v-if="users.length === 0" class="px-4 py-6 text-center text-gray-400">No users match your search.</p>
       </template>
@@ -95,21 +146,33 @@
 </template>
 
 <script setup lang="ts">
-import { Pencil, Trash2 } from 'lucide-vue-next'
+import { Pencil, Trash2, Ban, CircleCheck } from 'lucide-vue-next'
 import type { ManagedUser, UserRole } from '@/types/user'
 import UserCard from '@/components/user/UserCard.vue'
 import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
 import { useDefaultAvatars } from '@/composables/user/useDefaultAvatars'
 
-defineProps<{
-  users: ManagedUser[]
-  loading: boolean
-  deletingId: number | null
-}>()
+withDefaults(
+  defineProps<{
+    users: ManagedUser[]
+    loading: boolean
+    deletingId: number | null
+    togglingId?: number | null
+    canDelete?: boolean
+    canToggleStatus?: boolean
+    currentUserId?: number | null
+    isSelected: (id: number) => boolean
+    allSelected?: boolean
+  }>(),
+  { canDelete: false, canToggleStatus: false, togglingId: null, currentUserId: null, allSelected: false },
+)
 
 const emit = defineEmits<{
   (e: 'edit', user: ManagedUser): void
   (e: 'remove', user: ManagedUser): void
+  (e: 'toggle-status', user: ManagedUser): void
+  (e: 'toggle-select', id: number): void
+  (e: 'toggle-select-all'): void
 }>()
 
 const { urlFor } = useDefaultAvatars()

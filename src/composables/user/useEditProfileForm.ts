@@ -65,6 +65,10 @@ function splitClass(value: string): { prefix: string; suffix: string } {
   return { prefix: CLASS_PREFIXES[0], suffix: value };
 }
 
+function normalizeClassSuffix(value: string): string {
+  return value.trim().replace(/[\s-]+/g, '').toUpperCase();
+}
+
 export function useEditProfileForm() {
   // ── Current User / Derived Info ──────────────────────
   const auth = useAuthStore();
@@ -99,7 +103,7 @@ export function useEditProfileForm() {
   const classSuffix = ref(initialClassParts.suffix);
 
   watch([classPrefix, classSuffix], ([prefix, suffix]) => {
-    form.class_name = `${prefix} - ${suffix.trim()}`;
+    form.class_name = `${prefix}-${normalizeClassSuffix(suffix)}`;
   });
 
   // ── Submit Profile ───────────────────────────────────

@@ -40,6 +40,7 @@
                 v-for="lt in leaveTypes"
                 :key="lt.id"
                 :leave-type="lt"
+                :can-delete="auth.isAdmin"
                 @edit="openEditModal(lt)"
                 @toggle="confirmToggle(lt)"
                 @remove="confirmRemove(lt)"
@@ -65,6 +66,7 @@
             v-for="lt in leaveTypes"
             :key="lt.id"
             :leave-type="lt"
+            :can-delete="auth.isAdmin"
             @edit="openEditModal(lt)"
             @toggle="confirmToggle(lt)"
             @remove="confirmRemove(lt)"
@@ -106,8 +108,10 @@ import LeaveTypeModal from '@/components/leave-type/LeaveTypeModal.vue'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import TableRowSkeleton from '@/components/shared/TableRowSkeleton.vue'
 import { leaveService } from '@/services/leaveService'
+import { useAuthStore } from '@/stores/auth'
 import type { LeaveType, LeaveTypePayload } from '@/types/leave'
 
+const auth = useAuthStore()
 const leaveTypes = ref<LeaveType[]>([])
 const loading = ref(true)
 const errMsg = ref('')

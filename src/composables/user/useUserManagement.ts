@@ -4,11 +4,13 @@ import { userService } from '@/services/userService'
 import { extractErrorMessage } from '@/utils/errors'
 import { usePagination } from '@/composables/shared/usePagination'
 import { useStudentDirectoryStore } from '@/stores/studentDirectory'
+import { useAuthStore } from '@/stores/auth'
 
 export function useUserManagement() {
   // Any create/update/delete/import below can change generations, classes, or
   // student counts — the cached Student Directory snapshot must not outlive that.
   const studentDirectoryStore = useStudentDirectoryStore()
+  const auth = useAuthStore()
   // ── List State ───────────────────────────────────────
   const users = ref<ManagedUser[]>([])
   const loading = ref(true)
@@ -29,6 +31,41 @@ export function useUserManagement() {
   const totalPages = computed(() => lastPage.value)
   const { from, to, visiblePages } = usePagination(page, lastPage, perPage, total)
 
+  // ── Bulk Selection ───────────────────────────────────
+  const selectedIds = ref<Set<number>>(new Set())
+
+  const selectableUsers = computed(() => users.value.filter((u) => u.id !== auth.user?.id))
+  const selectedCount = computed(() => selectedIds.value.size)
+  const allSelected = computed(
+    () => selectableUsers.value.length > 0 && selectableUsers.value.every((u) => selectedIds.value.has(u.id)),
+  )
+
+  function isSelected(id: number) {
+    return selectedIds.value.has(id)
+  }
+
+  function toggleSelect(id: number) {
+    const next = new Set(selectedIds.value)
+    if (next.has(id)) {
+      next.delete(id)
+    } else {
+      next.add(id)
+    }
+    selectedIds.value = next
+  }
+
+  function toggleSelectAll() {
+    if (allSelected.value) {
+      selectedIds.value = new Set()
+    } else {
+      selectedIds.value = new Set(selectableUsers.value.map((u) => u.id))
+    }
+  }
+
+  function clearSelection() {
+    selectedIds.value = new Set()
+  }
+
   // ── Search & Fetch ───────────────────────────────────
   let searchTimeout: ReturnType<typeof setTimeout> | undefined
 
@@ -41,6 +78,7 @@ export function useUserManagement() {
     loading.value = true
     errorMsg.value = ''
     page.value = p
+    selectedIds.value.clear()
 
     try {
       const result = await userService.getUsers({
@@ -87,7 +125,15 @@ export function useUserManagement() {
     modalOpen.value = false
   }
 
-  async function saveUser(payload: { name: string; email: string; role: UserRole; gender?: Gender | null }) {
+  async function saveUser(payload: {
+    name: string
+    email: string
+    role: UserRole
+    gender?: Gender | null
+    student_id?: string | null
+    class_name?: string | null
+    generation?: string | null
+  }) {
     saving.value = true
     formError.value = ''
     errorMsg.value = ''
@@ -159,6 +205,138 @@ export function useUserManagement() {
     }
   }
 
+  // ── Enable / Disable ─────────────────────────────────
+  const togglingId = ref<number | null>(null)
+  const confirmToggleOpen = ref(false)
+  const pendingToggleUser = ref<ManagedUser | null>(null)
+  const confirmToggleMessage = computed(() => {
+    const u = pendingToggleUser.value
+    if (!u) return ''
+    return u.is_active
+      ? `Are you sure you want to disable ${u.name}? They will be signed out and won't be able to log in until re-enabled.`
+      : `Are you sure you want to enable ${u.name}? They will be able to log in again.`
+  })
+
+  function requestToggleStatus(u: ManagedUser) {
+    pendingToggleUser.value = u
+    confirmToggleOpen.value = true
+  }
+
+  function cancelToggleStatus() {
+    if (togglingId.value) return
+    confirmToggleOpen.value = false
+    pendingToggleUser.value = null
+  }
+
+  async function confirmToggleStatus() {
+    if (!pendingToggleUser.value) return
+    const target = pendingToggleUser.value
+    togglingId.value = target.id
+    errorMsg.value = ''
+    successMsg.value = ''
+
+    try {
+      const updated = await userService.toggleUserStatus(target.id)
+      const index = users.value.findIndex((existing) => existing.id === target.id)
+      if (index !== -1) users.value[index] = updated
+      successMsg.value = updated.is_active
+        ? `${updated.name} has been enabled.`
+        : `${updated.name} has been disabled.`
+      confirmToggleOpen.value = false
+      pendingToggleUser.value = null
+    } catch (err) {
+      errorMsg.value = extractErrorMessage(err, 'Failed to update user status.')
+    } finally {
+      togglingId.value = null
+    }
+  }
+
+  // ── Bulk Delete ───────────────────────────────────────
+  const bulkDeleting = ref(false)
+  const bulkDeleteConfirmOpen = ref(false)
+  const bulkDeleteMessage = computed(
+    () =>
+      `Are you sure you want to remove ${selectedCount.value} user${selectedCount.value === 1 ? '' : 's'}? This cannot be undone.`,
+  )
+
+  function requestBulkDelete() {
+    if (selectedCount.value === 0) return
+    bulkDeleteConfirmOpen.value = true
+  }
+
+  function cancelBulkDelete() {
+    if (bulkDeleting.value) return
+    bulkDeleteConfirmOpen.value = false
+  }
+
+  async function confirmBulkDelete() {
+    bulkDeleting.value = true
+    errorMsg.value = ''
+    successMsg.value = ''
+
+    try {
+      const { deletedCount } = await userService.bulkDeleteUsers(Array.from(selectedIds.value))
+      successMsg.value = `${deletedCount} user(s) removed successfully.`
+      bulkDeleteConfirmOpen.value = false
+      clearSelection()
+      await fetchUsers(1)
+      await studentDirectoryStore.fetchDirectory(true)
+    } catch (err) {
+      errorMsg.value = extractErrorMessage(err, 'Failed to remove selected users.')
+    } finally {
+      bulkDeleting.value = false
+    }
+  }
+
+  // ── Bulk Enable / Disable ────────────────────────────
+  const bulkToggling = ref(false)
+  const bulkToggleConfirmOpen = ref(false)
+  const pendingBulkAction = ref<'enable' | 'disable' | null>(null)
+  const bulkToggleMessage = computed(() =>
+    pendingBulkAction.value === 'enable'
+      ? `Are you sure you want to enable ${selectedCount.value} user${selectedCount.value === 1 ? '' : 's'}? They will be able to log in again.`
+      : `Are you sure you want to disable ${selectedCount.value} user${selectedCount.value === 1 ? '' : 's'}? They will be signed out and won't be able to log in until re-enabled.`,
+  )
+
+  function requestBulkToggle(action: 'enable' | 'disable') {
+    if (selectedCount.value === 0) return
+    pendingBulkAction.value = action
+    bulkToggleConfirmOpen.value = true
+  }
+
+  function cancelBulkToggle() {
+    if (bulkToggling.value) return
+    bulkToggleConfirmOpen.value = false
+    pendingBulkAction.value = null
+  }
+
+  async function confirmBulkToggle() {
+    if (!pendingBulkAction.value) return
+    bulkToggling.value = true
+    errorMsg.value = ''
+    successMsg.value = ''
+
+    try {
+      const { users: updatedUsers, updatedCount } = await userService.bulkToggleStatus(
+        Array.from(selectedIds.value),
+        pendingBulkAction.value === 'enable',
+      )
+      const byId = new Map(updatedUsers.map((u) => [u.id, u]))
+      users.value = users.value.map((u) => byId.get(u.id) ?? u)
+      successMsg.value =
+        pendingBulkAction.value === 'enable'
+          ? `${updatedCount} user(s) enabled.`
+          : `${updatedCount} user(s) disabled.`
+      bulkToggleConfirmOpen.value = false
+      pendingBulkAction.value = null
+      clearSelection()
+    } catch (err) {
+      errorMsg.value = extractErrorMessage(err, 'Failed to update selected users.')
+    } finally {
+      bulkToggling.value = false
+    }
+  }
+
   // ── Excel Import ─────────────────────────────────────
   const importModalOpen = ref(false)
 
@@ -189,6 +367,14 @@ export function useUserManagement() {
     visiblePages,
     onSearchDebounced,
     fetchUsers,
+    // ── bulk selection ──
+    selectedIds,
+    selectedCount,
+    allSelected,
+    isSelected,
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
     // ── add/edit form ──
     modalOpen,
     editingUser,
@@ -205,6 +391,29 @@ export function useUserManagement() {
     requestRemoveUser,
     cancelRemoveUser,
     confirmRemoveUser,
+    // ── enable/disable ──
+    togglingId,
+    confirmToggleOpen,
+    pendingToggleUser,
+    confirmToggleMessage,
+    requestToggleStatus,
+    cancelToggleStatus,
+    confirmToggleStatus,
+    // ── bulk delete ──
+    bulkDeleting,
+    bulkDeleteConfirmOpen,
+    bulkDeleteMessage,
+    requestBulkDelete,
+    cancelBulkDelete,
+    confirmBulkDelete,
+    // ── bulk enable/disable ──
+    bulkToggling,
+    bulkToggleConfirmOpen,
+    pendingBulkAction,
+    bulkToggleMessage,
+    requestBulkToggle,
+    cancelBulkToggle,
+    confirmBulkToggle,
     // ── import ──
     importModalOpen,
     onUsersImported,
