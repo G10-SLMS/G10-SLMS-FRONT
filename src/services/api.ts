@@ -2,30 +2,64 @@ import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import type { AxiosInstance } from 'axios'
 
+const FALLBACK_DEV_BASE_URL = 'http://localhost:8000/api'
+const configuredBaseURL = import.meta.env.VITE_API_BASE_URL
+
+if (!configuredBaseURL) {
+
+  console.warn(
+    '[api] VITE_API_BASE_URL is not set — falling back to ' +
+      FALLBACK_DEV_BASE_URL +
+      '. This is only correct for local development. If you are seeing this ' +
+      'in a deployed environment, set VITE_API_BASE_URL in your build/hosting config.',
+  )
+}
+
+// ── Axios Instance ───────────────────────────────────────
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
+  baseURL: configuredBaseURL || FALLBACK_DEV_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
+// ── Request Interceptor: attach auth token ──────────────
 api.interceptors.request.use((config) => {
   const authStore = useAuthStore()
   if (authStore.token) {
     config.headers.Authorization = `Bearer ${authStore.token}`
   }
+
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    delete config.headers['Content-Type']
+  }
+
   return config
 })
 
+// ── Response Interceptor: handle auth errors + missing base URL ──
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isLogoutRequest = error.config?.url?.includes('/logout')
+
+    if (error.response?.status === 401 && !isLogoutRequest) {
       const authStore = useAuthStore()
-      authStore.logout()
+      authStore.clearSession()
     }
+
+    if (!error.response && !configuredBaseURL) {
+
+      console.error(
+        '[api] Request failed with no response, and VITE_API_BASE_URL was never set. ' +
+          'This is almost certainly the cause — the app is trying to reach ' +
+          FALLBACK_DEV_BASE_URL +
+          ' instead of your real backend.',
+      )
+    }
+
     return Promise.reject(error)
-  }
+  },
 )
 
 export default api
