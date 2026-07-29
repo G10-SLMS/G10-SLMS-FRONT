@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import type { Gender, UserRole, ManagedUser, UserRoleCounts, ImportUsersResult } from '@/types/user'
-import { userService } from '@/services/Userservice'
+import { userService } from '@/services/userService'
 import { extractErrorMessage } from '@/utils/errors'
 import { usePagination } from '@/composables/shared/usePagination'
 import { useStudentDirectoryStore } from '@/stores/studentDirectory'

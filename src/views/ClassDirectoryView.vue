@@ -151,7 +151,7 @@ import StudentProfileModal from '@/components/leave-request/modal/StudentProfile
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue';
 import { useStudentDirectoryStore } from '@/stores/studentDirectory';
 import { useAuthStore } from '@/stores/auth';
-import { userService } from '@/services/Userservice';
+import { userService } from '@/services/userService';
 import { extractErrorMessage } from '@/utils/errors';
 import { fromSlug, toSlug } from '@/utils/slug';
 import { filterClasses } from '@/utils/studentDirectoryFilter';

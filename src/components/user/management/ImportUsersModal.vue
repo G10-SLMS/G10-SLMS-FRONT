@@ -154,7 +154,7 @@
 import { ref } from 'vue'
 import { X, FileSpreadsheet, LoaderCircle } from 'lucide-vue-next'
 import type { ImportUsersResult } from '@/types/user'
-import { userService } from '@/services/Userservice'
+import { userService } from '@/services/userService'
 import { extractErrorMessage } from '@/utils/errors'
 
 const props = defineProps<{

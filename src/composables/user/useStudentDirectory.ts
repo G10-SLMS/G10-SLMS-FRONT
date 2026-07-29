@@ -1,5 +1,5 @@
 import { ref, reactive, computed, onMounted } from 'vue'
-import { userService } from '@/services/Userservice'
+import { userService } from '@/services/userService'
 import { extractErrorMessage } from '@/utils/errors'
 import type { DirectoryGenerationGroup } from '@/types/user'
 
