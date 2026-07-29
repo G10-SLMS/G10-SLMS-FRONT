@@ -70,7 +70,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import type { DefaultAvatar, Gender } from '../../types/user';
+import type { DefaultAvatar, Gender } from '../../../types/user';
 
 const props = withDefaults(
   defineProps<{

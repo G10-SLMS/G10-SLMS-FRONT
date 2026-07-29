@@ -1,42 +1,24 @@
-export type LeaveNotificationType =
-  | 'leave_submitted'
-  | 'leave_under_review'
-  | 'leave_approved'
-  | 'leave_rejected'
-  | 'leave_cancelled'
-  | 'comment_added'
-  | 'comment_reply'
-  | 'comment_mention'
-
-export interface LeaveNotificationActor {
+export interface CommentAuthor {
   id: number
   name: string
-  avatar_id?: number | null
+  avatar_url: string | null
 }
 
-export interface LeaveNotificationItem {
+export interface Comment {
   id: number
-  type: LeaveNotificationType
-  title: string
-  message: string
   leave_request_id: number
-  actor: LeaveNotificationActor | null
-  read: boolean
+  parent_id: number | null
+  user_id: number
+  user: CommentAuthor | null
+  body: string
+  replies: Comment[]
+  edited_at: string | null
   created_at: string
+  updated_at: string
 }
 
-export interface RawLeaveNotification {
-  id: number
-  type: LeaveNotificationType
-  title: string
-  message: string
+export interface CommentPayload {
   leave_request_id: number
-  actor?: LeaveNotificationActor | null
-  read_at: string | null
-  created_at: string
-}
-
-export interface LeaveNotificationsResponse {
-  data: LeaveNotificationItem[]
-  unread_count: number
+  body: string
+  parent_id?: number
 }

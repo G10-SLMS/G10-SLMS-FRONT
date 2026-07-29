@@ -2,7 +2,7 @@
   <div class="w-full">
     <div v-if="showLegend && datasets.length" class="mb-3 flex flex-wrap gap-x-4 gap-y-1.5">
       <span
-        v-for="(item, i) in legendItems"
+        v-for="item in legendItems"
         :key="item.label"
         class="flex items-center gap-1.5 text-xs text-gray-500"
       >

@@ -51,7 +51,7 @@ import { useDefaultAvatars } from '@/composables/user/useDefaultAvatars';
 import { useChangePassword } from '@/composables/user/useChangePassword';
 import { getInitials } from '@/utils/initials';
 import { Pencil, Mail, Phone, User, IdCard, GraduationCap, MapPin } from 'lucide-vue-next';
-import ProfileBadgeCard from '@/components/user/profile/ProfileBadgeCard.vue';
+import ProfileBadgeCard, { type ProfileField } from '@/components/user/profile/ProfileBadgeCard.vue';
 import ProfileSecuritySection from '@/components/user/profile/ProfileSecuritySection.vue';
 import ChangePasswordModal from '@/components/user/profile/ChangePasswordModal.vue';
 
@@ -149,7 +149,7 @@ const profileFields = computed(() =>
       icon: MapPin,
       value: user.value?.province,
     },
-  ].filter((field) => field.value),
+  ].filter((field): field is typeof field & { value: string } => Boolean(field.value)) as ProfileField[],
 );
 
 const barHeights = Array.from({ length: 18 }, (_, i) => ['h-[60%]', 'h-[80%]', 'h-full'][i % 3]);

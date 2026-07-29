@@ -29,5 +29,9 @@ export const useNotificationStore = defineStore('notification', () => {
     notifications.value = []
   }
 
-  return { notifications, addNotification, markAsRead, clearNotifications }
+  function removeNotification(id: number) {
+    notifications.value = notifications.value.filter((n) => n.id !== id)
+  }
+
+  return { notifications, addNotification, markAsRead, clearNotifications, removeNotification }
 })

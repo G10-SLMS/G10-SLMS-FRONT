@@ -1,5 +1,5 @@
 import { computed, onMounted, ref, watch } from 'vue'
-import { reportService } from '@/services/Reportservice'
+import { reportService } from '@/services/reportService'
 import type {
   ReportRange,
   ReportSummary,

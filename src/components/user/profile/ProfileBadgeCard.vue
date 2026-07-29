@@ -67,7 +67,7 @@
 import type { Component } from 'vue';
 import ProfileFieldRow from './ProfileFieldRow.vue';
 
-type ProfileField = {
+export type ProfileField = {
   key: string;
   label: string;
   icon: Component;
