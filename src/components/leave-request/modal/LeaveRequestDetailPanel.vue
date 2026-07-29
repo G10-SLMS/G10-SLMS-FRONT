@@ -74,6 +74,7 @@
         <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" :class="reviewTheme.icon">
           <CheckCircle2 v-if="request.status?.toLowerCase() === 'approved'" :size="18" />
           <XCircle v-else-if="request.status?.toLowerCase() === 'rejected'" :size="18" />
+          <UserSearch v-else-if="request.status?.toLowerCase() === 'under_review'" :size="18" />
           <UserCheck v-else :size="18" />
         </div>
         <div class="min-w-0 flex-1">
@@ -99,7 +100,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Paperclip, CheckCircle2, XCircle, UserCheck } from 'lucide-vue-next'
+import { Paperclip, CheckCircle2, XCircle, UserCheck, UserSearch } from 'lucide-vue-next'
 import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue'
 import { getInitials, getAvatarColor } from '@/utils/initials'
 import { formatDate } from '@/utils/date'
@@ -113,6 +114,7 @@ const reviewLabel = computed(() => {
   const status = (props.request.status ?? '').toLowerCase()
   if (status === 'approved') return 'Approved by'
   if (status === 'rejected') return 'Rejected by'
+  if (status === 'under_review') return 'Marked under review by'
   return 'Reviewed by'
 })
 
@@ -123,6 +125,9 @@ const reviewTheme = computed(() => {
   }
   if (status === 'rejected') {
     return { box: 'bg-red-50 border-red-100', icon: 'bg-red-100 text-red-600', text: 'text-red-800' }
+  }
+  if (status === 'under_review') {
+    return { box: 'bg-cyan-50 border-cyan-100', icon: 'bg-cyan-100 text-cyan-600', text: 'text-cyan-800' }
   }
   return { box: 'bg-slate-50 border-slate-100', icon: 'bg-slate-100 text-slate-600', text: 'text-slate-800' }
 })

@@ -7,7 +7,7 @@ import { leaveService, LEAVE_REQUESTS_API_AVAILABLE } from '@/services/leaveServ
 import { usePagination } from '@/composables/shared/usePagination';
 import type { AxiosError } from 'axios';
 import type { LeaveRequestListItem, LeaveType } from '@/types/leave';
-import { AlertOctagon, Ban, CheckCircle, Clock } from 'lucide-vue-next';
+import { AlertOctagon, Ban, CheckCircle, Clock, UserSearch } from 'lucide-vue-next';
 
 export function useLeaveRequests() {
   // ── Stores & Routing ─────────────────────────────────
@@ -60,7 +60,7 @@ export function useLeaveRequests() {
   );
 
   // ── Status Stats (cards above the table) ─────────────
-  const statusCounts = reactive({ pending: 0, approved: 0, rejected: 0, cancelled: 0 });
+  const statusCounts = reactive({ pending: 0, under_review: 0, approved: 0, rejected: 0, cancelled: 0 });
   const statsLoading = ref(false);
 
   async function loadStats() {
@@ -72,6 +72,7 @@ export function useLeaveRequests() {
       const counts = await leaveService.getLeaveRequestStats();
 
       statusCounts.pending = counts.pending;
+      statusCounts.under_review = counts.under_review;
       statusCounts.approved = counts.approved;
       statusCounts.rejected = counts.rejected;
       statusCounts.cancelled = counts.cancelled;
@@ -87,6 +88,13 @@ export function useLeaveRequests() {
       label: 'Pending',
       bg: 'var(--stat-pending-bg, #fef3c7)',
       fg: 'var(--stat-pending-fg, #d97706)',
+    },
+    {
+      icon: UserSearch,
+      count: statusCounts.under_review,
+      label: 'Under Review',
+      bg: 'var(--stat-under-review-bg, #cffafe)',
+      fg: 'var(--stat-under-review-fg, #0e7490)',
     },
     {
       icon: CheckCircle,
@@ -121,7 +129,11 @@ export function useLeaveRequests() {
   }
 
   function statusLabel(status: string): string {
-    return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown';
+    if (!status) return 'Unknown';
+    return status
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   }
 
   // ── Filters ↔ URL Query Sync ──────────────────────────

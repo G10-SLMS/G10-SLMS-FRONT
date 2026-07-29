@@ -35,6 +35,17 @@ export const STATUS_COLORS: Record<string, StatusColorConfig> = {
       hoverBackground: '#fecaca',
     },
   },
+  under_review: {
+    bg: 'bg-cyan-100',
+    text: 'text-cyan-700',
+    border: 'border-l-cyan-500',
+    css: {
+      background: '#cffafe',
+      color: '#0e7490',
+      borderLeft: '3px solid #06b6d4',
+      hoverBackground: '#a5f3fc',
+    },
+  },
   cancelled: {
     bg: 'bg-slate-200',
     text: 'text-slate-600',

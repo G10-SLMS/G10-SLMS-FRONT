@@ -46,12 +46,13 @@
 
     <div class="mb-5 grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
       <template v-if="loading">
-        <StatCardSkeleton v-for="n in 4" :key="n" />
+        <StatCardSkeleton v-for="n in 5" :key="n" />
       </template>
       <template v-else>
         <StatCard :icon="FileText" label="Total Requests" :value="summary.total" color="blue" />
         <StatCard :icon="CheckCircle" label="Approved" :value="summary.approved" color="green" />
         <StatCard :icon="Clock" label="Pending" :value="summary.pending" color="amber" />
+        <StatCard :icon="UserSearch" label="Under Review" :value="summary.under_review" color="cyan" />
         <StatCard :icon="XCircle" label="Rejected" :value="summary.rejected" color="red" />
       </template>
     </div>
@@ -183,7 +184,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { FileText, CheckCircle, Clock, XCircle } from 'lucide-vue-next'
+import { FileText, CheckCircle, Clock, UserSearch, XCircle } from 'lucide-vue-next'
 import StatCard from '@/components/ui/StatCard.vue'
 import StatCardSkeleton from '@/components/shared/StatCardSkeleton.vue'
 import ResponsiveDataTable from '@/components/shared/ResponsiveDataTable.vue'

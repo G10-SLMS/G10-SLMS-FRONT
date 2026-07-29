@@ -24,7 +24,7 @@ export function useReportData() {
   const loading = ref(false)
   const error = ref('')
 
-  const summary = ref<ReportSummary>({ total: 0, approved: 0, pending: 0, rejected: 0 })
+  const summary = ref<ReportSummary>({ total: 0, approved: 0, pending: 0, under_review: 0, rejected: 0 })
   const byType = ref<ReportByLeaveType[]>([])
   const monthly = ref<ReportMonthly[]>([])
   const frequentStudents = ref<ReportFrequentStudent[]>([])

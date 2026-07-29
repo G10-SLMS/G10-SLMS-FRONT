@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { Check, X, Eye } from 'lucide-vue-next';
+import { Check, X, Eye, UserSearch } from 'lucide-vue-next';
 import { computed } from 'vue';
 import LeaveStatusBadge from '@/components/leave-common/LeaveStatusBadge.vue';
 import { getInitials } from '@/utils/initials';
@@ -81,27 +81,44 @@ const props = defineProps<{
 }>();
 
 defineEmits<{
-  decide: [decision: 'Approved' | 'Rejected'];
+  decide: [decision: 'Approved' | 'Rejected' | 'Under Review'];
   view: [];
 }>();
 
-const canDecide = computed(() => !!props.showActions && props.request.status === 'Pending');
+const canDecide = computed(
+  () => !!props.showActions && ['Pending', 'Under Review'].includes(props.request.status),
+);
 
 const actionButtonBaseClasses =
   'flex items-center gap-1 whitespace-nowrap rounded-md border border-transparent px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60';
 
-const actions = [
-  {
-    decision: 'Approved' as const,
-    label: 'Approve',
-    icon: Check,
-    classes: 'bg-green-100 text-green-700 enabled:hover:bg-green-200',
-  },
-  {
-    decision: 'Rejected' as const,
-    label: 'Reject',
-    icon: X,
-    classes: 'bg-red-100 text-red-700 enabled:hover:bg-red-200',
-  },
-];
+const actions = computed(() => {
+  const list = [];
+
+  if (props.request.status === 'Pending') {
+    list.push({
+      decision: 'Under Review' as const,
+      label: 'Mark Under Review',
+      icon: UserSearch,
+      classes: 'bg-cyan-100 text-cyan-700 enabled:hover:bg-cyan-200',
+    });
+  }
+
+  list.push(
+    {
+      decision: 'Approved' as const,
+      label: 'Approve',
+      icon: Check,
+      classes: 'bg-green-100 text-green-700 enabled:hover:bg-green-200',
+    },
+    {
+      decision: 'Rejected' as const,
+      label: 'Reject',
+      icon: X,
+      classes: 'bg-red-100 text-red-700 enabled:hover:bg-red-200',
+    },
+  );
+
+  return list;
+});
 </script>

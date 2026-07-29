@@ -4,6 +4,25 @@
       <div>
         <h1 class="text-2xl font-bold text-slate-900">Approvals</h1>
         <p class="mt-1 text-sm text-slate-500">Review and act on student leave requests.</p>
+
+        <div class="mt-3 inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1 text-sm font-semibold">
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 transition"
+            :class="statusFilter === 'pending' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+            @click="setStatusFilter('pending')"
+          >
+            Pending
+          </button>
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 transition"
+            :class="statusFilter === 'under_review' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+            @click="setStatusFilter('under_review')"
+          >
+            Under Review
+          </button>
+        </div>
       </div>
 
       <div class="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
@@ -163,7 +182,11 @@
         <CheckCircle2 v-else :size="36" :stroke-width="1.5" />
         <p class="text-sm">
           {{
-            hasActiveFilters ? 'No requests match your search or filter.' : 'No pending requests.'
+            hasActiveFilters
+              ? 'No requests match your search or filter.'
+              : statusFilter === 'pending'
+                ? 'No pending requests.'
+                : 'No requests are currently under review.'
           }}
         </p>
         <button
@@ -219,6 +242,8 @@ const router = useRouter();
 
 const {
   leaveFormModal,
+  statusFilter,
+  setStatusFilter,
   searchQuery,
   typeFilter,
   page,

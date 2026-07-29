@@ -35,6 +35,7 @@ export function exportReportToPdf({ rangeLabel, summary, byType, monthly, freque
       ['Total Requests', String(summary.total)],
       ['Approved', String(summary.approved)],
       ['Pending', String(summary.pending)],
+      ['Under Review', String(summary.under_review)],
       ['Rejected', String(summary.rejected)],
     ],
     theme: 'grid',
@@ -107,6 +108,7 @@ export function exportReportToExcel({ rangeLabel, summary, byType, monthly, freq
     ['Total Requests', summary.total],
     ['Approved', summary.approved],
     ['Pending', summary.pending],
+    ['Under Review', summary.under_review],
     ['Rejected', summary.rejected],
   ])
   XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary')

@@ -15,7 +15,7 @@
 import { computed } from 'vue'
 import type { Component } from 'vue'
 
-type StatCardColor = 'blue' | 'amber' | 'green' | 'red'
+type StatCardColor = 'blue' | 'amber' | 'green' | 'red' | 'cyan'
 
 interface StatCardProps {
   icon: Component | string
@@ -36,6 +36,8 @@ const colorClasses = computed(() => {
       return 'bg-green-100 text-green-700'
     case 'red':
       return 'bg-red-100 text-red-700'
+    case 'cyan':
+      return 'bg-cyan-100 text-cyan-700'
     case 'blue':
     default:
       return 'bg-blue-100 text-blue-700'
