@@ -132,7 +132,7 @@ import DirectoryClassCard from '@/components/user/directory/DirectoryClassCard.v
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue';
 import { useStudentDirectoryStore } from '@/stores/studentDirectory';
 import { useAuthStore } from '@/stores/auth';
-import { userService } from '@/services/Userservice';
+import { userService } from '@/services/userService';
 import { extractErrorMessage } from '@/utils/errors';
 import { fromSlug } from '@/utils/slug';
 

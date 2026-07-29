@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { userService } from '@/services/Userservice'
+import { userService } from '@/services/userService'
 import { extractErrorMessage } from '@/utils/errors'
 import type { DirectoryGenerationGroup, DirectoryClassGroup } from '@/types/user'
 
