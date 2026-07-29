@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useDefaultAvatars } from '@/composables/user/useDefaultAvatars';
 import { useChangePassword } from '@/composables/user/useChangePassword';
 import { getInitials } from '@/utils/initials';
-import { extractErrorMessage } from '@/utils/errors';
+import { extractErrorMessage, extractFieldErrors } from '@/utils/errors';
 import type { Gender } from '@/types/user';
 
 // ── Static Form Data ──────────────────────────────────────
@@ -98,6 +98,7 @@ export function useEditProfileForm() {
   const savingProfile = ref(false);
   const profileError = ref('');
   const profileSuccess = ref(false);
+  const fieldErrors = ref<Record<string, string>>({});
   const initialClassParts = splitClass(form.class_name);
   const classPrefix = ref(initialClassParts.prefix);
   const classSuffix = ref(initialClassParts.suffix);
@@ -106,11 +107,19 @@ export function useEditProfileForm() {
     form.class_name = `${prefix}-${normalizeClassSuffix(suffix)}`;
   });
 
+  watch([() => form.student_id, () => form.generation], () => {
+    if (fieldErrors.value.student_id) {
+      const { student_id: _omit, ...rest } = fieldErrors.value;
+      fieldErrors.value = rest;
+    }
+  });
+
   // ── Submit Profile ───────────────────────────────────
   async function submitProfile() {
     savingProfile.value = true;
     profileError.value = '';
     profileSuccess.value = false;
+    fieldErrors.value = {};
     try {
       await auth.updateProfile({
         name: form.name,
@@ -132,7 +141,10 @@ export function useEditProfileForm() {
         router.push('/profile');
       }, 900);
     } catch (err) {
-      profileError.value = extractErrorMessage(err, 'Could not update profile.');
+      fieldErrors.value = extractFieldErrors(err);
+      profileError.value = Object.keys(fieldErrors.value).length
+        ? ''
+        : extractErrorMessage(err, 'Could not update profile.');
     } finally {
       savingProfile.value = false;
     }
@@ -167,6 +179,7 @@ export function useEditProfileForm() {
     savingProfile,
     profileError,
     profileSuccess,
+    fieldErrors,
     classPrefix,
     classSuffix,
     submitProfile,
