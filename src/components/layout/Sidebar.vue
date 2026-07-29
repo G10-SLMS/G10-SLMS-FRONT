@@ -104,7 +104,7 @@
             </template>
             <SidebarNavLink
               v-else
-              :to="item.to"
+              :to="item.to ?? '#'"
               :label="item.label"
               :icon="item.icon"
               :collapsed="collapsed"
@@ -187,7 +187,6 @@ const hoveredLabel = ref<string | null>(null);
 const tooltipStyle = ref({ top: '0px', left: '0px' });
 
 const canApprove = computed(() => auth.isEducator || auth.isAdmin);
-const isAdmin = computed(() => auth.isAdmin);
 // Educators get admin-level access to management screens; destructive actions
 // (e.g. deleting users/leave types) remain gated to admin within those screens.
 const canManage = computed(() => auth.isAdmin || auth.isEducator);

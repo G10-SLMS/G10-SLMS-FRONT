@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, type ComponentPublicInstance } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { leaveService } from '@/services/leaveService';
 import { extractErrorMessage } from '@/utils/errors';
@@ -106,9 +106,9 @@ export function useApprovals() {
 
   // ── Focus/Highlight a Specific Row ───────────────────
   const highlightedId = ref<number | null>(null);
-  const rowRefs = new Map<number, { $el?: HTMLElement } | HTMLElement>();
+  const rowRefs = new Map<number, Element | ComponentPublicInstance>();
 
-  function setRowRef(id: number, el: { $el?: HTMLElement } | HTMLElement | null) {
+  function setRowRef(id: number, el: Element | ComponentPublicInstance | null) {
     if (el) rowRefs.set(id, el);
     else rowRefs.delete(id);
   }
@@ -118,7 +118,11 @@ export function useApprovals() {
     await nextTick();
 
     const el = rowRefs.get(id);
-    const domEl = el && '$el' in el ? el.$el : el;
+    const domEl: HTMLElement | undefined = el
+      ? el instanceof HTMLElement
+        ? el
+        : ((el as ComponentPublicInstance).$el as HTMLElement | undefined)
+      : undefined;
     domEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     setTimeout(() => {
