@@ -91,7 +91,7 @@
             <ApprovalCard
               v-for="request in filteredRequests"
               :key="request.id"
-              :ref="(el) => setRowRef(request.id, el)"
+              :ref="(el: Element | ComponentPublicInstance | null) => setRowRef(request.id, el)"
               :request="request"
               :show-actions="true"
               :class="
@@ -99,7 +99,7 @@
                   ? 'bg-cyan-50 ring-2 ring-inset ring-cyan-400 transition-colors duration-700'
                   : 'transition-colors duration-700'
               "
-              @decide="(decision) => handleDecision(request, decision)"
+              @decide="(decision: 'Approved' | 'Rejected' | 'Under Review') => handleDecision(request, decision)"
               @view="leaveFormModal.openView(request.id)"
             />
           </template>
@@ -158,14 +158,14 @@
                 <ApprovalRow
                   v-for="request in filteredRequests"
                   :key="request.id"
-                  :ref="(el) => setRowRef(request.id, el)"
+                  :ref="(el: Element | ComponentPublicInstance | null) => setRowRef(request.id, el)"
                   :request="request"
                   :show-actions="true"
                   :class="[
                     'transition-colors duration-700 hover:bg-slate-50/60',
                     request.id === highlightedId ? 'bg-cyan-50' : '',
                   ]"
-                  @decide="(decision) => handleDecision(request, decision)"
+                  @decide="(decision: 'Approved' | 'Rejected' | 'Under Review') => handleDecision(request, decision)"
                   @view="leaveFormModal.openView(request.id)"
                 />
               </template>
@@ -227,7 +227,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, type ComponentPublicInstance } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CheckCircle2, Search, SearchX, ChevronDown, X } from 'lucide-vue-next';
 import ApprovalRow from '@/components/approval/ApprovalRow.vue';

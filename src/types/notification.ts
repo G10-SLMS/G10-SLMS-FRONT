@@ -4,6 +4,9 @@ export type LeaveNotificationType =
   | 'leave_approved'
   | 'leave_rejected'
   | 'leave_cancelled'
+  | 'comment_added'
+  | 'comment_reply'
+  | 'comment_mention'
 
 export interface LeaveNotificationActor {
   id: number
