@@ -3,7 +3,7 @@
     class="inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize"
     :class="statusClasses"
   >
-    {{ normalizedStatus || 'Unknown' }}
+    {{ displayLabel }}
   </span>
 </template>
 
@@ -18,6 +18,11 @@ const props = defineProps<{
 }>()
 
 const normalizedStatus = computed(() => (props.status ?? '').trim().toLowerCase())
+
+const displayLabel = computed(() => {
+  if (!normalizedStatus.value) return 'Unknown'
+  return normalizedStatus.value.replace(/_/g, ' ')
+})
 
 const statusClasses = computed(() => {
   if (KNOWN_STATUSES.includes(normalizedStatus.value)) {

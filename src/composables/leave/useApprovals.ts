@@ -19,7 +19,7 @@ export interface LeaveRequest {
   startDate: string;
   endDate: string;
   reason: string;
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Cancelled';
+  status: 'Pending' | 'Under Review' | 'Approved' | 'Rejected' | 'Cancelled';
   processing?: boolean;
 }
 
@@ -29,6 +29,7 @@ const STATUS_MAP: Record<string, LeaveRequest['status']> = {
   rejected: 'Rejected',
   cancelled: 'Cancelled',
   pending: 'Pending',
+  under_review: 'Under Review',
 };
 
 function statusToTab(status: string): LeaveRequest['status'] {
@@ -41,8 +42,7 @@ export function useApprovals() {
   const notificationStore = useNotificationStore();
   const route = useRoute();
   const router = useRouter();
-
-  const STATUS_FILTER = 'pending';
+  const statusFilter = ref<'pending' | 'under_review'>('pending');
 
   // ── Filters & Pagination State ───────────────────────
   const searchQuery = ref('');
@@ -61,7 +61,7 @@ export function useApprovals() {
   const errorMsg = ref('');
 
   // ── Review Modal State ───────────────────────────────
-  const reviewTarget = ref<{ request: LeaveRequest; mode: 'approve' | 'reject' } | null>(null);
+  const reviewTarget = ref<{ request: LeaveRequest; mode: 'approve' | 'reject' | 'under_review' } | null>(null);
   const reviewSubmitting = ref(false);
 
   // ── Fetching ─────────────────────────────────────────
@@ -88,7 +88,7 @@ export function useApprovals() {
         params: {
           page: page.value,
           per_page: perPage.value,
-          status: STATUS_FILTER,
+          status: statusFilter.value,
         },
       });
       requests.value = data.data.map(toRow);
@@ -160,20 +160,33 @@ export function useApprovals() {
     fetchRequests(1);
   }
 
+  function setStatusFilter(status: 'pending' | 'under_review') {
+    if (statusFilter.value === status) return;
+    statusFilter.value = status;
+    clearFilters();
+  }
+
   // ── Approve/Reject Workflow ──────────────────────────
   function friendlyErrorMessage(err: unknown): string {
     const status = (err as AxiosError)?.response?.status;
     if (status === 403) {
-      return 'Only educators can approve or reject requests. You don\'t have permission to take this action.';
+      return 'Only educators and admins can review requests. You don\'t have permission to take this action.';
     }
     return extractErrorMessage(err, 'Failed to update this request.');
   }
 
-  function handleDecision(request: LeaveRequest, decision: 'Approved' | 'Rejected') {
-    reviewTarget.value = {
-      request,
-      mode: decision === 'Approved' ? 'approve' : 'reject',
-    };
+  function handleDecision(request: LeaveRequest, decision: 'Approved' | 'Rejected' | 'Under Review') {
+    const mode = decision === 'Approved' ? 'approve' : decision === 'Rejected' ? 'reject' : 'under_review';
+    reviewTarget.value = { request, mode };
+  }
+
+  function removeIfOutsideCurrentFilter(request: LeaveRequest) {
+    const stillMatches =
+      (statusFilter.value === 'pending' && request.status === 'Pending') ||
+      (statusFilter.value === 'under_review' && request.status === 'Under Review');
+    if (!stillMatches) {
+      requests.value = requests.value.filter((r) => r.id !== request.id);
+    }
   }
 
   async function handleReviewConfirm(note: string) {
@@ -190,7 +203,7 @@ export function useApprovals() {
           type: 'success',
           read: false,
         });
-      } else {
+      } else if (mode === 'reject') {
         await leaveService.rejectLeaveRequest(request.id, note);
         request.status = 'Rejected';
         notificationStore.addNotification({
@@ -198,7 +211,16 @@ export function useApprovals() {
           type: 'success',
           read: false,
         });
+      } else {
+        await leaveService.markUnderReview(request.id, note);
+        request.status = 'Under Review';
+        notificationStore.addNotification({
+          message: 'Leave request marked as under review.',
+          type: 'success',
+          read: false,
+        });
       }
+      removeIfOutsideCurrentFilter(request);
       reviewTarget.value = null;
     } catch (err) {
       errorMsg.value = friendlyErrorMessage(err);
@@ -221,6 +243,8 @@ export function useApprovals() {
 
   return {
     leaveFormModal,
+    statusFilter,
+    setStatusFilter,
     searchQuery,
     typeFilter,
     page,

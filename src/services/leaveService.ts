@@ -149,10 +149,16 @@ export const leaveService = {
     }
   },
 
-  async getLeaveRequestStats(): Promise<{ pending: number; approved: number; rejected: number; cancelled: number }> {
+  async getLeaveRequestStats(): Promise<{
+    pending: number
+    under_review: number
+    approved: number
+    rejected: number
+    cancelled: number
+  }> {
     const { data } = await api.get<{
       success: boolean
-      data: { pending: number; approved: number; rejected: number; cancelled: number }
+      data: { pending: number; under_review: number; approved: number; rejected: number; cancelled: number }
     }>('/leave-requests/stats')
     return data.data
   },
@@ -301,6 +307,14 @@ export const leaveService = {
   },
 
   // ── Approval Workflow ────────────────────────────────
+  async markUnderReview(id: number, reviewNote: string): Promise<LeaveRequestResponse> {
+    const { data } = await api.put<RawApiEnvelope<RawLeaveRequest>>(`/leave-requests/${id}`, {
+      status: 'under_review',
+      review_note: reviewNote,
+    })
+    return toRequestResponse(data.data)
+  },
+
   async approveLeaveRequest(id: number, reviewNote: string): Promise<LeaveRequestResponse> {
     const { data } = await api.put<RawApiEnvelope<RawLeaveRequest>>(`/leave-requests/${id}`, {
       status: 'approved',

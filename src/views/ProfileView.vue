@@ -50,7 +50,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useDefaultAvatars } from '@/composables/user/useDefaultAvatars';
 import { useChangePassword } from '@/composables/user/useChangePassword';
 import { getInitials } from '@/utils/initials';
-import { Pencil, Mail, Phone, User, GraduationCap, MapPin } from 'lucide-vue-next';
+import { Pencil, Mail, Phone, User, IdCard, GraduationCap, MapPin } from 'lucide-vue-next';
 import ProfileBadgeCard from '@/components/user/profile/ProfileBadgeCard.vue';
 import ProfileSecuritySection from '@/components/user/profile/ProfileSecuritySection.vue';
 import ChangePasswordModal from '@/components/user/profile/ChangePasswordModal.vue';
@@ -121,6 +121,16 @@ const profileFields = computed(() =>
       value: user.value?.gender ?? 'Not specified',
       valueClass: 'capitalize',
     },
+    ...(currentRole.value === 'student'
+      ? [
+          {
+            key: 'student_id',
+            label: 'Student ID',
+            icon: IdCard,
+            value: user.value?.student_id,
+          },
+        ]
+      : []),
     {
       key: 'class',
       label: 'Class',

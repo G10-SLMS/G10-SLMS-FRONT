@@ -1,5 +1,6 @@
 export type LeaveNotificationType =
   | 'leave_submitted'
+  | 'leave_under_review'
   | 'leave_approved'
   | 'leave_rejected'
   | 'leave_cancelled'

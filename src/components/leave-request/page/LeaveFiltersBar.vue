@@ -56,6 +56,7 @@
       >
         <option value="">All Statuses</option>
         <option value="pending">Pending</option>
+        <option value="under_review">Under Review</option>
         <option value="approved">Approved</option>
         <option value="rejected">Rejected</option>
         <option value="cancelled">Cancelled</option>

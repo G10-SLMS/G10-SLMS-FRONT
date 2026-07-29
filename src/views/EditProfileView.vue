@@ -88,7 +88,7 @@
                 Student Record
               </p>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <ProfileFormField id="student_id" label="ID Card Number">
+                <ProfileFormField id="student_id" label="ID Card Number" :error="fieldErrors.student_id">
                   <input
                     id="student_id"
                     v-model="form.student_id"
@@ -214,6 +214,7 @@ const {
   savingProfile,
   profileError,
   profileSuccess,
+  fieldErrors,
   classPrefix,
   classSuffix,
   submitProfile,

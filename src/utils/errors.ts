@@ -5,6 +5,20 @@ export interface ExtractErrorMessageOptions {
   serverErrorMessage?: string
 }
 
+export function extractFieldErrors(error: unknown): Record<string, string> {
+  if (isAxiosError(error)) {
+    const data = error.response?.data as { errors?: Record<string, string[]> } | undefined
+    if (data?.errors) {
+      const fieldErrors: Record<string, string> = {}
+      for (const [field, messages] of Object.entries(data.errors)) {
+        if (messages?.[0]) fieldErrors[field] = messages[0]
+      }
+      return fieldErrors
+    }
+  }
+  return {}
+}
+
 export function extractErrorMessage(
   error: unknown,
   fallback = 'Something went wrong. Please try again.',

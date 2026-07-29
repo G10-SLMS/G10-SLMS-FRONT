@@ -131,6 +131,7 @@
                   <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" :class="reviewTheme.icon">
                     <CheckCircle2 v-if="detail.status?.toLowerCase() === 'approved'" :size="18" />
                     <XCircle v-else-if="detail.status?.toLowerCase() === 'rejected'" :size="18" />
+                    <UserSearch v-else-if="detail.status?.toLowerCase() === 'under_review'" :size="18" />
                     <UserCheck v-else :size="18" />
                   </div>
                   <div class="min-w-0 flex-1">
@@ -183,7 +184,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { X, AlertCircle, CheckCircle2, XCircle, UserCheck } from 'lucide-vue-next'
+import { X, AlertCircle, CheckCircle2, XCircle, UserCheck, UserSearch } from 'lucide-vue-next'
 import { leaveService } from '@/services/leaveService'
 import { useLeaveFormModalStore } from '@/stores/leaveFormModal'
 import { useAuthStore } from '@/stores/auth'

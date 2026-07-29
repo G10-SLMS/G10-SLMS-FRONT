@@ -1,6 +1,6 @@
 import type { Component } from 'vue'
 
-export type StatCardColor = 'blue' | 'amber' | 'green' | 'red'
+export type StatCardColor = 'blue' | 'amber' | 'green' | 'red' | 'cyan'
 
 export interface StatCardProps {
   icon: Component | string
@@ -15,6 +15,7 @@ export interface ReportSummary {
   total: number
   approved: number
   pending: number
+  under_review: number
   rejected: number
 }
 

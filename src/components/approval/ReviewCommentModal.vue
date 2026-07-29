@@ -32,14 +32,14 @@
             <div class="flex items-start gap-3.5 p-6 pb-0">
               <div
                 class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-                :class="mode === 'approve' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'"
+                :class="iconTheme"
               >
                 <component :is="iconComponent" :size="22" />
               </div>
               <div class="min-w-0 flex-1">
                 <h3 class="m-0 text-lg font-bold text-slate-900">{{ title }}</h3>
                 <p class="m-0 mt-0.5 text-[13px] text-slate-500">
-                  {{ mode === 'approve' ? 'This action will approve the leave request.' : 'This action cannot be undone.' }}
+                  {{ headerHint }}
                 </p>
               </div>
               <button
@@ -55,12 +55,12 @@
             <!-- ── Body ─────────────────────────────────────────── -->
             <div class="p-6">
               <p v-if="studentName" class="mb-4 text-sm text-slate-600">
-                {{ mode === 'approve' ? 'Approving' : 'Rejecting' }} request from
+                {{ actionVerb }} request from
                 <strong class="text-slate-900">{{ studentName }}</strong>
               </p>
 
               <label class="mb-1.5 block text-[13px] font-semibold text-slate-700" for="review-note">
-                {{ mode === 'approve' ? 'Note' : 'Reason for rejection' }}
+                {{ noteLabel }}
                 <span v-if="mode === 'reject'" class="text-red-500">*</span>
                 <span v-else class="font-normal text-slate-400">(optional)</span>
               </label>
@@ -113,7 +113,7 @@
               <button
                 :class="[
                   'inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60',
-                  mode === 'approve' ? 'bg-emerald-600 hover:enabled:bg-emerald-700' : 'bg-red-600 hover:enabled:bg-red-700',
+                  submitButtonTheme,
                 ]"
                 :disabled="!canSubmit || submitting"
                 @click="handleSubmit"
@@ -132,12 +132,12 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
-import { X, CheckCircle2, XCircle } from 'lucide-vue-next'
+import { X, CheckCircle2, XCircle, UserSearch } from 'lucide-vue-next'
 
 const props = withDefaults(
   defineProps<{
     open: boolean
-    mode: 'approve' | 'reject'
+    mode: 'approve' | 'reject' | 'under_review'
     studentName?: string
     submitting?: boolean
     minLength?: number
@@ -160,21 +160,59 @@ const touched = ref(false)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 // ── Computed ─────────────────────────────────────────────
-const iconComponent = computed(() => (props.mode === 'approve' ? CheckCircle2 : XCircle))
+const iconComponent = computed(() => {
+  if (props.mode === 'approve') return CheckCircle2
+  if (props.mode === 'reject') return XCircle
+  return UserSearch
+})
 
-const title = computed(() =>
-  props.mode === 'approve' ? 'Approve Leave Request' : 'Reject Leave Request'
-)
+const iconTheme = computed(() => {
+  if (props.mode === 'approve') return 'bg-emerald-50 text-emerald-600'
+  if (props.mode === 'reject') return 'bg-red-50 text-red-500'
+  return 'bg-cyan-50 text-cyan-600'
+})
 
-const submitLabel = computed(() =>
-  props.mode === 'approve' ? 'Approve Request' : 'Reject Request'
-)
+const title = computed(() => {
+  if (props.mode === 'approve') return 'Approve Leave Request'
+  if (props.mode === 'reject') return 'Reject Leave Request'
+  return 'Mark as Under Review'
+})
 
-const placeholder = computed(() =>
-  props.mode === 'approve'
-    ? 'Add a note for the student...'
-    : 'Explain why this request is being rejected...'
-)
+const headerHint = computed(() => {
+  if (props.mode === 'approve') return 'This action will approve the leave request.'
+  if (props.mode === 'reject') return 'This action cannot be undone.'
+  return 'Lets the student know their request is being looked at.'
+})
+
+const actionVerb = computed(() => {
+  if (props.mode === 'approve') return 'Approving'
+  if (props.mode === 'reject') return 'Rejecting'
+  return 'Marking as under review'
+})
+
+const noteLabel = computed(() => {
+  if (props.mode === 'reject') return 'Reason for rejection'
+  if (props.mode === 'under_review') return 'Note for the student'
+  return 'Note'
+})
+
+const submitLabel = computed(() => {
+  if (props.mode === 'approve') return 'Approve Request'
+  if (props.mode === 'reject') return 'Reject Request'
+  return 'Mark as Under Review'
+})
+
+const submitButtonTheme = computed(() => {
+  if (props.mode === 'approve') return 'bg-emerald-600 hover:enabled:bg-emerald-700'
+  if (props.mode === 'reject') return 'bg-red-600 hover:enabled:bg-red-700'
+  return 'bg-cyan-600 hover:enabled:bg-cyan-700'
+})
+
+const placeholder = computed(() => {
+  if (props.mode === 'approve') return 'Add a note for the student...'
+  if (props.mode === 'reject') return 'Explain why this request is being rejected...'
+  return 'Add a note for the student (optional)...'
+})
 
 const isRequired = computed(() => props.mode === 'reject')
 
@@ -199,7 +237,10 @@ const textareaClasses = computed(() => {
     if (props.mode === 'approve') {
       return 'border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
     }
-    return 'border-slate-200 focus:border-red-400 focus:ring-2 focus:ring-red-100'
+    if (props.mode === 'reject') {
+      return 'border-slate-200 focus:border-red-400 focus:ring-2 focus:ring-red-100'
+    }
+    return 'border-slate-200 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100'
   }
   return 'border-red-400 ring-2 ring-red-100'
 })

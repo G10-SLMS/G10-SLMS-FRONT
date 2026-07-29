@@ -7,6 +7,7 @@ export function statusEventClass(status: string): string {
   if (s === 'rejected') return 'vc-rejected'
   if (s === 'cancelled') return 'vc-cancelled'
   if (s === 'pending') return 'vc-pending'
+  if (s === 'under_review') return 'vc-under_review'
   return 'vc-unknown'
 }
 
@@ -22,6 +23,7 @@ export function miniStyle(status: string): Record<string, string> {
     rejected: { bg: STATUS_COLORS.rejected.css.background, text: STATUS_COLORS.rejected.css.color },
     cancelled: { bg: STATUS_COLORS.cancelled.css.background, text: STATUS_COLORS.cancelled.css.color },
     pending: { bg: STATUS_COLORS.pending.css.background, text: STATUS_COLORS.pending.css.color },
+    under_review: { bg: STATUS_COLORS.under_review.css.background, text: STATUS_COLORS.under_review.css.color },
   }
   const c = map[s] ?? map.pending
   return { background: c.bg, color: c.text }
