@@ -38,9 +38,6 @@ export interface RegisterPayload {
   email: string
   password: string
   password_confirmation: string
-  role?: UserRole
-  educator_id?: number | null
-  student_id?: string | null
 }
 
 export interface LoginPayload {

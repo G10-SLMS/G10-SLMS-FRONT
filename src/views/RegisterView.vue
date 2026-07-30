@@ -7,10 +7,9 @@ import logoUrl from '@/assets/image/logo.png'
 import AuthPanelLeft from '@/components/auth/AuthPanelLeft.vue'
 import AuthTabs from '@/components/auth/AuthTabs.vue'
 import FormField from '@/components/auth/FormField.vue'
-import SelectField from '@/components/auth/SelectField.vue'
 import PasswordField from '@/components/auth/PasswordField.vue'
 import SocialAuthButtons from '@/components/auth/SocialAuthButtons.vue'
-import { Mail, User, GraduationCap } from 'lucide-vue-next'
+import { Mail, User } from 'lucide-vue-next'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -18,7 +17,6 @@ const auth = useAuthStore()
 const form = reactive({
   fullName: '',
   email: '',
-  role: 'student' as 'student' | 'educator',
   password: '',
   confirmPassword: '',
   acceptTerms: false,
@@ -38,7 +36,6 @@ async function handleSubmit() {
   const success = await auth.register({
     name: form.fullName,
     email: form.email,
-    role: form.role,
     password: form.password,
     password_confirmation: form.confirmPassword,
   })
@@ -91,12 +88,6 @@ async function handleSubmit() {
           >
             <template #icon><Mail :size="18" :stroke-width="1.8" /></template>
           </FormField>
-
-          <SelectField id="role" label="Account Type" v-model="form.role" required>
-            <template #icon><GraduationCap :size="18" :stroke-width="1.8" /></template>
-            <option value="student">Student</option>
-            <option value="educator">Educator</option>
-          </SelectField>
 
           <div class="flex gap-4">
             <PasswordField
